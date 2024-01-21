@@ -1,16 +1,14 @@
 import random
 import sys
 
-from PyQt6.QtCore import QTimer, Qt, QRect
+from PyQt6.QtCore import QTimer, Qt, QRect, QPropertyAnimation
 from PyQt6.QtGui import QPainter, QColor, QPixmap, QImage
 from PyQt6.QtWidgets import QMainWindow, QApplication, QLabel
 
 W=1000
 H=600
-STEP = 10
 X_SIZE_PLAYER = 50
 Y_SIZE_PLAYER = 50
-Hits = 0
 X_SIZE_ENEMY = 40
 Y_SIZE_ENEMY = 30
 
@@ -18,18 +16,43 @@ class MovingPlayer:
     def __init__(self, x=0, y=0):
         self.x = x
         self.y = y
+        self.step = 1
+        self.HP_P = 3
 
-    def move_left(self):
-        self.x += -STEP
+        self.move_direction_L = 0
+        self.move_direction_R = 0
+        self.move_direction_U = 0
+        self.move_direction_D = 0
 
-    def move_right(self):
-        self.x += STEP
+        self.timer = QTimer()
+        self.timer.timeout.connect(self.move)
+        self.timer.start(5)
 
-    def move_up(self):
-        self.y += -STEP
+        # self.animation = QPropertyAnimation(self.move, b'position')
+        # self.animation.setDuration(1000)
+        # self.animation.setStartValue(self.x, self.y)
+        # self.animation.setEndValue(self.move())
 
-    def move_down(self):
-        self.y += STEP
+    def move(self):
+        if self.x -self.step < 0:
+            self.x = 0
+        elif self.move_direction_L == 1:
+            self.x += -self.step
+        if self.x + self.step > W-X_SIZE_PLAYER:
+            self.x = W-X_SIZE_PLAYER
+        elif self.move_direction_R == 1:
+            self.x += self.step
+        if self.y - self.step < 0:
+            self.y = 0
+        elif self.move_direction_U == 1:
+            self.y += -self.step
+        if self.y + self.step > H-Y_SIZE_PLAYER:
+            self.y = H-Y_SIZE_PLAYER
+        elif self.move_direction_D == 1:
+            self.y += self.step
+
+
+
 
 
 class MovingEnemy:
@@ -57,34 +80,30 @@ class GameWindow(QMainWindow):
         self.showMaximized()
 
 
-
-
     def update_game(self):
         # Обновление состояния объекта
         self.enemy.move()
         self.update()
 
-
     def keyPressEvent(self, event):
-        if self.player.x-STEP < 0:
-            self.player.x = 0
-        elif event.key() == Qt.Key.Key_Left:
-            self.player.move_left()
+        if event.key() == Qt.Key.Key_W:
+            self.player.move_direction_U = 1
+        elif event.key() == Qt.Key.Key_S:
+            self.player.move_direction_D = 1
+        elif event.key() == Qt.Key.Key_A:
+            self.player.move_direction_L = 1
+        elif event.key() == Qt.Key.Key_D:
+            self.player.move_direction_R = 1
 
-        if self.player.x+STEP > W-X_SIZE_PLAYER:
-            self.player.x = W-X_SIZE_PLAYER
-        elif event.key() == Qt.Key.Key_Right:
-            self.player.move_right()
-
-        if self.player.y-STEP < 0:
-            self.player.y = 0
-        elif event.key() == Qt.Key.Key_Up:
-            self.player.move_up()
-
-        if self.player.y+STEP > H-Y_SIZE_PLAYER:
-            self.player.y = H-Y_SIZE_PLAYER
-        elif event.key() == Qt.Key.Key_Down:
-            self.player.move_down()
+    def keyReleaseEvent(self, event):
+        if event.key() == Qt.Key.Key_W:
+            self.player.move_direction_U = 0
+        elif event.key() == Qt.Key.Key_S:
+            self.player.move_direction_D = 0
+        elif event.key() == Qt.Key.Key_A:
+            self.player.move_direction_L = 0
+        elif event.key() == Qt.Key.Key_D:
+            self.player.move_direction_R = 0
 
 
 
@@ -106,4 +125,5 @@ class GameWindow(QMainWindow):
 if __name__ == '__main__':
     app = QApplication([])
     game_window = GameWindow()
+
     sys.exit(app.exec())
