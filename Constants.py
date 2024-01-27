@@ -1,0 +1,18 @@
+from PyQt6.QtWidgets import QMainWindow
+
+import tests
+
+X_SIZE_PLAYER = 30
+Y_SIZE_PLAYER = 20
+
+X_SIZE_ENEMY = 30
+Y_SIZE_ENEMY = 30
+
+X_SIZE_BULLET = 15
+Y_SIZE_BULLET = 5
+
+W = 1500
+H = 600
+
+X_SIZE_PLAYER_HP = 50
+X_SIZE_PLAYER_TXT = 50
