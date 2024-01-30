@@ -1,6 +1,6 @@
 from PyQt6.QtWidgets import QMainWindow
 
-import tests
+import main_game_2p
 
 X_SIZE_PLAYER = 30
 Y_SIZE_PLAYER = 20
@@ -15,4 +15,6 @@ W = 1500
 H = 600
 
 X_SIZE_PLAYER_HP = 50
+Y_SIZE_PLAYER_HP = 30
+
 X_SIZE_PLAYER_TXT = 50

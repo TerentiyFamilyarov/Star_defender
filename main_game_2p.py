@@ -53,7 +53,7 @@ class GameWindow(QMainWindow):
         self.setGeometry(0, 0, Constants.W, Constants.H+100)
 
         self.player1 = Player.MovingPlayer(10, 50, 3, 5)
-        self.player2 = Player.MovingPlayer(100, Constants.H - 50, 7, 1)
+        self.player2 = Player.MovingPlayer(100, Constants.H - 50, 7, 3)
 
 
     def HPs_Player_TXT(self):
@@ -69,7 +69,7 @@ class GameWindow(QMainWindow):
         self.Player2_HP.setText("P2")
         self.Player2_HP.setAlignment(Qt.AlignmentFlag.AlignLeft)
         self.Player2_HP.setStyleSheet("font-size: 32px; color: tomato;")
-        self.Player2_HP.setGeometry(30 + Constants.X_SIZE_PLAYER_TXT + Constants.X_SIZE_PLAYER_HP*self.player2.HP_P,
+        self.Player2_HP.setGeometry(Constants.X_SIZE_PLAYER_HP*self.player1.HP_P,
                                     Constants.H + 10, Constants.X_SIZE_PLAYER_TXT, 100)
         self.Player2_HP.show()
 
@@ -167,7 +167,7 @@ class GameWindow(QMainWindow):
         self.score_rect.setGeometry(Constants.W//4, Constants.H//4, Constants.W//2, Constants.H//4)
         self.score_rect.show()
         retry_button = QPushButton('Retry', game_window)
-        retry_button.clicked.connect(papapewagemmbody)
+        # retry_button.clicked.connect()
         retry_button.setGeometry(Constants.W//3, Constants.H//3, 80, 30)
         retry_button.show()
 
@@ -200,10 +200,13 @@ class GameWindow(QMainWindow):
             painter.drawImage(QRect(enemy.x, enemy.y, Constants.X_SIZE_ENEMY, Constants.Y_SIZE_ENEMY), QImage('enemy.png'))
 
         for i in range(self.player1.HP_P):
-            painter.drawImage(QRect(40+i*30, Constants.H + 12, Constants.X_SIZE_PLAYER_HP, Constants.X_SIZE_PLAYER_HP), QImage('hardcore-heart.png'))
+            painter.fillRect(50+i*30, Constants.H + 20, Constants.X_SIZE_PLAYER_HP, Constants.Y_SIZE_PLAYER_HP, QColor(255,255,255))
+            # painter.drawImage(QRect(40+i*30, Constants.H + 12, Constants.X_SIZE_PLAYER_HP, Constants.X_SIZE_PLAYER_HP), QImage('hardcore-heart.png'))
         for i in range(self.player2.HP_P):
-            painter.drawImage(QRect(30 + Constants.X_SIZE_PLAYER_TXT + Constants.X_SIZE_PLAYER_HP*self.player2.HP_P
-                                    + 33 + i * 30, Constants.H + 12, Constants.X_SIZE_PLAYER_HP, Constants.X_SIZE_PLAYER_HP), QImage('hardcore-heart.png'))
+            painter.fillRect(Constants.X_SIZE_PLAYER_HP*self.player1.HP_P + 40 + i*30
+                                    , Constants.H + 20, Constants.X_SIZE_PLAYER_HP, Constants.Y_SIZE_PLAYER_HP, QColor(255,255,100))
+            # painter.drawImage(QRect(Constants.X_SIZE_PLAYER_HP*self.player1.HP_P + 30 + i*30
+            #                         , Constants.H + 12, Constants.X_SIZE_PLAYER_HP, Constants.X_SIZE_PLAYER_HP), QImage('hardcore-heart.png'))
 
         if self.player1.HP_P <= 0 or self.player2.HP_P <= 0:
             painter.fillRect(Constants.W//4, Constants.H//4, Constants.W//2, Constants.H//2, QColor(102, 51, 0))
