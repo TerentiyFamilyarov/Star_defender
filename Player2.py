@@ -40,14 +40,14 @@ class MovingPlayer:
 
     def keyPressEvent(self, event):
 
-        if event.key() == Qt.Key.Key_Left:
+        if event.text() in ['Л','л','K','k']:
             self.move_direction_U2 = 1
-        elif event.key() == Qt.Key.Key_Right:
+        elif event.text() in ['Д','д','L','l']:
             self.move_direction_D2 = 1
 
     def keyReleaseEvent(self, event):
 
-        if event.key() == Qt.Key.Key_Left:
+        if event.text() in ['Л', 'л', 'K', 'k']:
             self.move_direction_U2 = 0
-        elif event.key() == Qt.Key.Key_Right:
+        elif event.text() in ['Д', 'д', 'L', 'l']:
             self.move_direction_D2 = 0

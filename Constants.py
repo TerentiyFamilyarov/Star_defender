@@ -1,6 +1,6 @@
 from PyQt6.QtWidgets import QMainWindow
 
-import main_game_2p
+import main_game
 
 X_SIZE_PLAYER = 30
 Y_SIZE_PLAYER = 20
@@ -11,8 +11,8 @@ Y_SIZE_ENEMY = 30
 X_SIZE_BULLET = 15
 Y_SIZE_BULLET = 5
 
-W = 1500
-H = 600
+W = 1000
+H = 400
 
 X_SIZE_PLAYER_HP = 50
 Y_SIZE_PLAYER_HP = 30
