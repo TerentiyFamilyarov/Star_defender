@@ -72,118 +72,170 @@ class GameWindow(QMainWindow):
     def __init__(self):
         super().__init__()
 
-        self.setWindowTitle('Star Defender')
-        self.setGeometry(0, 0, W, H + 100)
+        self.setWindowTitle('Papa pewa gemma body')
+        self.setGeometry(0, 0, W, H)
+        self.game_over(1)
+        self.Pause_game(1)
         self.Main_Game(1)
 
-
     def Main_Game(self, main_menu_show = 1):
+        self.game_over(0)       # при нажатии клавиши закрывается
+        self.Pause_game(0)
         if main_menu_show == 1:
+            self.Game_Continuous(0)
             self.Main_Title = QLabel(self)
             self.Main_Title.setText("Star Defender")
-            self.Main_Title.setStyleSheet("font-size: 24px; color: Green;")
-            self.Main_Title.setGeometry(W // 4, H // 4, W // 2, H // 4)
+            self.Main_Title.setStyleSheet("font-size: 24px; color: Green; text-align: right;")
+            self.Main_Title.setGeometry(0, 100, W, 100)
             self.start_button = QPushButton('Start', self)
             self.start_button.setGeometry(W // 3, H // 3, 80, 30)
             self.start_button.clicked.connect(self.StartGame)
             self.exit_button = QPushButton('Exit', self)
             self.exit_button.setGeometry(W // 3, (H // 3) + 100, 80, 30)
-            self.exit_button.clicked.connect(self.close)
+            self.exit_button.clicked.connect(GameWindow.close)
             self.game_started = 0
-            # self.Main_Title.show()
-            # self.start_button.show()
-            # self.exit_button.show()
+
+            self.Main_Title.show()
+            self.start_button.show()
+            self.exit_button.show()
         else:
-            self.Main_Title.close()
-            self.start_button.close()
-            self.exit_button.close()
+            self.Main_Title.hide()
+            self.start_button.hide()
+            self.exit_button.hide()
 
     def game_over(self, game_over_show=1):
+
         if game_over_show == 1:
             self.game_started = 0
-            self.timer.stop()
+            self.Game_Continuous(0)
             self.game_over_txt = QLabel(self)
             self.game_over_txt.setText("You destroyed!")
             self.game_over_txt.setStyleSheet("font-size: 24px; color: red;")
-            self.game_over_txt.setGeometry(W // 4, H // 4, W // 2, H // 4)
+            self.game_over_txt.setGeometry(0, 0, W , H )
             self.retry_button = QPushButton('Retry', self)
             self.retry_button.setGeometry(W // 3, H // 3, 80, 30)
-            self.retry_button.clicked.connect(self.StartGame)
+            self.retry_button.clicked.connect(self.Retry_game)
             self.main_menu_button = QPushButton('Main menu', self)
             self.main_menu_button.setGeometry(W // 3, (H // 3) + 100, 80, 30)
-            self.main_menu_button.clicked.connect(self.Main_Game)
+            self.main_menu_button.clicked.connect(self.Main_menu)
 
             self.game_over_txt.show()
             self.retry_button.show()
             self.main_menu_button.show()
         else:
-            self.game_over_txt.close()
-            self.retry_button.close()# как-то надо скрывать их может, game_REstarted?
-            self.main_menu_button.close()
+            self.game_over_txt.hide()
+            self.retry_button.hide()# пока скрываются с помощью вызова 1 -> 0
+            self.main_menu_button.hide()
 
-    def StartGame(self):
+
+    def Retry_game(self):
+        self.StartGame()
+    def Main_menu(self):
+        self.Main_Game(1)
+
+    def Pause_game(self, game_pause_show = 1):
+        self.twice_pause = 0
+        if game_pause_show == 1:
+            self.game_started = 0
+            self.Game_Continuous(0)
+            self.pause_game_txt = QLabel(self)
+            self.pause_game_txt.setText("Pause")
+            self.pause_game_txt.setStyleSheet("font-size: 24px; color: Green;")
+            self.pause_game_txt.setGeometry(0, 0, W , H )
+            self.resume_button = QPushButton('Resume', self)
+            self.resume_button.setGeometry(W // 3, H // 3, 80, 30)
+            self.resume_button.clicked.connect(self.Resume_game)
+            self.resume_main_menu_button = QPushButton('Main menu', self)
+            self.resume_main_menu_button.setGeometry(W // 3, (H // 3) + 100, 80, 30)
+            self.resume_main_menu_button.clicked.connect(self.Main_menu)
+
+            self.pause_game_txt.show()
+            self.resume_button.show()
+            self.resume_main_menu_button.show()
+        else:
+            self.pause_game_txt.hide()
+            self.resume_button.hide()
+            self.resume_main_menu_button.hide()
+
+    def Resume_game(self):
         self.game_started = 1
-        if self.game_started == 1:
+        self.Game_Continuous(1)
+        self.Pause_game(0)
 
-            self.Main_Game(0)
-            self.game_over(0)
 
-            self.HPs_Player_TXT()
+    def Game_Continuous(self, continue_game = 1):
 
-            self.enemies = []
-            self.enemy_timer = QTimer()
-            self.enemy_timer.timeout.connect(self.create_enemy)
-            self.enemy_timer.start(1800)  # Создавать врага каждые 2 секунды
+        self.enemy_timer = QTimer()
+        self.enemy_timer.timeout.connect(self.create_enemy)
 
-            self.bullets1 = []
-            self.shoot1 = 0
-            self.bullet_timer1 = QTimer()
-            self.bullet_timer1.timeout.connect(self.create_bullet1)
+        self.bullet_timer1 = QTimer()
+        self.bullet_timer1.timeout.connect(self.create_bullet1)
+
+        self.timer = QTimer()
+        self.timer.timeout.connect(self.update_game)
+
+        if continue_game == 1:
+            self.enemy_timer.start(1800)
             self.bullet_timer1.start(400)
+            self.timer.start(20)  # Вызывать обновление игры каждые 20 миллисекунд
+            self.show_TXTs(1)
+        else:
+            self.enemy_timer.stop()
+            self.bullet_timer1.stop()
+            self.timer.stop()
 
-            self.bullets2 = []
-            self.shoot2 = 0
-            self.bullet_timer2 = QTimer()
-            self.bullet_timer2.timeout.connect(self.create_bullet2)
-            self.bullet_timer2.start(400)
 
-            self.score = 0
+
+    def show_TXTs(self, show = 1):
+
+        if show == 1:
             self.score_label = QLabel(self)
-            self.score_label.setText("SCORE: 0")
+            self.score_label.setText(f"SCORE: 0")
             self.score_label.setAlignment(Qt.AlignmentFlag.AlignTop)
             self.score_label.setStyleSheet("font-size: 32px; color: white;")
             self.score_label.setGeometry(W -200, H + 10,200,50)
-            self.score_label.show()
 
-            self.timer = QTimer()
-            self.timer.timeout.connect(self.update_game)
-            self.timer.start(20)  # Вызывать обновление игры каждые 20 миллисекунд
+            self.Player1_HP = QLabel(self)
+            self.Player1_HP.setText("P1")
+            self.Player1_HP.setAlignment(Qt.AlignmentFlag.AlignLeft)
+            self.Player1_HP.setStyleSheet("font-size: 32px; color: skyblue;")
+            self.Player1_HP.setGeometry(10, 150, X_SIZE_PLAYER_TXT, 100)
+
+            self.score_label.show()
+            self.Player1_HP.show()
+        else:
+            self.score_label.hide()
+            self.Player1_HP.hide()
+
+    def StartGame(self):
+        self.game_started = 1
+
+        if self.game_started == 1:
+
+            self.Main_Game(0)
+
+            self.game_over(0)
+
+            self.Game_Continuous(1)
+
+            self.enemies = []
+
+            self.bullets1 = []
+            self.shoot1 = 0
+
+            # self.bullets2 = []
+            # self.shoot2 = 0
+            # self.bullet_timer2 = QTimer()
+            # self.bullet_timer2.timeout.connect(self.create_bullet2)
+            # self.bullet_timer2.start(400)
+
+            self.score = 0
+
 
             self.enemy = MovingEnemy()
 
-            self.player1 = MovingPlayer(10, 50, 10, 1)
+            self.player1 = MovingPlayer(220, 50, 10, 5)
             self.player2 = MovingPlayer(100, H - 50, 7, 3)
-
-
-
-
-
-
-    def HPs_Player_TXT(self):
-
-        self.Player1_HP = QLabel(self)
-        self.Player1_HP.setText("P1")
-        self.Player1_HP.setAlignment(Qt.AlignmentFlag.AlignLeft)
-        self.Player1_HP.setStyleSheet("font-size: 32px; color: skyblue;")
-        self.Player1_HP.setGeometry(10, H + 10, X_SIZE_PLAYER_TXT, 100)
-        self.Player1_HP.show()
-
-        # self.Player2_HP = QLabel(self)
-        # self.Player2_HP.setText("P2")
-        # self.Player2_HP.setAlignment(Qt.AlignmentFlag.AlignLeft)
-        # self.Player2_HP.setStyleSheet("font-size: 32px; color: tomato;")
-        # self.Player2_HP.setGeometry(30 + X_SIZE_PLAYER_TXT + X_SIZE_PLAYER_HP*self.player2.HP_P, H + 10, X_SIZE_PLAYER_TXT, 100)
-        # self.Player2_HP.show()
 
 
 
@@ -201,25 +253,26 @@ class GameWindow(QMainWindow):
         if self.shoot1 == 1:
             bullet = Shooting(self.player1.x + X_SIZE_PLAYER, self.player1.y + Y_SIZE_PLAYER//2)
             self.bullets1.append(bullet)
-    def create_bullet2(self):
-        if self.shoot2 == 0:
-            bullet = Shooting(self.player2.x + X_SIZE_PLAYER, self.player2.y + Y_SIZE_PLAYER // 2)
-            self.bullets2.append(bullet)
+
+    # def create_bullet2(self):
+    #     if self.shoot2 == 0:
+    #         bullet = Shooting(self.player2.x + X_SIZE_PLAYER, self.player2.y + Y_SIZE_PLAYER // 2)
+    #         self.bullets2.append(bullet)
 
 
     def update_game(self):
 
         self.player1.move()
-        self.player2.move()
+        # self.player2.move()
 
         for bullet in self.bullets1:
             bullet.move_bullet()
             if bullet.b_x > W+X_SIZE_BULLET:
                 self.bullets1.remove(bullet)
-        for bullet in self.bullets2:
-            bullet.move_bullet()
-            if bullet.b_x > W+X_SIZE_BULLET:
-                self.bullets2.remove(bullet)
+        # for bullet in self.bullets2:
+        #     bullet.move_bullet()
+        #     if bullet.b_x > W+X_SIZE_BULLET:
+        #         self.bullets2.remove(bullet)
 
             # Удалить за границей экрана
         for enemy in self.enemies:
@@ -234,10 +287,11 @@ class GameWindow(QMainWindow):
 
         # Проверяем столкновение игрока с врагами
         for enemy in self.enemies:
-            if enemy.x <= -X_SIZE_ENEMY:
+            if enemy.x <= X_INFO_BAR:
                 self.player1.HP_P -= 1  # Уменьшение здоровья игрока
                 if self.player1.HP_P <= 0:
                     self.game_over(1)
+
                 self.enemies.remove(enemy)
 
             # if player2_rect.intersects(enemy_rect):
@@ -253,7 +307,7 @@ class GameWindow(QMainWindow):
                 enemy_rect = QRect(enemy.x, enemy.y, X_SIZE_ENEMY, Y_SIZE_ENEMY)
                 if bullet_rect.intersects(enemy_rect):
                     self.bullets1.remove(bullet)
-                    enemy.HP_E -= 2
+                    enemy.HP_E -= 1
                     if enemy.HP_E <= 0:
                         self.update_score()  # Обновление счета
                         self.enemies.remove(enemy)
@@ -278,36 +332,43 @@ class GameWindow(QMainWindow):
             elif event.text() in ['X','x','Ч','ч']:
                 self.shoot1 = 1
 
-        if event.text() == 'p':
-            self.game_over(1)
+            if event.text() == 'p':
+                self.game_over(1)
 
-        if event.key() == Qt.Key.Key_Left:
-            self.player2.move_direction_U = 1
-        elif event.key() == Qt.Key.Key_Right:
-            self.player2.move_direction_D = 1
-        if event.key() == Qt.Key.Key_Down:
-            self.shoot2 = 1
+            if event.key() == Qt.Key.Key_Escape: # кнопку надо ограничить в свое нажатии, можно прям в меню ее нажать
+                self.Pause_game(1)
+
+        # if event.key() == Qt.Key.Key_Left:
+        #     self.player2.move_direction_U = 1
+        # elif event.key() == Qt.Key.Key_Right:
+        #     self.player2.move_direction_D = 1
+        # if event.key() == Qt.Key.Key_Down:
+        #     self.shoot2 = 1
 
 
 
 
     def keyReleaseEvent(self, event):
-        if event.text() in ['Q', 'q', 'Й', 'й']:
-            self.player1.move_direction_U = 0
-        elif event.text() in ['S', 's', 'Ы', 'ы']:
-            self.player1.move_direction_D = 0
-        elif event.text() in ['X', 'x', 'Ч', 'ч']:
-            self.shoot1 = 0
+        if self.game_started == 1:
+            if event.text() in ['Q', 'q', 'Й', 'й']:
+                self.player1.move_direction_U = 0
+            elif event.text() in ['S', 's', 'Ы', 'ы']:
+                self.player1.move_direction_D = 0
+            elif event.text() in ['X', 'x', 'Ч', 'ч']:
+                self.shoot1 = 0
 
-        if event.text() == 'p':
-            s=0
+            if event.text() == 'p':
+                s=0
 
-        if event.key() == Qt.Key.Key_Left:
-            self.player2.move_direction_U = 0
-        elif event.key() == Qt.Key.Key_Right:
-            self.player2.move_direction_D = 0
-        if event.key() == Qt.Key.Key_Down:
-            self.shoot2 = 0
+            if event.key() == Qt.Key.Key_Escape:
+                s=0
+
+        # if event.key() == Qt.Key.Key_Left:
+        #     self.player2.move_direction_U = 0
+        # elif event.key() == Qt.Key.Key_Right:
+        #     self.player2.move_direction_D = 0
+        # if event.key() == Qt.Key.Key_Down:
+        #     self.shoot2 = 0
 
     def paintEvent(self, event):
         painter = QPainter(self)
@@ -315,14 +376,11 @@ class GameWindow(QMainWindow):
         if self.game_started == 1:
 
             painter.fillRect(0, 0, W, H, QColor(153, 255, 153))  # Очищаем окно, закрашивая его зеленым
-            painter.fillRect(0, H, W , 100, QColor(100,100,100))
+            painter.fillRect(0,0,X_INFO_BAR,H, QColor(100,100,100))
 
             # painter.drawImage(QRect(self.player1.x, self.player1.y, X_SIZE_PLAYER, Y_SIZE_PLAYER), QImage('player.png'))
             # painter.drawImage(QRect(self.player2.x, self.player2.y, X_SIZE_PLAYER, Y_SIZE_PLAYER), QImage('player.png'))
             painter.fillRect(self.player1.x,self.player1.y,X_SIZE_PLAYER,Y_SIZE_PLAYER, QColor(1,1,1))
-
-            if self.player1.HP_P <= 0 or self.player2.HP_P <= 0:
-                painter.fillRect(W//4, H//4, W//2, H//2, QColor(102, 51, 0))
 
             for bullet in self.bullets1:
                 # painter.drawImage(QRect(bullet.b_x, bullet.b_y, X_SIZE_BULLET, Y_SIZE_BULLET), QImage('bullet.png'))
@@ -336,7 +394,7 @@ class GameWindow(QMainWindow):
 
             for i in range(self.player1.HP_P):
                 # painter.drawImage(QRect(40+i*30, H + 12, X_SIZE_PLAYER_HP, X_SIZE_PLAYER_HP), QImage('hardcore-heart.png'))
-                painter.fillRect(50+i*35, H + 12, X_SIZE_PLAYER_HP, Y_SIZE_PLAYER_HP,QColor(200,100,100))
+                painter.fillRect(70+i*(X_SIZE_PLAYER_HP+2), 150, X_SIZE_PLAYER_HP, Y_SIZE_PLAYER_HP,QColor(200,100,100))
             # for i in range(self.player2.HP_P):
             #     painter.drawImage(QRect(30 + X_SIZE_PLAYER_TXT + X_SIZE_PLAYER_HP*self.player2.HP_P + 33 + i * 30, H + 12, X_SIZE_PLAYER_HP, X_SIZE_PLAYER_HP), QImage('hardcore-heart.png'))
 
@@ -347,9 +405,10 @@ class GameWindow(QMainWindow):
 
 W = 1500
 H = 600
-X_SIZE_PLAYER_HP = 30
+X_SIZE_PLAYER_HP = 15
 Y_SIZE_PLAYER_HP = 50
 X_SIZE_PLAYER_TXT = 50
+X_INFO_BAR = 200
 
 if __name__ == '__main__':
     app = QApplication([])
