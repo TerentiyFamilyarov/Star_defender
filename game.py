@@ -74,6 +74,7 @@ class GameWindow(QMainWindow):
 
         self.setWindowTitle('Papa pewa gemma body')
         self.setGeometry(0, 0, W, H)
+        self.show_TXTs(1)
         self.game_over(1)
         self.Pause_game(1)
         self.Main_Game(1)
@@ -180,6 +181,7 @@ class GameWindow(QMainWindow):
             self.timer.start(20)  # Вызывать обновление игры каждые 20 миллисекунд
             self.show_TXTs(1)
         else:
+            self.show_TXTs(0)
             self.enemy_timer.stop()
             self.bullet_timer1.stop()
             self.timer.stop()
