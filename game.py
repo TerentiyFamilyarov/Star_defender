@@ -58,11 +58,13 @@ class Shooting:
         self.b_x += self.step
 
 class MovingEnemy:
-    def __init__(self, x=1000, y=0, HP_E = 3, step = 2):
+    def __init__(self, x=1000, y=0, HP_E = 3, step = 1,x_size=X_SIZE_ENEMY, y_size=Y_SIZE_ENEMY):
         self.x = W
         self.y = y
         self.step = step
         self.HP_E = HP_E
+        self.x_size = x_size
+        self.y_size = y_size
 
     def move(self):
         self.x -= self.step
@@ -74,26 +76,29 @@ class GameWindow(QMainWindow):
 
         self.setWindowTitle('Papa pewa gemma body')
         self.setGeometry(0, 0, W, H)
+
+        self.score = 0
+
         self.show_TXTs(1)
         self.game_over(1)
         self.Pause_game(1)
         self.Main_Game(1)
 
     def Main_Game(self, main_menu_show = 1):
-        self.game_over(0)       # при нажатии клавиши закрывается
+        self.game_over(0)
         self.Pause_game(0)
         if main_menu_show == 1:
             self.Game_Continuous(0)
             self.Main_Title = QLabel(self)
-            self.Main_Title.setText("Star Defender")
-            self.Main_Title.setStyleSheet("font-size: 24px; color: Green; text-align: right;")
-            self.Main_Title.setGeometry(0, 100, W, 100)
+            self.Main_Title.setText("STAR DEFENDER")
+            self.Main_Title.setStyleSheet("font-size: 50px; color: Green; text-align: right;")
+            self.Main_Title.setGeometry(0, 0, W, H)
             self.start_button = QPushButton('Start', self)
             self.start_button.setGeometry(W // 3, H // 3, 80, 30)
             self.start_button.clicked.connect(self.StartGame)
             self.exit_button = QPushButton('Exit', self)
             self.exit_button.setGeometry(W // 3, (H // 3) + 100, 80, 30)
-            self.exit_button.clicked.connect(GameWindow.close)
+            self.exit_button.clicked.connect(self.close)
             self.game_started = 0
 
             self.Main_Title.show()
@@ -103,6 +108,8 @@ class GameWindow(QMainWindow):
             self.Main_Title.hide()
             self.start_button.hide()
             self.exit_button.hide()
+            self.start_button.clearFocus()
+            self.exit_button.clearFocus()
 
     def game_over(self, game_over_show=1):
 
@@ -110,8 +117,8 @@ class GameWindow(QMainWindow):
             self.game_started = 0
             self.Game_Continuous(0)
             self.game_over_txt = QLabel(self)
-            self.game_over_txt.setText("You destroyed!")
-            self.game_over_txt.setStyleSheet("font-size: 24px; color: red;")
+            self.game_over_txt.setText("YOU DESTROYED !")
+            self.game_over_txt.setStyleSheet("font-size: 50px; color: red;")
             self.game_over_txt.setGeometry(0, 0, W , H )
             self.retry_button = QPushButton('Retry', self)
             self.retry_button.setGeometry(W // 3, H // 3, 80, 30)
@@ -127,22 +134,24 @@ class GameWindow(QMainWindow):
             self.game_over_txt.hide()
             self.retry_button.hide()# пока скрываются с помощью вызова 1 -> 0
             self.main_menu_button.hide()
+            self.retry_button.clearFocus()
+            self.main_menu_button.clearFocus()
 
 
     def Retry_game(self):
         self.StartGame()
+        self.score = 0 # отобразить счет после паузы правильно нада а щас не правильно
     def Main_menu(self):
         self.Main_Game(1)
 
     def Pause_game(self, game_pause_show = 1):
-        self.twice_pause = 0
         if game_pause_show == 1:
             self.game_started = 0
             self.Game_Continuous(0)
             self.pause_game_txt = QLabel(self)
-            self.pause_game_txt.setText("Pause")
-            self.pause_game_txt.setStyleSheet("font-size: 24px; color: Green;")
-            self.pause_game_txt.setGeometry(0, 0, W , H )
+            self.pause_game_txt.setText("PAUSE")
+            self.pause_game_txt.setStyleSheet("font-size: 50px; color: Green;")
+            self.pause_game_txt.setGeometry(0, 0, W, H)
             self.resume_button = QPushButton('Resume', self)
             self.resume_button.setGeometry(W // 3, H // 3, 80, 30)
             self.resume_button.clicked.connect(self.Resume_game)
@@ -157,6 +166,8 @@ class GameWindow(QMainWindow):
             self.pause_game_txt.hide()
             self.resume_button.hide()
             self.resume_main_menu_button.hide()
+            self.resume_button.clearFocus()
+            self.resume_main_menu_button.clearFocus()
 
     def Resume_game(self):
         self.game_started = 1
@@ -192,10 +203,10 @@ class GameWindow(QMainWindow):
 
         if show == 1:
             self.score_label = QLabel(self)
-            self.score_label.setText(f"SCORE: 0")
+            self.score_label.setText(f"SCORE: {self.score}")
             self.score_label.setAlignment(Qt.AlignmentFlag.AlignTop)
             self.score_label.setStyleSheet("font-size: 32px; color: white;")
-            self.score_label.setGeometry(W -200, H + 10,200,50)
+            self.score_label.setGeometry(10,400, X_INFO_BAR,50)
 
             self.Player1_HP = QLabel(self)
             self.Player1_HP.setText("P1")
@@ -209,6 +220,7 @@ class GameWindow(QMainWindow):
             self.score_label.hide()
             self.Player1_HP.hide()
 
+
     def StartGame(self):
         self.game_started = 1
 
@@ -220,6 +232,13 @@ class GameWindow(QMainWindow):
 
             self.Game_Continuous(1)
 
+
+            # self.pause_button = QPushButton('Pause', self)
+            # self.pause_button.setGeometry(0, 0, 80, 30)
+            # pause_game = self.Pause_game(1)
+            # self.pause_button.clicked.connect(pause_game)
+            # self.pause_button.show()
+
             self.enemies = []
 
             self.bullets1 = []
@@ -230,8 +249,6 @@ class GameWindow(QMainWindow):
             # self.bullet_timer2 = QTimer()
             # self.bullet_timer2.timeout.connect(self.create_bullet2)
             # self.bullet_timer2.start(400)
-
-            self.score = 0
 
 
             self.enemy = MovingEnemy()
@@ -248,7 +265,18 @@ class GameWindow(QMainWindow):
     def create_enemy(self):
         enemy_y = random.randint(0, H - Y_SIZE_ENEMY)
         enemy = MovingEnemy(W, enemy_y)
+        if self.score != 0:
+            if self.score % 7 == 0:
+                enemy.HP_E += 1
+            if self.score % 5 == 0:
+                enemy.step += 1
+            if self.score % 29 == 0:
+                enemy.HP_E += 5
+                enemy.x_size *= 2
+                enemy.y_size *= 2
+
         self.enemies.append(enemy)
+
 
 
     def create_bullet1(self):
@@ -306,7 +334,7 @@ class GameWindow(QMainWindow):
         for bullet in self.bullets1:
             bullet_rect = QRect(bullet.b_x, bullet.b_y, X_SIZE_BULLET, Y_SIZE_BULLET)
             for enemy in self.enemies:
-                enemy_rect = QRect(enemy.x, enemy.y, X_SIZE_ENEMY, Y_SIZE_ENEMY)
+                enemy_rect = QRect(enemy.x, enemy.y, enemy.x_size, enemy.y_size)
                 if bullet_rect.intersects(enemy_rect):
                     self.bullets1.remove(bullet)
                     enemy.HP_E -= 1
@@ -339,6 +367,7 @@ class GameWindow(QMainWindow):
 
             if event.key() == Qt.Key.Key_Escape: # кнопку надо ограничить в свое нажатии, можно прям в меню ее нажать
                 self.Pause_game(1)
+
 
         # if event.key() == Qt.Key.Key_Left:
         #     self.player2.move_direction_U = 1
@@ -382,7 +411,7 @@ class GameWindow(QMainWindow):
 
             # painter.drawImage(QRect(self.player1.x, self.player1.y, X_SIZE_PLAYER, Y_SIZE_PLAYER), QImage('player.png'))
             # painter.drawImage(QRect(self.player2.x, self.player2.y, X_SIZE_PLAYER, Y_SIZE_PLAYER), QImage('player.png'))
-            painter.fillRect(self.player1.x,self.player1.y,X_SIZE_PLAYER,Y_SIZE_PLAYER, QColor(1,1,1))
+            painter.fillRect(self.player1.x,self.player1.y,X_SIZE_PLAYER,Y_SIZE_PLAYER, QColor('skyblue'))
 
             for bullet in self.bullets1:
                 # painter.drawImage(QRect(bullet.b_x, bullet.b_y, X_SIZE_BULLET, Y_SIZE_BULLET), QImage('bullet.png'))
@@ -392,7 +421,7 @@ class GameWindow(QMainWindow):
 
             for enemy in self.enemies:
                 # painter.drawImage(QRect(enemy.x, enemy.y, X_SIZE_ENEMY, Y_SIZE_ENEMY), QImage('enemy.png'))
-                painter.fillRect(enemy.x,enemy.y,X_SIZE_ENEMY,Y_SIZE_ENEMY,QColor(255,255,255))
+                painter.fillRect(enemy.x,enemy.y,enemy.x_size,enemy.y_size,QColor(255,255,255))
 
             for i in range(self.player1.HP_P):
                 # painter.drawImage(QRect(40+i*30, H + 12, X_SIZE_PLAYER_HP, X_SIZE_PLAYER_HP), QImage('hardcore-heart.png'))
@@ -401,7 +430,7 @@ class GameWindow(QMainWindow):
             #     painter.drawImage(QRect(30 + X_SIZE_PLAYER_TXT + X_SIZE_PLAYER_HP*self.player2.HP_P + 33 + i * 30, H + 12, X_SIZE_PLAYER_HP, X_SIZE_PLAYER_HP), QImage('hardcore-heart.png'))
 
         else:
-            painter.fillRect(0, 0, W, H + 100, QColor(200, 250, 250))
+            painter.fillRect(0, 0, W, H, QColor(123,123,123))
 
 
 
