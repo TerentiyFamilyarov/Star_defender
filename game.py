@@ -52,7 +52,7 @@ class Shooting:
     def __init__(self, b_x= 0, b_y=0):
         self.b_x = b_x
         self.b_y = b_y
-        self.step = 20
+        self.step = 16
 
     def move_bullet(self):
         self.b_x += self.step
@@ -189,7 +189,7 @@ class GameWindow(QMainWindow):
         if continue_game == 1:
             self.enemy_timer.start(1800)
             self.bullet_timer1.start(400)
-            self.timer.start(20)  # Вызывать обновление игры каждые 20 миллисекунд
+            self.timer.start(16)  # Вызывать обновление игры каждые 20 миллисекунд
             self.show_TXTs(1)
         else:
             self.show_TXTs(0)
@@ -238,6 +238,9 @@ class GameWindow(QMainWindow):
             # pause_game = self.Pause_game(1)
             # self.pause_button.clicked.connect(pause_game)
             # self.pause_button.show()
+
+            self.score = -1
+            self.update_score()
 
             self.enemies = []
 
@@ -446,3 +449,13 @@ if __name__ == '__main__':
     game_window = GameWindow()
     game_window.show()
     sys.exit(app.exec())
+
+# игра будет выглядеть как война бегемотов, гигосюдам против гиготудам. Война началась из-за демонического культа
+# - по версии гиготудамов. на самом деле гиготудамы презирали и завидовали их цвету кожи,
+# но гигосюдамы не пальцем деланные, поэтому схватились за свои пачки жваек с разными вкусами.
+
+# жили как-то в грамонии цевилизация меньшинств, однако одно из меньшинств решило поднять свое влияние путем завоевания,
+# так были обьедененны меньшинства в большинство под названием гиготудамы, и началась война за уничтожение человечества...ой
+# не тот сценарий, и началась война за обьдинение меньшинств и преследования инакомыслия. Вы одни из выживших - гигосюдамы. В БОЙ!
+
+# после выхода в главное меню и старта игра сохр счет
