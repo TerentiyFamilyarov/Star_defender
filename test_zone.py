@@ -22,18 +22,19 @@ class MovingPlayer(QGraphicsItem):
         self.move_direction_R = 0
         self.move_direction_U = 0
         self.move_direction_D = 0
+        self.shoot = 0
 
         self.width_window = width_window
         self.height_window = height_window
 
 
     def boundingRect(self):
-        return QRectF()
+        return QRectF(self.x(), self.y(), self.x_size, self.y_size)
 
     def paint(self, painter, option, widget=...):
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
         painter.setBrush(QColor(0, 0, 255))
-        painter.drawRect(int(self.x()), int(self.y()), self.x_size, self.y_size)
+        painter.drawRect(self.boundingRect())
 
     def move(self):
 
@@ -69,6 +70,8 @@ class MovingPlayer(QGraphicsItem):
 
         elif event.text() in ['В', 'в', 'D', 'd']:
             self.move_direction_R = 1
+        if event.text() in ['C', 'c', 'С', 'с']:
+            self.shoot = 1
 
     def keyReleaseEvent(self, event):
         if event.text() in ['Ц', 'ц', 'W', 'w']:
@@ -82,12 +85,14 @@ class MovingPlayer(QGraphicsItem):
 
         elif event.text() in ['В', 'в', 'D', 'd']:
             self.move_direction_R = 0
+        if event.text() in ['C', 'c', 'С', 'с']:
+            self.shoot = 0
 
 
 class Shooting(QGraphicsItem):
     def __init__(self, x=0, y=0, x_size=30, y_size=30):
         super().__init__()
-        self.step = 16
+        self.step = 15
         self.x_size = x_size
         self.y_size = y_size
         self.setX(x)
@@ -107,7 +112,7 @@ class Shooting(QGraphicsItem):
         self.setX(self.x() + self.step)
 
 class MovingEnemy(QGraphicsItem):
-    def __init__(self,x=0, y=50, HP_E=3, step=0.6, x_size=70, y_size=70,width_window=1920, height_window=1080):
+    def __init__(self,x=0, y=50, HP_E=3, step=1, x_size=70, y_size=70,width_window=1920, height_window=1080):
         super().__init__()
         self.step = step
         self.HP_E = HP_E
@@ -119,12 +124,12 @@ class MovingEnemy(QGraphicsItem):
         self.setY(y)
 
     def boundingRect(self):
-        return QRectF()
+        return QRectF(self.x(), self.y(), self.x_size, self.y_size)
 
     def paint(self, painter, option, widget=...):
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
         painter.setBrush(QColor(255, 0, 0))
-        painter.drawRect(int(self.x()), int(self.y()), self.x_size, self.y_size)
+        painter.drawRect(self.boundingRect())
 
     def move(self):
 
@@ -149,18 +154,8 @@ class GameWindow(QMainWindow):
         super(QMainWindow, self).__init__()
 
         self.scene = QGraphicsScene(self)
-        # palette = QPalette()
-        # # palette.setColor(QPalette.ColorRole.Background, Qt.black)
-        # scene.setBackgroundBrush(QColor(100, 10, 10))
 
         self.central_widget.setScene(self.scene)
-        # self.setGeometry(30, 30, 200, 125)
-        # self.show()
-        # self.scene = QGraphicsScene(self)
-        # self.view = QGraphicsView(self.scene)
-        # self.view.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-        # self.view.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-
 
         # Main menu
         self.Main_Title = QLabel(self)
@@ -218,12 +213,8 @@ class GameWindow(QMainWindow):
         self.game_PREstarted = 1
         # Включить полноэкранный режим
         self.showMaximized()
-        scene_rect = QRectF(0, 0, 400, 300)
-        # self.scene().setSceneRect(scene_rect)
 
-        print(self.width(),'---',self.height())
-
-        # self.setBackgroundBrush(QColor('rgb(20,20,20)'))
+        # print(self.width(),'---',self.height())
 
         self.Main_Game(1)
 
@@ -236,79 +227,99 @@ class GameWindow(QMainWindow):
 
     def resizeEvent(self, event):
 
-
         self.fullW = self.width()
         self.fullH = self.height()
 
         old_width = 200
         old_height = 125
 
-        if self.width() < 600:
-            old_width = 600
+        if self.width() < 700:
+            old_width = 700
             old_height = 375
-            self.resize(old_width, old_height)
 
-        elif self.width() > old_width:
+        if self.width() > old_width:
             old_height += ((self.width() - old_width) // 2)
             old_width = self.width()
-        if self.height() > old_height:
-            old_width += ((self.height() - old_height) // 1)
-            old_height = self.height()
+        # elif self.height() > old_height:
+        #     old_width += ((self.height() - old_height) // 1)
+        #     old_height = self.height()
         self.resize(old_width, old_height)
+
         # print('Now size window')
         # print(self.width(), ' ', self.height())
-
         previous_width = 1536
         previous_height = 793
         current_size = self.size()
+        # print('Current size ',current_size)
         if self.previous_size.isValid():
             previous_width = self.previous_size.width()
             previous_height = self.previous_size.height()
             # print(f"Previous size: {previous_width} x {previous_height}")
 
-
         if self.game_started == 1:
+
             self.player1.x_size = ceil(self.fullW*0.04)
             self.player1.y_size = ceil(self.fullW*0.04)
-            self.player1.width_window = self.fullW
-            self.player1.height_window = self.fullH
-
-            procent_x_player_position = self.player1.x() / previous_width
-            procent_y_player_position = self.player1.y() / previous_height
-            self.player1.setX(round(self.fullW * procent_x_player_position, 1))
-            self.player1.setY(round(self.fullH * procent_y_player_position, 1))
+            self.player1.width_window = (self.fullW*0.2)
+            self.player1.height_window = (self.fullH*0.8)
+            pro_x_player_position = self.player1.x() / previous_width
+            pro_y_player_position = self.player1.y() / previous_height
+            pro_x_player_speed = self.player1.step / previous_width
+            self.player1.setX(round(self.fullW * pro_x_player_position, 1))
+            self.player1.setY(round(self.fullH * pro_y_player_position, 1))
+            if self.width() != 1536:
+                self.player1.step = round(self.fullW * pro_x_player_speed, 1) # нужно найти размер полного экрана
+            else:
+                self.player1.step = self.Main_player.step
             self.player1.paint(QPainter(self),None,None) # сохранение позиции player1 при изменении экрана
                                                                     # (в процентном соотношении с округлением до 1 десятой)
-            # print((self.player1.p_x / self.fullW), '% ', (self.player1.p_y / self.fullH), '%')
-            # print(self.player1.p_x, '&', self.player1.p_y)
             self.enemy.x_size = ceil((self.fullW * 0.04)+10)
             self.enemy.y_size = ceil((self.fullW * 0.04)+10)
+            pro_x_enemy_speed = self.enemy.step / 1536
+            if self.width() != 1536:
+                self.enemy.step = round(self.fullW * pro_x_enemy_speed, 1) # нужно найти размер полного экрана
+            else:
+                self.enemy.step = self.Main_enemy.step
             self.enemy.width_window = self.fullW
             self.enemy.height_window = self.fullH
             for enemy in self.enemies:
                 enemy.x_size = ceil((self.fullW * 0.04) + 10)
                 enemy.y_size = ceil((self.fullW * 0.04) + 10)
-                procent_x_enemy_position = enemy.x() / previous_width
-                procent_y_enemy_position = enemy.y() / previous_height
-                enemy.setX(round(self.fullW * procent_x_enemy_position, 1))
-                enemy.setY(round(self.fullH * procent_y_enemy_position, 1))
+                pro_x_enemy_position = enemy.x() / previous_width
+                pro_y_enemy_position = enemy.y() / previous_height
+                enemy.setX(round(self.fullW * pro_x_enemy_position, 1))
+                enemy.setY(round(self.fullH * pro_y_enemy_position, 1))
+                if self.width() != 1536:
+                    enemy.step = round(self.fullW * pro_x_enemy_speed, 1)  # нужно найти размер полного экрана
+                else:
+                    enemy.step = self.Main_enemy.step
                 enemy.paint(QPainter(self), None, None)
 
             self.bullet.x_size = ceil((self.fullW * 0.02))
             self.bullet.y_size = ceil((self.fullW * 0.02))
             # self.bullet.width_window = self.fullW
             # self.bullet.height_window = self.fullH
+            pro_x_bullet_speed = self.bullet.step / previous_width
+            if self.width() != 1536:
+                self.bullet.step = round(self.fullW * pro_x_bullet_speed, 1) # нужно найти размер полного экрана
+            else:
+                self.bullet.step = self.Main_bullet.step
             for bullet in self.bullets:
                 bullet.x_size = ceil((self.fullW * 0.02))
                 bullet.y_size = ceil((self.fullW * 0.02))
-                procent_x_bullet_position = bullet.x() / previous_width
-                procent_y_bullet_position = bullet.y() / previous_height
-                bullet.setX(round(self.fullW * procent_x_bullet_position, 1))
-                bullet.setY(round(self.fullH * procent_y_bullet_position, 1))
+                pro_x_bullet_position = bullet.x() / previous_width
+                pro_y_bullet_position = bullet.y() / previous_height
+                bullet.setX(round(self.fullW * pro_x_bullet_position, 1))
+                bullet.setY(round(self.fullH * pro_y_bullet_position, 1))
+                if self.width() != 1536:
+                    bullet.step = round(self.fullW * pro_x_bullet_speed, 1)  # нужно найти размер полного экрана
+                else:
+                    bullet.step = self.Main_bullet.step
                 bullet.paint(QPainter(self), None, None)
+
+
         #
         self.previous_size = current_size
-
         if self.game_PREstarted == 1:
 
             self.Main_Title.setGeometry(self.fullW // 3, 0, self.fullW // 2, self.fullH // 2)
@@ -469,20 +480,21 @@ class GameWindow(QMainWindow):
             self.enemies = []
 
             self.bullets = []
-            self.shoot1 = 0
-            self.shoot2 = 0
 
-            self.bullet = Shooting()
+            self.bullet = Shooting()# этот предатель существует, но не виден глазу
+            self.Main_bullet = Shooting()# этот предатель существует, но не виден глазу
 
-            self.enemy = MovingEnemy()
+            self.Main_enemy = MovingEnemy()# этот предатель существует, но не виден глазу
+            self.enemy = MovingEnemy()# этот предатель существует, но не виден глазу
+            # думаю, что вполне возможно исп только один
+
+            self.Main_player = MovingPlayer()# этот предатель существует, но не виден глазу
 
             self.player1 = MovingPlayer(0, 0, 10, 5,50,50)
             self.scene.addItem(self.player1)
-            if self.mode == 1:
-                self.player2 = MovingPlayer(220, self.fullH - 500, 10,3,50,50)
-                self.scene.addItem(self.player2)
 
             self.resizeEvent(None)
+            self.showMaximized()
 
     def update_score(self):
         self.score += 1
@@ -497,92 +509,71 @@ class GameWindow(QMainWindow):
         self.enemies.append(enemy)
 
     def create_bullet(self):
-        if self.shoot1 == 1 and self.bullet_timer1.isActive() is False:
+        if self.player1.shoot == 1 and self.bullet_timer1.isActive() is False:
             bullet = Shooting(ceil(self.player1.x() + self.player1.x_size), ceil(self.player1.y() + self.player1.y_size // 2),self.bullet.x_size,self.bullet.y_size)
             self.scene.addItem(bullet)
             self.bullets.append(bullet)
             self.bullet_timer1.start(400)
             self.bullet_timer1.timeout.connect(self.bullet_timer1.stop)
 
-        if self.shoot2 == 1 and self.bullet_timer2.isActive() is False:
-            bullet = Shooting(self.player2.x() + self.player2.x_size, self.player2.y() + self.player2.y_size // 2)
-            self.scene.addItem(bullet)
-            self.bullets.append(bullet)
-            self.bullet_timer2.start(400)
-            self.bullet_timer2.timeout.connect(self.bullet_timer2.stop)
-
 
     def check_collision(self):
-        #Проверяем столкновение игрока с врагами
-        # for enemy in self.enemies:
-        #     if enemy.e_x < ceil(self.fullW * 0.2):
-        #         self.player1.HP_P -= 1  # Уменьшение здоровья игрока
-        #         if self.player1.HP_P <= 0:
-        #             self.game_over(1)
-
-                # self.scene.removeItem(enemy)
-                # self.enemies.remove(enemy)
+        # Проверяем столкновение пуль с врагами
         for enemy in self.enemies:
-            if ceil(enemy.x()) < X_INFO_BAR:
+            if enemy.x() < (self.width()*0.2):
                 self.scene.removeItem(enemy)
                 self.enemies.remove(enemy)
-
-        # Проверяем столкновение пуль с врагами
-        for bullet in self.bullets:
-            for enemy in self.enemies:
-
-                if enemy.x() <= self.fullW - enemy.x_size:
-                    if (bullet.x() + self.bullet.x_size) >= enemy.x():
-                        if (enemy.y() <= bullet.y() <= (enemy.y() + enemy.y_size) or enemy.y() <= (
-                                bullet.y() + self.bullet.y_size) <= (enemy.y() + enemy.y_size)):
-                            self.scene.removeItem(bullet)
-                            self.bullets.remove(bullet)
-                            enemy.HP_E -= 1
-                            if enemy.HP_E <= 0:
-                                self.update_score()  # Обновление счета
-                                self.scene.removeItem(enemy)
-                                self.enemies.remove(enemy)
-
-            # 4 утра. я здась вижу возможность оптимизации = boundingRect имеет .contains что может быть оптимизировано
+                self.player1.HP_P -= 1  # Уменьшение здоровья игрока
+                if self.player1.HP_P <= 0:
+                    self.game_over(1)
+                    break
+                continue
+            for bullet in self.bullets:
+                if bullet.x() + bullet.x_size > self.width():
+                    self.scene.removeItem(bullet)
+                    self.bullets.remove(bullet)
+                    continue
+                if enemy.x() <= self.fullW - (enemy.x_size//2):
+                    if enemy.boundingRect().intersects(bullet.boundingRect()):
+                        self.scene.removeItem(bullet)
+                        self.bullets.remove(bullet)
+                        enemy.HP_E -= 1
+                        if enemy.HP_E <= 0:
+                            self.update_score()  # Обновление счета
+                            self.scene.removeItem(enemy)
+                            self.enemies.remove(enemy)
 
     def updateScene(self, **kwargs):
-        # self.scene.update()
-        # self.scene.advance()
         self.create_bullet()
         self.player1.move()
-        if self.mode == 1: self.player2.move()
         for bullet in self.bullets:
             bullet.move()
         for enemy in self.enemies:
             enemy.move()
         self.check_collision()
         self.update()
-        print(len(self.bullets))
 
 
 
     def keyPressEvent(self, event):
         if self.game_started == 1:
             self.player1.keyPressEvent(event)
-            if event.text() in ['C', 'c', 'С', 'с']:
-                self.shoot1 = 1
 
             if event.text() == 'p':
                 self.game_over(1)
 
-            if event.key() == Qt.Key.Key_Escape:  # кнопку надо ограничить в свое нажатии, можно прям в меню ее нажать
-                self.Pause_game(1)
+            # if event.key() == Qt.Key.Key_Escape:  # кнопку надо ограничить в свое нажатии, можно прям в меню ее нажать
+            #     self.Pause_game(1)
 
-            print(self.player1.x(),'&',self.player1.y())
-            print( (self.player1.x() / self.fullW),'% ',(self.player1.y() / self.fullH),'%')
+            # print(self.player1.x(),'&',self.player1.y())
+            # print( (self.player1.x() / self.fullW),'% ',(self.player1.y() / self.fullH),'%')
+            print(self.bullet.step,' ',self.enemy.step)
 
 
 
     def keyReleaseEvent(self, event):
         if self.game_started == 1:
             self.player1.keyReleaseEvent(event)
-            if event.text() in ['C', 'c', 'С', 'с']:
-                self.shoot1 = 0
 
             if event.text() == 'p':
                 s = 0
@@ -590,25 +581,17 @@ class GameWindow(QMainWindow):
             if event.key() == Qt.Key.Key_Escape:
                 s = 0
 
-
-
     def paintEvent(self, event):
         painter = QPainter(self)
         if self.game_started == 1:
-
-
 
             painter.fillRect(0, 0, self.fullW, self.fullH,QColor(153, 255, 153))  # Очищаем окно, закрашивая его зеленым
             painter.fillRect(0, 0, ceil(self.fullW * 0.2), self.fullH, QColor(150, 140, 130))
             painter.fillRect(0, ceil(self.fullH * 0.8), self.fullW, self.fullH, QColor(100, 100, 100))
 
-
             for i in range(self.player1.HP_P):
-                # painter.drawImage(QRect(40+i*30, H + 12, X_SIZE_PLAYER_HP, X_SIZE_PLAYER_HP), QImage('hardcore-heart.png'))
                 painter.fillRect(ceil(self.fullW * 0.05) + i * (ceil(self.fullW*0.01) + 2), ceil(self.fullH * 0.82),
                                  ceil(self.fullW*0.01), ceil(self.fullW*0.03), QColor(200, 100, 100))
-            # for i in range(self.player2.HP_P):
-            #     painter.drawImage(QRect(30 + X_SIZE_PLAYER_TXT + X_SIZE_PLAYER_HP*self.player2.HP_P + 33 + i * 30, H + 12, X_SIZE_PLAYER_HP, X_SIZE_PLAYER_HP), QImage('hardcore-heart.png'))
             self.player1.paint(painter,None,None)
             for bullet in self.bullets:
                 bullet.paint(painter,None,None)
@@ -616,14 +599,6 @@ class GameWindow(QMainWindow):
                 enemy.paint(painter,None,None)
         else:
             painter.fillRect(0, 0, self.fullW, self.fullH, QColor(123, 123, 123))
-
-# в заключении могу сказать что все тесты с QWidget, и QGrafiscScene я провел и понял что все это дрисня. Это из-за не
-# стабильных пуль и тд.
-
-# W = 1539-200
-# H = 793-200
-# X_SIZE_PLAYER_TXT = 50
-X_INFO_BAR = 250
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
