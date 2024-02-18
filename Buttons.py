@@ -1,39 +1,68 @@
-from PyQt6.QtWidgets import QApplication, QWidget, QLabel
-from PyQt6.QtCore import Qt, QPoint
+from PyQt6.QtGui import QPainter, QColor
+from PyQt6.QtWidgets import QApplication, QMainWindow, QGraphicsScene, QGraphicsView, QGraphicsItem
+from PyQt6.QtCore import QRectF
 
 
-class MainWindow(QWidget):
-    def __init__(self):
+class MovingPlayer(QGraphicsItem):
+    def __init__(self, x=0, y=0, step=10, HP_P=3, x_size=50, y_size=50, width_window=1920, height_window=1080):
         super().__init__()
-        self.setGeometry(100, 100, 400, 300)
-        self.label = QLabel("Player", self)
-        self.label.move(500, 500)
-        self.player_margin_left = 0
-        self.player_margin_top = 0
+        self.step = step
+        self.HP_P = HP_P
+        self.x_size = x_size
+        self.y_size = y_size
+        self.setX(x)
+        self.setY(y)
 
-    def scaleEvent(self, event):
-        # Получить оригинальные размеры окна
-        old_size = self.size()
+        self.move_direction_L = 0
+        self.move_direction_R = 0
+        self.move_direction_U = 0
+        self.move_direction_D = 0
 
-        # Получить позицию игрока относительно размеров окна в процентах
-        player_pos = self.label.pos()
-        self.player_margin_left = player_pos.x() / old_size.width()
-        self.player_margin_top = player_pos.y() / old_size.height()
+        self.width_window = width_window
+        self.height_window = height_window
 
-        # Изменить размер окна
-        super().resizeEvent(event)
+    def boundingRect(self):
+        return QRectF(0, 0, self.x_size, self.y_size)
 
-        # Получить новые размеры окна
-        new_size = self.size()
+    def paint(self, painter, option, widget=None):
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+        painter.setBrush(QColor(0, 0, 255))
+        painter.drawRect(int(self.x()), int(self.y()), self.x_size, self.y_size)
 
-        # Вычислить новую позицию игрока в соответствии с новыми размерами окна
-        new_player_pos = QPoint(new_size.width() * self.player_margin_left, new_size.height() * self.player_margin_top)
+    def move(self):
+        if self.x() - self.step < 0:
+            self.setX(0)
+        elif self.move_direction_L == 1:
+            self.setX(self.x() - self.step)
 
-        # Установить новую позицию игрока
-        self.label.move(new_player_pos)
+        if self.x() + self.step > self.width_window - self.x_size:
+            self.setX(self.width_window - self.x_size)
+        elif self.move_direction_R == 1:
+            self.setX(self.x() + self.step)
 
+        if self.y() - self.step < 0:
+            self.setY(0)
+        elif self.move_direction_U == 1:
+            self.setY(self.y() - self.step)
 
-app = QApplication([])
-window = MainWindow()
-window.show()
-app.exec()
+        if self.y() + self.step > self.height_window - self.y_size:
+            self.setY(self.height_window - self.y_size)
+        elif self.move_direction_D == 1:
+            self.setY(self.y() + self.step)
+
+if __name__ == '__main__':
+    app = QApplication([])
+
+    window = QMainWindow()
+    scene = QGraphicsScene()
+    view = QGraphicsView(scene)
+
+    player = MovingPlayer()
+    scene.addItem(player)
+
+    window.setCentralWidget(view)
+    window.show()
+
+    player.move()
+
+    app.exec()

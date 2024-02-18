@@ -85,15 +85,13 @@ class MovingPlayer(QGraphicsItem):
 
 
 class Shooting(QGraphicsItem):
-    def __init__(self, b_x=0, b_y=0, x_size=30, y_size=30):
+    def __init__(self, x=0, y=0, x_size=30, y_size=30):
         super().__init__()
-        self.b_x = b_x
-        self.b_y = b_y
         self.step = 16
         self.x_size = x_size
         self.y_size = y_size
-        self.setX(b_x)
-        self.setY(b_y)
+        self.setX(x)
+        self.setY(y)
 
     def boundingRect(self):
         return QRectF(self.x(), self.y(), self.x_size, self.y_size)
@@ -104,16 +102,12 @@ class Shooting(QGraphicsItem):
         painter.drawRect(self.boundingRect())
         pass
 
-    def advance(self, phase):
-        if phase == 0:
-            return
-
+    def move(self, ):
         # if self.x() <= 0:
         self.setX(self.x() + self.step)
-        self.b_x = self.x()
 
 class MovingEnemy(QGraphicsItem):
-    def __init__(self,x=0, y=50, HP_E=3, step=1, x_size=70, y_size=70,width_window=1920, height_window=1080):
+    def __init__(self,x=0, y=50, HP_E=3, step=0.6, x_size=70, y_size=70,width_window=1920, height_window=1080):
         super().__init__()
         self.step = step
         self.HP_E = HP_E
@@ -134,8 +128,8 @@ class MovingEnemy(QGraphicsItem):
 
     def move(self):
 
-        # if self.x() - self.step > 0:
-            self.setX(self.x() + self.step)
+        if self.x() - self.step > 0:
+            self.setX(self.x() - self.step)
 
 class GameWindow(QMainWindow):
     def __init__(self):
@@ -154,18 +148,18 @@ class GameWindow(QMainWindow):
         self.setCentralWidget(self.central_widget)
         super(QMainWindow, self).__init__()
 
-        scene = QGraphicsScene(self)
-        palette = QPalette()
-        # palette.setColor(QPalette.ColorRole.Background, Qt.black)
-        scene.setBackgroundBrush(QColor(100, 10, 10))
-
-        self.central_widget.setScene(scene)
-        self.setGeometry(30, 30, 200, 125)
-        self.show()
         self.scene = QGraphicsScene(self)
-        self.view = QGraphicsView(self.scene)
-        self.view.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-        self.view.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        # palette = QPalette()
+        # # palette.setColor(QPalette.ColorRole.Background, Qt.black)
+        # scene.setBackgroundBrush(QColor(100, 10, 10))
+
+        self.central_widget.setScene(self.scene)
+        # self.setGeometry(30, 30, 200, 125)
+        # self.show()
+        # self.scene = QGraphicsScene(self)
+        # self.view = QGraphicsView(self.scene)
+        # self.view.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        # self.view.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
 
 
         # Main menu
@@ -287,17 +281,31 @@ class GameWindow(QMainWindow):
                                                                     # (в процентном соотношении с округлением до 1 десятой)
             # print((self.player1.p_x / self.fullW), '% ', (self.player1.p_y / self.fullH), '%')
             # print(self.player1.p_x, '&', self.player1.p_y)
-
             self.enemy.x_size = ceil((self.fullW * 0.04)+10)
             self.enemy.y_size = ceil((self.fullW * 0.04)+10)
             self.enemy.width_window = self.fullW
             self.enemy.height_window = self.fullH
+            for enemy in self.enemies:
+                enemy.x_size = ceil((self.fullW * 0.04) + 10)
+                enemy.y_size = ceil((self.fullW * 0.04) + 10)
+                procent_x_enemy_position = enemy.x() / previous_width
+                procent_y_enemy_position = enemy.y() / previous_height
+                enemy.setX(round(self.fullW * procent_x_enemy_position, 1))
+                enemy.setY(round(self.fullH * procent_y_enemy_position, 1))
+                enemy.paint(QPainter(self), None, None)
 
-            procent_x_enemy_position = self.enemy.x() / previous_width
-            procent_y_enemy_position = self.enemy.y() / previous_height
-            self.enemy.setX(round(self.fullW * procent_x_enemy_position, 1))
-            self.enemy.setY(round(self.fullH * procent_y_enemy_position, 1))
-            self.enemy.paint(QPainter(self), None, None)
+            self.bullet.x_size = ceil((self.fullW * 0.02))
+            self.bullet.y_size = ceil((self.fullW * 0.02))
+            # self.bullet.width_window = self.fullW
+            # self.bullet.height_window = self.fullH
+            for bullet in self.bullets:
+                bullet.x_size = ceil((self.fullW * 0.02))
+                bullet.y_size = ceil((self.fullW * 0.02))
+                procent_x_bullet_position = bullet.x() / previous_width
+                procent_y_bullet_position = bullet.y() / previous_height
+                bullet.setX(round(self.fullW * procent_x_bullet_position, 1))
+                bullet.setY(round(self.fullH * procent_y_bullet_position, 1))
+                bullet.paint(QPainter(self), None, None)
         #
         self.previous_size = current_size
 
@@ -481,22 +489,16 @@ class GameWindow(QMainWindow):
         self.score_label.setText(f"SCORE: {self.score}")
 
     def create_enemy(self):
-        # self.enemy.x_size = ceil(self.fullW * 0.05)
-        # self.enemy.y_size = ceil(self.fullW * 0.05)
-        # self.enemy.x = ceil(self.fullW * (self.enemy.x / self.previous_size.width()))
-        # self.enemy.y = ceil(self.fullH * (self.enemy.y / self.previous_size.height()))
-
         y_size = self.enemy.y_size
-        enemy_y = random.randint(0, self.height() - y_size)
-        enemy = MovingEnemy(600, enemy_y,self.enemy.HP_E,self.enemy.step,self.enemy.x_size,self.enemy.y_size)
+        enemy_y = random.randint(0, int(self.height()*0.8) - y_size)
+        enemy = MovingEnemy(self.width(), enemy_y,self.enemy.HP_E,self.enemy.step,self.enemy.x_size,self.enemy.y_size)
         # сложность можно писать в MovingEnemy
         self.scene.addItem(enemy)
         self.enemies.append(enemy)
-        pass
 
     def create_bullet(self):
         if self.shoot1 == 1 and self.bullet_timer1.isActive() is False:
-            bullet = Shooting(self.player1.x() + self.player1.x_size, self.player1.y() + self.player1.y_size // 2,self.bullet.x_size,self.bullet.y_size)
+            bullet = Shooting(ceil(self.player1.x() + self.player1.x_size), ceil(self.player1.y() + self.player1.y_size // 2),self.bullet.x_size,self.bullet.y_size)
             self.scene.addItem(bullet)
             self.bullets.append(bullet)
             self.bullet_timer1.start(400)
@@ -508,24 +510,54 @@ class GameWindow(QMainWindow):
             self.bullets.append(bullet)
             self.bullet_timer2.start(400)
             self.bullet_timer2.timeout.connect(self.bullet_timer2.stop)
-        pass
 
-    def update_game(self):
 
+    def check_collision(self):
+        #Проверяем столкновение игрока с врагами
         # for enemy in self.enemies:
-        #     enemy.move_enemy()
+        #     if enemy.e_x < ceil(self.fullW * 0.2):
+        #         self.player1.HP_P -= 1  # Уменьшение здоровья игрока
+        #         if self.player1.HP_P <= 0:
+        #             self.game_over(1)
 
-        # self.check_collision()
-        # self.scene().update()
-        pass
+                # self.scene.removeItem(enemy)
+                # self.enemies.remove(enemy)
+        for enemy in self.enemies:
+            if ceil(enemy.x()) < X_INFO_BAR:
+                self.scene.removeItem(enemy)
+                self.enemies.remove(enemy)
+
+        # Проверяем столкновение пуль с врагами
+        for bullet in self.bullets:
+            for enemy in self.enemies:
+
+                if enemy.x() <= self.fullW - enemy.x_size:
+                    if (bullet.x() + self.bullet.x_size) >= enemy.x():
+                        if (enemy.y() <= bullet.y() <= (enemy.y() + enemy.y_size) or enemy.y() <= (
+                                bullet.y() + self.bullet.y_size) <= (enemy.y() + enemy.y_size)):
+                            self.scene.removeItem(bullet)
+                            self.bullets.remove(bullet)
+                            enemy.HP_E -= 1
+                            if enemy.HP_E <= 0:
+                                self.update_score()  # Обновление счета
+                                self.scene.removeItem(enemy)
+                                self.enemies.remove(enemy)
+
+            # 4 утра. я здась вижу возможность оптимизации = boundingRect имеет .contains что может быть оптимизировано
 
     def updateScene(self, **kwargs):
-        self.scene.update()
-        self.scene.advance()
+        # self.scene.update()
+        # self.scene.advance()
+        self.create_bullet()
         self.player1.move()
         if self.mode == 1: self.player2.move()
-        self.enemy.move()
+        for bullet in self.bullets:
+            bullet.move()
+        for enemy in self.enemies:
+            enemy.move()
+        self.check_collision()
         self.update()
+        print(len(self.bullets))
 
 
 
@@ -561,50 +593,37 @@ class GameWindow(QMainWindow):
 
 
     def paintEvent(self, event):
+        painter = QPainter(self)
         if self.game_started == 1:
-            self.player1.paint(QPainter(self),None,None)
-            self.enemy.paint(QPainter(self),None,None)
-    #     painter = QPainter(self)
-    #     painter.setRenderHint(QPainter.RenderHint.Antialiasing)
-    #     if self.game_started == 1:
-    #
-    #         painter.fillRect(0, 0, self.fullW, self.fullH,
-    #                          QColor(153, 255, 153))  # Очищаем окно, закрашивая его зеленым
-    #         painter.fillRect(0, 0, ceil(self.fullW * 0.2), self.fullH, QColor(150, 140, 130))
-    #         painter.fillRect(0, ceil(self.fullH * 0.8), self.fullW, self.fullH, QColor(100, 100, 100))
-    #
-    #         # painter.drawImage(QRect(self.player1.x, self.player1.y, X_SIZE_PLAYER, Y_SIZE_PLAYER), QImage('player.png'))
-    #         # painter.drawImage(QRect(self.player2.x, self.player2.y, X_SIZE_PLAYER, Y_SIZE_PLAYER), QImage('player.png'))
-    #         painter.fillRect(ceil(self.fullW*0.14), self.player1.y, self.player1.x_size, self.player1.y_size,
-    #                          QColor('skyblue'))
-    #         if self.mode == 1: painter.fillRect(self.player2.x, self.player2.y, self.player2.x_size,
-    #                                             self.player2.y_size, QColor('green'))
-    #
-    #         for bullet in self.bullets:
-    #             # painter.drawImage(QRect(bullet.b_x, bullet.b_y, X_SIZE_BULLET, Y_SIZE_BULLET), QImage('bullet.png'))
-    #             painter.fillRect(bullet.b_x, bullet.b_y, self.bullet.x_size, self.bullet.y_size, QColor(100, 100, 100))
-    #
-    #         for enemy in self.enemies:
-    #             # painter.drawImage(QRect(enemy.x, enemy.y, X_SIZE_ENEMY, Y_SIZE_ENEMY), QImage('enemy.png'))
-    #             # painter.fillRect(enemy.x, enemy.y, enemy.x_size, enemy.y_size, QColor(255, 255, 255))
-    #             s=0
-    #
-    #         for i in range(self.player1.HP_P):
-    #             # painter.drawImage(QRect(40+i*30, H + 12, X_SIZE_PLAYER_HP, X_SIZE_PLAYER_HP), QImage('hardcore-heart.png'))
-    #             painter.fillRect(ceil(self.fullW * 0.05) + i * (ceil(self.fullW*0.01) + 2), ceil(self.fullH * 0.82),
-    #                              ceil(self.fullW*0.01), ceil(self.fullW*0.03), QColor(200, 100, 100))
-    #         # for i in range(self.player2.HP_P):
-    #         #     painter.drawImage(QRect(30 + X_SIZE_PLAYER_TXT + X_SIZE_PLAYER_HP*self.player2.HP_P + 33 + i * 30, H + 12, X_SIZE_PLAYER_HP, X_SIZE_PLAYER_HP), QImage('hardcore-heart.png'))
-    #
-    #     else:
-    #         painter.fillRect(0, 0, self.fullW, self.fullH, QColor(123, 123, 123))
 
 
+
+            painter.fillRect(0, 0, self.fullW, self.fullH,QColor(153, 255, 153))  # Очищаем окно, закрашивая его зеленым
+            painter.fillRect(0, 0, ceil(self.fullW * 0.2), self.fullH, QColor(150, 140, 130))
+            painter.fillRect(0, ceil(self.fullH * 0.8), self.fullW, self.fullH, QColor(100, 100, 100))
+
+
+            for i in range(self.player1.HP_P):
+                # painter.drawImage(QRect(40+i*30, H + 12, X_SIZE_PLAYER_HP, X_SIZE_PLAYER_HP), QImage('hardcore-heart.png'))
+                painter.fillRect(ceil(self.fullW * 0.05) + i * (ceil(self.fullW*0.01) + 2), ceil(self.fullH * 0.82),
+                                 ceil(self.fullW*0.01), ceil(self.fullW*0.03), QColor(200, 100, 100))
+            # for i in range(self.player2.HP_P):
+            #     painter.drawImage(QRect(30 + X_SIZE_PLAYER_TXT + X_SIZE_PLAYER_HP*self.player2.HP_P + 33 + i * 30, H + 12, X_SIZE_PLAYER_HP, X_SIZE_PLAYER_HP), QImage('hardcore-heart.png'))
+            self.player1.paint(painter,None,None)
+            for bullet in self.bullets:
+                bullet.paint(painter,None,None)
+            for enemy in self.enemies:
+                enemy.paint(painter,None,None)
+        else:
+            painter.fillRect(0, 0, self.fullW, self.fullH, QColor(123, 123, 123))
+
+# в заключении могу сказать что все тесты с QWidget, и QGrafiscScene я провел и понял что все это дрисня. Это из-за не
+# стабильных пуль и тд.
 
 # W = 1539-200
 # H = 793-200
 # X_SIZE_PLAYER_TXT = 50
-X_INFO_BAR = 200
+X_INFO_BAR = 250
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)

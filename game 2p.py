@@ -9,16 +9,14 @@ from PyQt6.QtCore import QTimer, Qt, QSize, QRectF, QPointF, QPropertyAnimation,
 
 
 class MovingPlayer(QGraphicsItem):
-    def __init__(self, p_x=0, p_y=0, step=10, HP_P=3, x_size=50, y_size=50, width_window=1920, height_window=1080):
+    def __init__(self, x=0, y=0, step=10, HP_P=3, x_size=50, y_size=50, width_window=1920, height_window=1080):
         super().__init__()
-        self.p_x = p_x
-        self.p_y = p_y
         self.step = step
         self.HP_P = HP_P
         self.x_size = x_size
         self.y_size = y_size
-        self.setX(p_x)
-        self.setY(p_y)
+        self.setX(x)
+        self.setY(y)
 
         self.move_direction_L = 0
         self.move_direction_R = 0
@@ -28,33 +26,62 @@ class MovingPlayer(QGraphicsItem):
         self.width_window = width_window
         self.height_window = height_window
 
+
     def boundingRect(self):
         return QRectF(self.x(), self.y(), self.x_size, self.y_size)
 
-    def paint(self, painter, option, widget = ...):
+    def paint(self, painter, option, widget=...):
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
         painter.setBrush(QColor(0, 0, 255))
         painter.drawRect(self.boundingRect())
 
     def advance(self, phase):
-        if phase == 0:
-            return
 
-        if self.p_x > 0 and self.move_direction_L == 1:
+        if self.x() - self.step < 0:
+            self.setX(0)
+        elif self.move_direction_L == 1:
             self.setX(self.x() - self.step)
-            self.p_x = self.x()
 
-        if self.x() + self.x_size <= self.width_window and self.move_direction_R == 1:
-            self.setX(self.x() + self.step)
-            self.p_x = self.x()
+        if self.x() + self.step > self.width_window - self.x_size:
+            self.setX(self.width_window - self.x_size)
+        elif self.move_direction_R == 1:
+            self.setPos(self.x() + self.step,0)
 
-        if self.p_y > 0 and self.move_direction_U == 1:
+        if self.y() - self.step < 0:
+            self.setY(0)
+        elif self.move_direction_U == 1:
             self.setY(self.y() - self.step)
-            self.p_y = self.y()
 
-        if self.y() + self.y_size <= self.height_window and self.move_direction_D == 1:
+        if self.y() + self.step > self.height_window - self.y_size:
+            self.setY(self.height_window - self.y_size)
+        elif self.move_direction_D == 1:
             self.setY(self.y() + self.step)
-            self.p_y = self.y()
+
+    def keyPressEvent(self, event):
+        if event.text() in ['Ц', 'ц', 'W', 'w']:
+            self.move_direction_U = 1
+
+        elif event.text() in ['Ф', 'ф', 'A', 'a']:
+            self.move_direction_L = 1
+
+        elif event.text() in ['Ы', 'ы', 'S', 's']:
+            self.move_direction_D = 1
+
+        elif event.text() in ['В', 'в', 'D', 'd']:
+            self.move_direction_R = 1
+
+    def keyReleaseEvent(self, event):
+        if event.text() in ['Ц', 'ц', 'W', 'w']:
+            self.move_direction_U = 0
+
+        elif event.text() in ['Ф', 'ф', 'A', 'a']:
+            self.move_direction_L = 0
+
+        elif event.text() in ['Ы', 'ы', 'S', 's']:
+            self.move_direction_D = 0
+
+        elif event.text() in ['В', 'в', 'D', 'd']:
+            self.move_direction_R = 0
 
 
 class Shooting(QGraphicsItem):
@@ -85,45 +112,30 @@ class Shooting(QGraphicsItem):
         self.setX(self.x() + self.step)
         self.b_x = self.x()
 
-
-class MovingEnemy(QWidget):
-    def __init__(self, parent=None,e_x=0, e_y=50, HP_E=3, step=1, x_size=60, y_size=60,width_window=1920, height_window=1080):
-        super().__init__(parent)
+class MovingEnemy(QGraphicsItem):
+    def __init__(self,x=0, y=50, HP_E=3, step=1, x_size=70, y_size=70,width_window=1920, height_window=1080):
+        super().__init__()
         self.step = step
         self.HP_E = HP_E
         self.x_size = x_size
         self.y_size = y_size
         self.width_window = width_window
         self.height_window = height_window
-        self.e_x = e_x
-        self.e_y = e_y
+        self.setX(x)
+        self.setY(y)
 
-        self.child = QWidget(self)
-        self.child.setStyleSheet("background-color:red;border-radius:15px;")
-        self.setGeometry(self.e_x,self.e_y,60,60)
-        self.anim = QPropertyAnimation(self.child, b"pos")
-        # self.anim.setEasingCurve(QEasingCurve.Type.InOutCubic)
-        # self.anim.setEndValue(QPoint(400, 400))
-        # self.anim.setDuration(1500)
-        # self.anim.start()
+    def boundingRect(self):
+        return QRectF(self.x(), self.y(), self.x_size, self.y_size)
 
-
-    # def boundingRect(self):
-    #     return QRectF(self.e_x, self.e_y, self.x_size, self.y_size)
-
-    # def paint(self, painter, option, widget = ...):
-    #     painter.setRenderHint(QPainter.RenderHint.Antialiasing)
-    #     painter.setBrush(QColor(255, 0, 0))
-    #     painter.drawRect(self.e_x, self.e_y, self.x_size, self.y_size)
-    #     pass
-
+    def paint(self, painter, option, widget=...):
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+        painter.setBrush(QColor(255, 0, 0))
+        painter.drawRect(self.boundingRect())
 
     def advance(self, phase):
-        if phase == 0:
-            return
 
-        self.e_x -= self.step
-        self.child.move(self.e_x, self.e_y)
+        # if self.x() - self.step > 0:
+            self.setX(self.x() - self.step)
 
 
 class GameWindow(QGraphicsView):
@@ -132,9 +144,9 @@ class GameWindow(QGraphicsView):
 
         self.setWindowTitle('Papa pewa gemma body')
         self.setScene(QGraphicsScene(self))
-        self.setRenderHint(QPainter.RenderHint.Antialiasing)
-        self.setRenderHint(QPainter.RenderHint.TextAntialiasing)
-        self.setRenderHint(QPainter.RenderHint.SmoothPixmapTransform)
+        # self.setRenderHint(QPainter.RenderHint.Antialiasing)
+        # self.setRenderHint(QPainter.RenderHint.TextAntialiasing)
+        # self.setRenderHint(QPainter.RenderHint.SmoothPixmapTransform)
         # self.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         # self.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         self.game_started = 0
@@ -210,46 +222,66 @@ class GameWindow(QGraphicsView):
 
     def resizeEvent(self, event):
 
-        self.fullW = self.width()
-        self.fullH = self.height()
+        self.fullW = 1536
+        self.fullH = 793
 
-        previous_width = 1536
-        previous_height = 793
-        current_size = self.size()
-        if self.previous_size.isValid():
-            previous_width = self.previous_size.width()
-            previous_height = self.previous_size.height()
-            print(f"Previous size: {previous_width} x {previous_height}")
+        self.setSceneRect(0,0,self.width(),self.height())
 
+        old_width = 200
+        old_height = 125
 
-        if self.game_started == 1:
-            self.enemy.width_window = self.fullW
-            self.enemy.height_window = self.fullH
+        # if self.width() < 600:
+        #     old_width = 600
+        #     old_height = 375
+        #     self.resize(old_width, old_height)
+        #
+        # elif self.width() > old_width:
+        #     old_height += ((self.width() - old_width) // 2)
+        #     old_width = self.width()
+        # if self.height() > old_height:
+        #     old_width += ((self.height() - old_height) // 1)
+        #     old_height = self.height()
+        # self.resize(old_width, old_height)
+        # # print('Now size window')
+        # # print(self.width(), ' ', self.height())
 
-            self.player1.x_size = ceil(self.fullW*0.04)
-            self.player1.y_size = ceil(self.fullW*0.04)
-            self.player1.width_window = self.fullW
-            self.player1.height_window = self.fullH
-            # self.player1.x = ceil(self.fullW * (self.player1.x / previous_height))
-            self.player1.p_y = ceil(self.fullH*(self.player1.p_y / previous_height))
+        # previous_width = 1536
+        # previous_height = 793
+        # current_size = self.size()
+        # if self.previous_size.isValid():
+        #     previous_width = self.previous_size.width()
+        #     previous_height = self.previous_size.height()
+        #     # print(f"Previous size: {previous_width} x {previous_height}")
+        #
+        # if self.game_started == 1:
+        #     self.player1.x_size = ceil(self.fullW * 0.04)
+        #     self.player1.y_size = ceil(self.fullW * 0.04)
+        #     self.player1.width_window = self.fullW
+        #     self.player1.height_window = self.fullH
+        #
+        #     procent_x_player_position = self.player1.x() / previous_width
+        #     procent_y_player_position = self.player1.y() / previous_height
+        #     self.player1.setX(round(self.fullW * procent_x_player_position, 1))
+        #     self.player1.setY(round(self.fullH * procent_y_player_position, 1))
+        #     self.player1.paint(QPainter(self), None, None)  # сохранение позиции player1 при изменении экрана
+        #     # (в процентном соотношении с округлением до 1 десятой)
+        #     # print((self.player1.p_x / self.fullW), '% ', (self.player1.p_y / self.fullH), '%')
+        #     # print(self.player1.p_x, '&', self.player1.p_y)
+        #
+        #     self.enemy.x_size = ceil((self.fullW * 0.04) + 10)
+        #     self.enemy.y_size = ceil((self.fullW * 0.04) + 10)
+        #     self.enemy.width_window = self.fullW
+        #     self.enemy.height_window = self.fullH
+        #
+        #     procent_x_enemy_position = self.enemy.x() / previous_width
+        #     procent_y_enemy_position = self.enemy.y() / previous_height
+        #     self.enemy.setX(round(self.fullW * procent_x_enemy_position, 1))
+        #     self.enemy.setY(round(self.fullH * procent_y_enemy_position, 1))
+        #     self.enemy.paint(QPainter(self), None, None)
+        # #
+        # self.previous_size = current_size
 
-            for bullet in self.bullets:
-                bullet.x_size = ceil(self.fullW*0.02)
-                bullet.y_size = ceil(self.fullW*0.02)
-                bullet.b_x = ceil(self.fullW*(bullet.b_x / previous_width))
-                bullet.b_y = ceil(self.fullH*(bullet.b_y / previous_height))
-
-            for self.enemy in self.enemies:
-                self.enemy.x_size = ceil(self.fullW*0.05)
-                self.enemy.y_size = ceil(self.fullW*0.05)
-                self.enemy.e_x = ceil(self.fullW*(self.enemy.e_x / previous_width))
-                self.enemy.e_y = ceil(self.fullH*(self.enemy.e_y / previous_height))
-                self.enemy.step = self.enemy.step*(self.fullW / previous_width)
-
-
-        self.previous_size = current_size
-
-
+        # if self.game_PREstarted == 1:
         self.Main_Title.setGeometry(self.fullW // 3, 0, self.fullW // 2, self.fullH // 2)
         self.start_button.setGeometry(self.fullW // 3, self.fullH // 3, 80, 30)
         self.exit_button.setGeometry(self.fullW // 3, (self.fullH // 3) + 100, 80, 30)
@@ -265,11 +297,11 @@ class GameWindow(QGraphicsView):
         self.pause_game_txt.setGeometry(0, 0, self.fullW, self.fullH)
         self.resume_button.setGeometry(self.fullW // 3, self.fullH // 3, 80, 30)
 
-        self.score_label.setGeometry(ceil(self.fullW * 0.85), ceil(self.fullH * 0.81), ceil(self.fullW*0.14), 50)
+        self.score_label.setGeometry(ceil(self.fullW * 0.85), ceil(self.fullH * 0.81), ceil(self.fullW * 0.14), 50)
         self.font.setPointSize(ceil(self.width() * 0.02))
         self.score_label.setFont(self.font)
 
-        self.Player1_HP.setGeometry(ceil(self.fullW * 0.01), ceil(self.fullH * 0.81), ceil(self.fullW*0.04), 100)
+        self.Player1_HP.setGeometry(ceil(self.fullW * 0.01), ceil(self.fullH * 0.81), ceil(self.fullW * 0.04), 100)
         self.Player1_HP.setFont(self.font)
 
 
@@ -419,7 +451,7 @@ class GameWindow(QGraphicsView):
 
             width = self.fullW
             height = self.fullH
-            self.player1 = MovingPlayer(220, 50, 10, 5,50,50)
+            self.player1 = MovingPlayer(0, 0, 10, 5,50,50)
             self.player2 = MovingPlayer(220, self.fullH - 500, 10,3,50,50,width,height)
             self.scene().addItem(self.player1)
             # self.scene().addItem(self.player2)
@@ -438,26 +470,26 @@ class GameWindow(QGraphicsView):
 
         y_size = self.enemy.y_size
         enemy_y = random.randint(0, self.height() - y_size)
-        enemy = MovingEnemy(self,600, enemy_y,self.enemy.HP_E,self.enemy.step,self.enemy.x_size,self.enemy.y_size)
+        enemy = MovingEnemy(600, enemy_y,self.enemy.HP_E,self.enemy.step,self.enemy.x_size,self.enemy.y_size)
         # сложность можно писать в MovingEnemy
-        enemy.show()
+        self.scene().addItem(enemy)
         self.enemies.append(enemy)
         pass
 
     def create_bullet(self):
-        if self.shoot1 == 1 and self.bullet_timer1.isActive() is False:
-            bullet = Shooting(self.player1.p_x + self.player1.x_size, self.player1.p_y + self.player1.y_size // 2,self.bullet.x_size,self.bullet.y_size)
-            self.scene().addItem(bullet)
-            self.bullets.append(bullet)
-            self.bullet_timer1.start(400)
-            self.bullet_timer1.timeout.connect(self.bullet_timer1.stop)
-
-        if self.shoot2 == 1 and self.bullet_timer2.isActive() is False:
-            bullet = Shooting(self.player2.p_x + self.player2.x_size, self.player2.p_y + self.player2.y_size // 2)
-            self.scene().addItem(bullet)
-            self.bullets.append(bullet)
-            self.bullet_timer2.start(400)
-            self.bullet_timer2.timeout.connect(self.bullet_timer2.stop)
+        # if self.shoot1 == 1 and self.bullet_timer1.isActive() is False:
+        #     bullet = Shooting(self.player1.p_x + self.player1.x_size, self.player1.p_y + self.player1.y_size // 2,self.bullet.x_size,self.bullet.y_size)
+        #     self.scene().addItem(bullet)
+        #     self.bullets.append(bullet)
+        #     self.bullet_timer1.start(400)
+        #     self.bullet_timer1.timeout.connect(self.bullet_timer1.stop)
+        #
+        # if self.shoot2 == 1 and self.bullet_timer2.isActive() is False:
+        #     bullet = Shooting(self.player2.p_x + self.player2.x_size, self.player2.p_y + self.player2.y_size // 2)
+        #     self.scene().addItem(bullet)
+        #     self.bullets.append(bullet)
+        #     self.bullet_timer2.start(400)
+        #     self.bullet_timer2.timeout.connect(self.bullet_timer2.stop)
         pass
 
     def update_game(self):
@@ -476,47 +508,44 @@ class GameWindow(QGraphicsView):
         self.scene().update()
         self.scene().advance()
         self.check_collision()
+        print(self.player1.x(), '&', self.player1.y())
 
 
 
     def check_collision(self):
 
         # Проверяем столкновение игрока с врагами
-        for enemy in self.enemies:
-            if enemy.e_x < ceil(self.fullW * 0.2):
-                self.player1.HP_P -= 1  # Уменьшение здоровья игрока
-                if self.player1.HP_P <= 0:
-                    self.game_over(1)
-
-                self.enemy.close()
-                self.enemies.remove(enemy)
-
-        # Проверяем столкновение пуль с врагами
-        for bullet in self.bullets:
-            for enemy in self.enemies:
-                if enemy.e_x < X_INFO_BAR:
-                    enemy.deleteLater()
-                    self.enemies.remove(enemy)
-                if enemy.e_x <= self.fullW - enemy.x_size:
-                    if (bullet.b_x + self.bullet.x_size) >= enemy.e_x:
-                        if (enemy.e_y <= bullet.b_y <= (enemy.e_y + enemy.y_size) or enemy.e_y <= (
-                                bullet.b_y + self.bullet.y_size) <= (enemy.e_y + enemy.y_size)):
-                            bullet.deleteLater()
-                            self.bullets.remove(bullet)
-                            enemy.HP_E -= 1
-                            if enemy.HP_E <= 0:
-                                self.update_score()  # Обновление счета
-                                enemy.deleteLater()
-                                self.enemies.remove(enemy)
+        # for enemy in self.enemies:
+        #     if enemy.e_x < ceil(self.fullW * 0.2):
+        #         self.player1.HP_P -= 1  # Уменьшение здоровья игрока
+        #         if self.player1.HP_P <= 0:
+        #             self.game_over(1)
+        #
+        #         self.enemy.close()
+        #         self.enemies.remove(enemy)
+        #
+        # # Проверяем столкновение пуль с врагами
+        # for bullet in self.bullets:
+        #     for enemy in self.enemies:
+        #         if enemy.e_x < X_INFO_BAR:
+        #             enemy.deleteLater()
+        #             self.enemies.remove(enemy)
+        #         if enemy.e_x <= self.fullW - enemy.x_size:
+        #             if (bullet.b_x + self.bullet.x_size) >= enemy.e_x:
+        #                 if (enemy.e_y <= bullet.b_y <= (enemy.e_y + enemy.y_size) or enemy.e_y <= (
+        #                         bullet.b_y + self.bullet.y_size) <= (enemy.e_y + enemy.y_size)):
+        #                     bullet.deleteLater()
+        #                     self.bullets.remove(bullet)
+        #                     enemy.HP_E -= 1
+        #                     if enemy.HP_E <= 0:
+        #                         self.update_score()  # Обновление счета
+        #                         enemy.deleteLater()
+        #                         self.enemies.remove(enemy)
+        pass
 
     def keyPressEvent(self, event):
         if self.game_started == 1:
-            if event.text() in ['W', 'w', 'Ц', 'ц']:
-                self.player1.move_direction_U = 1
-            elif event.text() in ['S', 's', 'Ы', 'ы']:
-                self.player1.move_direction_D = 1
-            elif event.text() in ['C', 'c', 'С', 'с']:
-                self.shoot1 = 1
+            self.player1.keyPressEvent(event)
 
             if event.text() == 'p':
                 self.game_over(1)
@@ -534,12 +563,7 @@ class GameWindow(QGraphicsView):
 
     def keyReleaseEvent(self, event):
         if self.game_started == 1:
-            if event.text() in ['W', 'w', 'Ц', 'ц']:
-                self.player1.move_direction_U = 0
-            elif event.text() in ['S', 's', 'Ы', 'ы']:
-                self.player1.move_direction_D = 0
-            elif event.text() in ['C', 'c', 'С', 'с']:
-                self.shoot1 = 0
+            self.player1.keyReleaseEvent(event)
 
             if event.text() == 'p':
                 s = 0
