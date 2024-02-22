@@ -9,14 +9,17 @@ from PyQt6.QtCore import QTimer, Qt, QSize, QRectF, QPointF, QPropertyAnimation,
 
 
 class MovingPlayer(QGraphicsItem):
-    def __init__(self, x=0, y=0, step=10, HP_P=3, x_size=50, y_size=50, width_window=1920, height_window=1080):
+    def __init__(self, mode = 0, width_window=1920, height_window=1080):
         super().__init__()
-        self.step = step
-        self.HP_P = HP_P
-        self.x_size = x_size
-        self.y_size = y_size
-        self.setX(x)
-        self.setY(y)
+        # self.step = step
+        # self.HP_P = HP_P
+        # self.x_size = x_size
+        # self.y_size = y_size
+        # self.setX(x)
+        # self.setY(y)
+
+        self.mode = 0
+        self.modifications()
 
         self.move_direction_L = 0
         self.move_direction_R = 0
@@ -27,12 +30,31 @@ class MovingPlayer(QGraphicsItem):
         self.width_window = width_window
         self.height_window = height_window
 
+    def modifications(self):
+        if self.mode == 0:
+            self.setX(0)
+            self.setY(0)
+            self.step = 10
+            self.HP_P = 5
+            self.x_size = 50
+            self.y_size = 50
+
+        elif self.mode == 1:
+            self.setX(0)
+            self.setY(300)
+            self.step = 15
+            self.HP_P = 2
+            self.x_size = 50
+            self.y_size = 50
+
+
     def boundingRect(self):
         return QRectF(self.x(), self.y(), self.x_size, self.y_size)
 
     def paint(self, painter, option=None, widget=None):
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
-        painter.setBrush(QColor(0, 0, 255))
+        if self.mode == 0: painter.setBrush(QColor(0, 0, 255))
+        elif self.mode == 1: painter.setBrush(QColor(0, 255, 0))
         painter.drawRect(self.boundingRect())
 
     def move(self, move = 1):
@@ -146,7 +168,7 @@ class MovingEnemy(QGraphicsItem):
 def create_page(this_page, addwidgets: list):
     page = QVBoxLayout(this_page)
     for i in range(len(addwidgets)):
-        page.addWidget(addwidgets[i])
+        page.addChildWidget(addwidgets[i])
     return page
 
 
@@ -157,7 +179,6 @@ def create_txt(name: str, style: str, geometry: list):
     txt.setGeometry(geometry[0], geometry[1], geometry[2], geometry[3])
     return txt
 
-
 class Menu(QMainWindow):
     def __init__(self):
         super().__init__()
@@ -165,56 +186,70 @@ class Menu(QMainWindow):
         self.stackWidget = QStackedWidget()
         self.setCentralWidget(self.stackWidget)
         # Main menu 0
-        main_menu_page = QWidget()
-        main_menu_page.setStyleSheet('background-color: grey')
-        self.Main_Title = QLabel()
+        self.main_menu_page = QWidget()
+        self.main_menu_page.setStyleSheet('background-color: grey')
         Main_Title_txt = create_txt('STAR DEFENDER', 'font-size: 50px; color: Green; text-align: right;',
                                     [100 // 4, 0, 100 // 2, 100])
         self.start_button = QPushButton('Start')
         self.start_button.setGeometry(100 // 3, 100 // 3, 80, 30)
-        self.start_button.clicked.connect(lambda: self.stackWidget.setCurrentIndex(1))
+        self.start_button.clicked.connect(lambda: self.stackWidget.setCurrentWidget(self.choose_menu_page))
         self.exit_button = QPushButton('Exit')
         self.exit_button.setGeometry(100 // 3, (100 // 3) + 100, 80, 30)
         self.exit_button.clicked.connect(self.close)
-        create_page(main_menu_page, [Main_Title_txt, self.start_button, self.exit_button])
-        self.stackWidget.addWidget(main_menu_page)
+        create_page(self.main_menu_page, [Main_Title_txt, self.start_button, self.exit_button])
+        self.stackWidget.addWidget(self.main_menu_page)
 
         # Choose mode 1
-        choose_menu_page = QWidget()
+        self.choose_menu_page = QWidget()
         choose_mode_txt = create_txt('CHOOSE MODE', 'font-size: 50px; color: Green; text-align: right;',
                                      [100 // 4, 0, 100 // 2, 100])
         self.start_1p_button = QPushButton('1 PLAYER')
         self.start_1p_button.setGeometry(100 // 3, 100 // 3, 80, 30)
-        self.start_1p_button.clicked.connect(self.restart_game)
+        self.start_1p_button.clicked.connect(lambda: self.stackWidget.setCurrentWidget(self.choose_player_page))
         self.start_2p_button = QPushButton('2 PLAYER')
         self.start_2p_button.setGeometry(100 // 3, (100 // 3) + 100, 80, 30)
-        create_page(choose_menu_page, [choose_mode_txt, self.start_1p_button,
+        create_page(self.choose_menu_page, [choose_mode_txt, self.start_1p_button,
                                        self.start_2p_button, self.main_menu_button()])
-        self.stackWidget.addWidget(choose_menu_page)
+        self.stackWidget.addWidget(self.choose_menu_page)
 
-        # Game over 2
-        game_over_page = QWidget()
+        # Choose player mode 2
+        self.choose_player_page = QWidget()
+        choose_player_txt = create_txt('CHOOSE PLAYER','font-size: 50px; color: Green; text-align: right;',
+                                       [100 // 4, 0, 100 // 2, 100])
+        self.start_1mode_button = QPushButton('1 mode')
+        self.start_1mode_button.setGeometry(100 // 3, 100 // 3, 80, 30)
+        self.start_1mode_button.clicked.connect(self.onemode)
+        self.start_2mode_button = QPushButton('2 mode')
+        self.start_2mode_button.clicked.connect(self.twomode)
+        self.start_2mode_button.setGeometry(100 // 3, (100 // 3) + 100, 80, 30)
+        create_page(self.choose_player_page, [choose_player_txt, self.start_1mode_button, self.start_2mode_button,
+                                         self.main_menu_button()])
+        self.stackWidget.addWidget(self.choose_player_page)
+
+        # Game over 3
+        self.game_over_page = QWidget()
         game_over_txt = create_txt('YOU DESTROYED !', 'font-size: 50px; color: red;',
                                    [0, 0, 100, 100])
         self.retry_button = QPushButton('Retry', self)
         self.retry_button.setGeometry(100 // 3, 100 // 3, 80, 30)
         self.retry_button.clicked.connect(self.restart_game)
-        create_page(game_over_page, [game_over_txt, self.retry_button, self.main_menu_button()])
-        self.stackWidget.addWidget(game_over_page)
+        create_page(self.game_over_page, [game_over_txt, self.retry_button, self.main_menu_button()])
+        self.stackWidget.addWidget(self.game_over_page)
 
-        # Pause 3
-        pause_page = QWidget()
+        # Pause 4
+        self.pause_page = QWidget()
         pause_game_txt = create_txt('PAUSE', 'font-size: 50px; color: Green;', [0, 0, 100, 100])
         self.resume_button = QPushButton('Resume', self)
-        self.resume_button.clicked.connect(lambda: self.stackWidget.setCurrentIndex(4))
+        self.resume_button.clicked.connect(lambda: self.stackWidget.setCurrentIndex(5))
         self.resume_button.setGeometry(100 // 3, 100 // 3, 80, 30)
-        create_page(pause_page, [pause_game_txt, self.resume_button, self.main_menu_button()])
-        self.stackWidget.addWidget(pause_page)
+        create_page(self.pause_page, [pause_game_txt, self.resume_button, self.main_menu_button()])
+        self.stackWidget.addWidget(self.pause_page)
 
 
-        # Game page 4
-        self.start_game = StartGame(self.stackWidget,True,True)
+        # Game page 5
+        self.start_game = StartGame(self.stackWidget,True)
         self.stackWidget.addWidget(self.start_game)
+
         # Включить полноэкранный режим
 
         self.showMaximized()
@@ -239,27 +274,36 @@ class Menu(QMainWindow):
     def main_menu_button(self):
         main_menu_button = QPushButton('Main menu', self)
         main_menu_button.setGeometry(100 // 3, (100 // 3) + 200, 80, 30)
-        main_menu_button.clicked.connect(lambda: self.stackWidget.setCurrentIndex(0))
+        main_menu_button.clicked.connect(lambda: self.stackWidget.setCurrentWidget(self.main_menu_page))
         return main_menu_button
 
 
     def restart_game(self):
-        self.stackWidget.setCurrentIndex(4)
-        self.start_game.game_restart()
+        self.stackWidget.setCurrentWidget(self.start_game)
+        self.start_game.game_restart(0)
+
+    def onemode(self):
+        self.start_game.player1.mode = 0
+        self.restart_game()
+
+    def twomode(self):
+        self.start_game.player1.mode = 1
+        self.restart_game()
+
 
 
 
 
 
 class StartGame(QWidget):
-    def __init__(self, stakWidget, game_begin=False, ZA_Wardo=True):
+    def __init__(self, stakWidget, game_begin=False):
         super().__init__()
         self.game_begin = game_begin
         self.stackWidget = stakWidget
 
-        self.mode = 0
-
         self.previous_size = QSize()
+
+        self.mode = 0
 
         self.bullets = []
         self.enemies = []
@@ -286,18 +330,19 @@ class StartGame(QWidget):
         self.bullet_timer1 = QTimer(self)
 
         self.bullet = Shooting()  # этот предатель существует, но не виден глазу
-        self.Main_bullet = Shooting()  # этот предатель существует, но не виден глазу
+        # self.Main_bullet = Shooting()  # этот предатель существует, но не виден глазу
 
-        self.Main_enemy = MovingEnemy()  # этот предатель существует, но не виден глазу
+        # self.Main_enemy = MovingEnemy()  # этот предатель существует, но не виден глазу
         self.enemy = MovingEnemy()  # этот предатель существует, но не виден глазу
         # думаю, что вполне возможно исп только один
 
-        self.Main_player = MovingPlayer()  # этот предатель существует, но не виден глазу
+        # self.Main_player = MovingPlayer()  # этот предатель существует, но не виден глазу
 
-        self.player1 = MovingPlayer(0, 0, 10, 5, 50, 50)
+        self.player1 = MovingPlayer()
 
-    def game_restart(self):
-        self.mode = 0
+
+    def game_restart(self, mode_player):
+        self.mode = mode_player
 
         self.previous_size = QSize()
 
@@ -307,9 +352,7 @@ class StartGame(QWidget):
         self.bullets = []
         self.enemies = []
 
-        self.player1.setX(0)
-        self.player1.setY(0)
-        self.player1.HP_P = 5
+        self.player1.modifications()
 
         self.resizeEvent(None)
         self.showMaximized()
@@ -408,7 +451,7 @@ class StartGame(QWidget):
                 self.enemies.remove(enemy)
                 self.player1.HP_P -= 1  # Уменьшение здоровья игрока
                 if self.player1.HP_P <= 0:
-                    self.stackWidget.setCurrentIndex(2)
+                    self.stackWidget.setCurrentIndex(3)
                     break
                 continue
             for bullet in self.bullets:
@@ -424,8 +467,8 @@ class StartGame(QWidget):
                             self.enemies.remove(enemy)
 
     def updateScene(self):
-        if self.stackWidget.currentIndex() == 4:
-            self.create_bullet(500)
+        if self.stackWidget.currentIndex() == 5:
+            self.create_bullet(470)
             self.create_enemy(1800)
             self.player1.move()
             for bullet in self.bullets:
@@ -440,10 +483,10 @@ class StartGame(QWidget):
         if self.game_begin is True:
             self.player1.keyPressEvent(event)
             if event.text() == 'p':
-                self.stackWidget.setCurrentIndex(2)
+                self.stackWidget.setCurrentIndex(3)
                 pass
             if event.key() == Qt.Key.Key_Escape:  # кнопку надо ограничить в свое нажатии, можно прям в меню ее нажать
-                self.stackWidget.setCurrentIndex(3)
+                self.stackWidget.setCurrentIndex(4)
                 pass
 
     def keyReleaseEvent(self, event):
@@ -474,8 +517,9 @@ class StartGame(QWidget):
                 enemy.paint(painter)
 
 
-# возможно для перемещ кнопок можно использовать QWidget
+# возможно для перемещ кнопок можно использовать QWidget/// ахах забей, все проще - вместо addWidget -> addChildWidget
 # есть баг - если постоянно увеличивать и уменьшать экран то погрешность движения накапливается.
+# в мовинг обжект доб разные виды так будет работать
 
 
 

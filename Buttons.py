@@ -1,47 +1,57 @@
 import sys
 
-from PyQt6.QtCore import QRect
-from PyQt6.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QStackedWidget, QLabel, QPushButton, QWidget
+from PyQt6.QtCore import QTimer
+from PyQt6.QtGui import QPainter
+from PyQt6.QtWidgets import QApplication, QMainWindow, QStackedWidget, QVBoxLayout, QPushButton, QWidget
+
+from test_zone import MovingPlayer
 
 
-class MainWindow(QMainWindow):
+class MainWindow(QWidget):
     def __init__(self):
         super().__init__()
+        timer = QTimer(self)
+        timer.timeout.connect(self.updategame)
+        timer.start(16)
 
-        self.stackedWidget = QStackedWidget(self)
-        self.setCentralWidget(self.stackedWidget)
-
-        self.setupUI()
-
-    def setupUI(self):
-        page1 = QWidget()
-        page1.setStyleSheet('background-color: black')
-        layout1 = QVBoxLayout(page1)
-        label1 = QLabel("Это страница 1")
-        button1 = QPushButton("Нажми меня")
-        layout1.setGeometry(QRect(0,0,500,500))
-
-        # Изменение положения и размеров кнопки
-        button1.setGeometry(100, 100, 200, 50)
-
-        layout1.addWidget(label1)
-        layout1.addWidget(button1)
-
-        page2 = QWidget()
-        layout2 = QVBoxLayout(page2)
-        label2 = QLabel("Это страница 2")
-        layout2.addWidget(label2)
-
-        self.stackedWidget.addWidget(page1)
-        self.stackedWidget.addWidget(page2)
-
-        button1.clicked.connect(lambda: self.stackedWidget.setCurrentIndex(1))
+        self.setGeometry(0,0,600,600)
 
 
-if __name__ == '__main__':
+        mode = [
+            MovingPlayer(0,0,10,3,50,50,self.width(),self.height()),
+            MovingPlayer(500, 0, 1, 3, 100, 50, self.width(), self.height())
+        ]
+        modeO=1
+        if modeO == 0:
+            self.player1 = mode[0]
+        if modeO == 1 :
+            self.player1 = mode[1]
+
+        button1 = QPushButton('1mode',self)
+
+        button1.clicked.connect(lambda: modeO+1)
+        button1.setGeometry(0,0,50,50)
+        button1.show()
+
+
+
+
+        # self.showMaximized()
+
+    def updategame(self):
+        self.player1.move()
+        self.update()
+
+    def keyPressEvent(self, event):
+        self.player1.keyPressEvent(event)
+    def keyReleaseEvent(self, event):
+        self.player1.keyReleaseEvent(event)
+    def paintEvent(self, event):
+        painter = QPainter(self)
+        self.player1.paint(painter)
+
+if __name__ == "__main__":
     app = QApplication(sys.argv)
-
-    mainWindow = MainWindow()
-    mainWindow.show()
-
+    window = MainWindow()
+    window.show()
     sys.exit(app.exec())
