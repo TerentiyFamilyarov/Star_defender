@@ -1,21 +1,11 @@
-from PyQt6.QtCore import QPropertyAnimation, QVariantAnimation
-from PyQt6.QtWidgets import QApplication, QLabel, QVBoxLayout, QWidget
+import random
 
-app = QApplication([])
-
-widget = QWidget()
-layout = QVBoxLayout(widget)
-
-label = QLabel("Мерцающий текст", widget)
-layout.addWidget(label)
-
-animation = QVariantAnimation(label)
-animation.setLoopCount(-1) # Бесконечное мерцание
-animation.setDuration(500) # Длительность одного периода мерцания
-animation.setStartValue(label.palette().color(label.foregroundRole()))
-animation.setEndValue(label.palette().color(label.backgroundRole()))
-
-animation.start()
-
-widget.show()
-app.exec()
+cards = {
+        "Slow_down": 0.9,
+        "Speed_Up": 'папа',
+        "Fat_player": 2
+    }
+use = random.choice(list(cards.keys()))
+used = cards[use]
+print(f"Случайный ключ: {use}")
+print(f"Значение для случайного ключа: {used}")
