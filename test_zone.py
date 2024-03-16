@@ -1289,7 +1289,7 @@ class StartGame(QWidget):
             for deserter in self.enemy_deserters:
                 if enemy != deserter:
                     if deserter.boundingRect().intersects(enemy.boundingRect()):
-                        enemy.HP_E -= 1
+                        enemy.HP_O -= 1
                         self.enemy_deserters.remove(deserter)
                         self.enemies.remove(deserter)
                     if self.boundingRect().contains(deserter.boundingRect()) is False:
@@ -1308,8 +1308,8 @@ class StartGame(QWidget):
                 if enemy.x() <= self.width() - (enemy.x_size // 2):
                         if enemy.boundingRect().intersects(bullet.boundingRect()):
                             self.bullets.remove(bullet)
-                            enemy.HP_E -= self.player1.damage
-                            if enemy.HP_E <= 0:
+                            enemy.HP_O -= self.player1.damage
+                            if enemy.HP_O <= 0:
                                 self.enemies.remove(enemy)
 
 
@@ -1324,11 +1324,13 @@ class StartGame(QWidget):
             if self.isActiveWindow() is True:
                 self.create_bullet(self.player1.speed_shoot)
                 self.create_enemy(2000, self.enemy.speed_shoot)
-                self.create_chest()
+                # self.create_chest()
                 self.player1.new_move()
                 for bullet in self.bullets:
+                    bullet.move_direction_R = 1
                     bullet.new_move()
                 for enemy in self.enemies:
+                    enemy.move_direction_L = 1
                     enemy.new_move()
                 self.check_collision()
                 # print(self.player1.x_size,' ',self.player1.y_size)
