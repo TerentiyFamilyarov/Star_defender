@@ -157,38 +157,59 @@ class MovingObject(QGraphicsItem):
         painter.drawRect(self.boundingRect())
 
 
-    def new_move(self, move=1):
-        if self.timer.isActive() is False:
+    def new_move(self, move=1, soap_move=1, window_borders=1):
+        if soap_move == 1:
+            if self.timer.isActive() is False:
+                if self.l_speed < self.step_x and self.move_direction_L == 1:
+                    self.l_speed += 1
+                elif self.move_direction_L == 0 and self.l_speed > 0:
+                    self.l_speed -= 1
+                elif self.l_speed < 0:
+                    self.l_speed = 0
+
+                if self.r_speed < self.step_x and self.move_direction_R == 1:
+                    self.r_speed += 1
+                elif self.move_direction_R == 0 and self.r_speed > 0:
+                    self.r_speed -= 1
+                elif self.r_speed < 0:
+                    self.r_speed = 0
+
+                if self.u_speed < self.step_y and self.move_direction_U == 1:
+                    self.u_speed += 1
+                elif self.move_direction_U == 0 and self.u_speed > 0:
+                    self.u_speed -= 1
+                elif self.u_speed < 0:
+                    self.u_speed = 0
+
+                if self.d_speed < self.step_y and self.move_direction_D == 1:
+                    self.d_speed += 1
+                elif self.move_direction_D == 0 and self.d_speed > 0:
+                    self.d_speed -= 1
+                elif self.d_speed < 0:
+                    self.d_speed = 0
+
+                self.timer.timeout.connect(self.timer.stop)
+                self.timer.start(15)
+        else:
             if self.l_speed < self.step_x and self.move_direction_L == 1:
-                self.l_speed += 1
+                self.l_speed = self.step_x
             elif self.move_direction_L == 0 and self.l_speed > 0:
-                self.l_speed -= 1
-            elif self.l_speed < 0:
                 self.l_speed = 0
 
             if self.r_speed < self.step_x and self.move_direction_R == 1:
-                self.r_speed += 1
+                self.r_speed = self.step_x
             elif self.move_direction_R == 0 and self.r_speed > 0:
-                self.r_speed -= 1
-            elif self.r_speed < 0:
                 self.r_speed = 0
 
             if self.u_speed < self.step_y and self.move_direction_U == 1:
-                self.u_speed += 1
+                self.u_speed = self.step_y
             elif self.move_direction_U == 0 and self.u_speed > 0:
-                self.u_speed -= 1
-            elif self.u_speed < 0:
                 self.u_speed = 0
 
             if self.d_speed < self.step_y and self.move_direction_D == 1:
-                self.d_speed += 1
+                self.d_speed = self.step_y
             elif self.move_direction_D == 0 and self.d_speed > 0:
-                self.d_speed -= 1
-            elif self.d_speed < 0:
                 self.d_speed = 0
-
-            self.timer.timeout.connect(self.timer.stop)
-            self.timer.start(15)
 
         if move == 0:
             self.move_direction_L = 0
@@ -200,25 +221,30 @@ class MovingObject(QGraphicsItem):
             self.r_speed = 0
             self.u_speed = 0
             self.d_speed = 0
-        if self.x() - self.l_speed < 0:
-            self.setX(0)
-        else:
-            self.setX(self.x() - self.l_speed)
 
-        if self.x() + self.r_speed > self.window_x - self.x_size:
-            self.setX(self.window_x - self.x_size)
-        else:
-            self.setX(self.x() + self.r_speed)
+        if window_borders == 1:
+            if self.x() - self.l_speed < 0:
+                self.setX(0)
+            else:
+                self.setX(self.x() - self.l_speed)
 
-        if self.y() - self.u_speed < 0:
-            self.setY(0)
-        else:
-            self.setY(self.y() - self.u_speed)
+            if self.x() + self.r_speed > self.window_x - self.x_size:
+                self.setX(self.window_x - self.x_size)
+            else:
+                self.setX(self.x() + self.r_speed)
 
-        if self.y() + self.d_speed > self.window_y - self.y_size:
-            self.setY(self.window_y - self.y_size)
+            if self.y() - self.u_speed < 0:
+                self.setY(0)
+            else:
+                self.setY(self.y() - self.u_speed)
+
+            if self.y() + self.d_speed > self.window_y - self.y_size:
+                self.setY(self.window_y - self.y_size)
+            else:
+                self.setY(self.y() + self.d_speed)
         else:
-            self.setY(self.y() + self.d_speed)
+            self.setX(self.x() - self.l_speed + self.r_speed)
+            self.setY(self.y() - self.u_speed + self.d_speed)
 
     def keyPressEvent(self, event):
             if event.text() in ['Ц', 'ц', 'W', 'w']:
@@ -1105,8 +1131,8 @@ class StartGame(QWidget):
             pro_y_player_size = self.player1.max_y_size / self.fullH
             self.player1.x_size = int(self.width() * pro_x_player_size)
             self.player1.y_size = int(self.height() * pro_y_player_size)
-            self.player1.width_window = (self.width())
-            self.player1.height_window = (self.height() * 0.8)
+            self.player1.window_x = (self.width())
+            self.player1.window_y = (self.height() * 0.8)
             pro_x_player_position = self.player1.x() / previous_width
             pro_y_player_position = self.player1.y() / previous_height
             pro_x_player_speed = self.player1.max_step_x / self.fullW
@@ -1140,8 +1166,8 @@ class StartGame(QWidget):
             self.enemy.step_x = round(self.width() * pro_x_enemy_speed, 1)
             pro_y_enemy_speed = self.enemy.max_step_y / self.fullH
             self.enemy.step_y = round(self.width() * pro_x_enemy_speed, 1)
-            self.enemy.width_window = self.width()
-            self.enemy.height_window = self.height()
+            self.enemy.window_x = self.width()
+            self.enemy.window_y = self.height()
             for enemy in self.enemies:
                 enemy.x_size = int(self.width() * pro_x_enemy_size)
                 enemy.y_size = int(self.height() * pro_y_enemy_size)
@@ -1267,7 +1293,7 @@ class StartGame(QWidget):
                     self.menu.choose_effect_page.enemy_open()
                     self.chests.remove(chest)
             if self.player1.boundingRect().intersects(enemy.boundingRect()):
-                if enemy.mode != 4 and enemy.mode != 5:
+                # if enemy.mode != 4 and enemy.mode != 5:
                     if self.player1.x() + self.player1.x_size//2 < enemy.x():
                         self.player1.l_speed = self.player1.step_x*1.2
                         self.player1.r_speed = 0
@@ -1280,20 +1306,20 @@ class StartGame(QWidget):
                     elif self.player1.y() + self.player1.y_size//2 > enemy.y() + enemy.y_size:
                         self.player1.d_speed = self.player1.step_y*1.2
                         self.player1.u_speed = 0
-                elif enemy.mode == 4:
-                    enemy.r_speed = enemy.step_x * 4
-                    enemy.u_speed = random.randint(0, (int(enemy.step_y)*2)+1)
-                    enemy.d_speed = random.randint(0, (int(enemy.step_y)*2)+1)
-                    enemy.mode = 5
-                    self.enemy_deserters.append(enemy)
-            for deserter in self.enemy_deserters:
-                if enemy != deserter:
-                    if deserter.boundingRect().intersects(enemy.boundingRect()):
-                        enemy.HP_O -= 1
-                        self.enemy_deserters.remove(deserter)
-                        self.enemies.remove(deserter)
-                    if self.boundingRect().contains(deserter.boundingRect()) is False:
-                        self.enemy_deserters.remove(deserter)
+                # elif enemy.mode == 4:
+                #     enemy.r_speed = enemy.step_x * 4
+                #     enemy.u_speed = random.randint(0, (int(enemy.step_y)*2)+1)
+                #     enemy.d_speed = random.randint(0, (int(enemy.step_y)*2)+1)
+                #     enemy.mode = 5
+                #     self.enemy_deserters.append(enemy)
+            # for deserter in self.enemy_deserters:
+            #     if enemy != deserter:
+            #         if deserter.boundingRect().intersects(enemy.boundingRect()):
+            #             enemy.HP_O -= 1
+            #             self.enemy_deserters.remove(deserter)
+            #             self.enemies.remove(deserter)
+            #         if self.boundingRect().contains(deserter.boundingRect()) is False:
+            #             self.enemy_deserters.remove(deserter)
 
             if enemy.x() <= -enemy.x_size:
                 self.enemies.remove(enemy)
@@ -1328,10 +1354,10 @@ class StartGame(QWidget):
                 self.player1.new_move()
                 for bullet in self.bullets:
                     bullet.move_direction_R = 1
-                    bullet.new_move()
+                    bullet.new_move(1,0,0)
                 for enemy in self.enemies:
                     enemy.move_direction_L = 1
-                    enemy.new_move()
+                    enemy.new_move(1,0,0)
                 self.check_collision()
                 # print(self.player1.x_size,' ',self.player1.y_size)
             else: self.player1.new_move(0)
