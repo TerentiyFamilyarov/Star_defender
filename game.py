@@ -539,7 +539,6 @@ class MovingEnemy(QGraphicsItem):
                 self.mode = 0
 
     def move(self):
-        if self.x() - self.step_x >= -50:
 
             self.l_speed = self.step_x
 

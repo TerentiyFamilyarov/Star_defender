@@ -8,19 +8,38 @@ from PyQt6.QtGui import QPainter, QColor, QFont, QBrush, QResizeEvent, QPalette,
 from PyQt6.QtCore import QTimer, Qt, QSize, QRectF, QPointF, QPropertyAnimation, QEasingCurve, QPoint, QEvent, \
     QVariantAnimation
 
-
-class MovingPlayer(QGraphicsItem):
-    def __init__(self, mode = 0, width_window=1920, height_window=1080):
+class MovingObject(QGraphicsItem):
+    def __init__(self,typec,modifc,x,y,hp,damage,step,speed_shoot,size_x,size_y,window_x,window_y):
         super().__init__()
-        # self.step = step
-        # self.HP_P = HP_P
-        # self.x_size = x_size
-        # self.y_size = y_size
-        # self.setX(x)
-        # self.setY(y)
+        type_object = {
+            "player": {
+                "default",
+                "IShowSpeed",
+                "BurgerKing"
+            },
+            "enemy": {
+                "default",
+                "tiny",
+                "fat"
+            },
+            "bullet": {
+                "default"
+            }
+        }
+        self.timer = QTimer()
 
-        self.mode = 0
-        self.modifications()
+        self.setX(x)
+        self.setY(y)
+        self.hp = hp
+        self.primary_damage = damage
+        self.step = step
+        self.speed_shoot = speed_shoot
+        self.size_x = size_x
+        self.size_y = size_y
+        self.window_x = window_x
+        self.window_y = window_y
+
+        self.modifications(typec, modifc)
 
         self.move_direction_L = 0
         self.move_direction_R = 0
@@ -33,53 +52,100 @@ class MovingPlayer(QGraphicsItem):
         self.u_speed = 0
         self.d_speed = 0
 
-        self.timer = QTimer()
+    def modifications(self, chosen_type, chosen_config):
+        if chosen_type == "player":
+            if chosen_config == "default":
+                self.step_x = self.step
+                self.step_y = self.step
+                self.max_step_x = self.step_x
+                self.max_step_y = self.step_y
+                self.speed_shoot = self.speed_shoot
+                self.damage = self.primary_damage
+                self.HP_O = self.hp
+                self.x_size = self.size_x
+                self.max_x_size = self.x_size
+                self.y_size = self.size_y
+                self.max_y_size = self.y_size
+            elif chosen_config == "IShowSpeed":
+                self.step_x = self.step + 2
+                self.step_y = self.step + 2
+                self.max_step_x = self.step_x
+                self.max_step_y = self.step_y
+                self.speed_shoot = self.speed_shoot - 70
+                self.damage = self.primary_damage
+                self.HP_O = self.hp - 3
+                self.x_size = self.size_x
+                self.max_x_size = self.x_size
+                self.y_size = self.size_y
+                self.max_y_size = self.y_size
+            elif chosen_config == "BurgerKing":
+                self.step_x = self.step - 3
+                self.step_y = self.step - 3
+                self.max_step_x = self.step_x
+                self.max_step_y = self.step_y
+                self.speed_shoot = self.speed_shoot + 50
+                self.damage = self.primary_damage + 1
+                self.HP_O = self.hp + 2
+                self.x_size = self.size_x + 20
+                self.max_x_size = self.x_size
+                self.y_size = self.size_y + 20
+                self.max_y_size = self.y_size
 
-        self.width_window = width_window
-        self.height_window = height_window
 
-    def modifications(self):
-        if self.mode == 0:
-            self.setX(0)
-            self.setY(300)
-            self.step_x = 8
-            self.step_y = 8
-            self.max_step = 8
-            self.speed_shoot = 370
-            self.damage = 2
-            self.HP_P = 5
-            self.x_size = 50
-            self.max_x_size = 50
-            self.y_size = 50
-            self.max_y_size = 50
 
-        elif self.mode == 1:
-            self.setX(0)
-            self.setY(300)
-            self.step_x = 10
-            self.step_y = 10
-            self.max_step = 10
-            self.speed_shoot = 300
-            self.damage = 2
-            self.HP_P = 2
-            self.x_size = 50
-            self.max_x_size = 50
-            self.y_size = 50
-            self.max_y_size = 50
+        elif chosen_type == "enemy":
+            if chosen_config == "default":
+                self.step_x = self.step
+                self.step_y = self.step
+                self.max_step_x = self.step_x
+                self.max_step_y = self.step_y
+                self.speed_shoot = self.speed_shoot
+                self.damage = self.primary_damage
+                self.HP_O = self.hp
+                self.x_size = self.size_x
+                self.max_x_size = self.x_size
+                self.y_size = self.size_y
+                self.max_y_size = self.y_size
+            elif chosen_config == "tiny":
+                self.step_x = self.step + 2
+                self.step_y = self.step + 2
+                self.max_step_x = self.step_x
+                self.max_step_y = self.step_y
+                self.speed_shoot = self.speed_shoot
+                self.damage = self.primary_damage
+                self.HP_O = self.hp - 2
+                self.x_size = self.size_x - 30
+                self.max_x_size = self.x_size
+                self.y_size = self.size_y - 30
+                self.max_y_size = self.y_size
+            elif chosen_config == "fat":
+                self.step_x = self.step - 0.5
+                self.step_y = self.step - 0.5
+                self.max_step_x = self.step_x
+                self.max_step_y = self.step_y
+                self.speed_shoot = self.speed_shoot
+                self.damage = self.primary_damage
+                self.HP_O = self.hp + 2
+                self.x_size = self.size_x + 20
+                self.max_x_size = self.x_size
+                self.y_size = self.size_y + 20
+                self.max_y_size = self.y_size
 
-        elif self.mode == 2:
-            self.setX(0)
-            self.setY(300)
-            self.step_x = 5
-            self.step_y = 5
-            self.max_step = 5
-            self.speed_shoot = 420
-            self.damage = 3
-            self.HP_P = 7
-            self.x_size = 70
-            self.max_x_size = 70
-            self.y_size = 70
-            self.max_y_size = 70
+
+
+        elif chosen_type == "bullet":
+            if chosen_config == "default":
+                self.step_x = self.step
+                self.step_y = self.step
+                self.max_step_x = self.step_x
+                self.max_step_y = self.step_y
+                self.speed_shoot = self.speed_shoot
+                self.damage = self.primary_damage
+                self.HP_O = self.hp
+                self.x_size = self.size_x
+                self.max_x_size = self.x_size
+                self.y_size = self.size_y
+                self.max_y_size = self.y_size
 
 
     def boundingRect(self):
@@ -87,13 +153,8 @@ class MovingPlayer(QGraphicsItem):
 
     def paint(self, painter, option=None, widget=None):
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
-        if self.mode == 0:
-            painter.setBrush(QColor(0, 0, 255))
-            painter.drawRect(self.boundingRect())
-        elif self.mode == 1:
-            painter.drawImage(self.boundingRect(),QImage('low_fanist.jpg'))
-        elif self.mode == 2:
-            painter.drawImage(self.boundingRect(),QImage('low_2_nokia.jpg'))
+        painter.setBrush(QColor(0, 0, 255))
+        painter.drawRect(self.boundingRect())
 
 
     def new_move(self, move=1):
@@ -144,8 +205,8 @@ class MovingPlayer(QGraphicsItem):
         else:
             self.setX(self.x() - self.l_speed)
 
-        if self.x() + self.r_speed > self.width_window - self.x_size:
-            self.setX(self.width_window - self.x_size)
+        if self.x() + self.r_speed > self.window_x - self.x_size:
+            self.setX(self.window_x - self.x_size)
         else:
             self.setX(self.x() + self.r_speed)
 
@@ -154,97 +215,42 @@ class MovingPlayer(QGraphicsItem):
         else:
             self.setY(self.y() - self.u_speed)
 
-        if self.y() + self.d_speed > self.height_window - self.y_size:
-            self.setY(self.height_window - self.y_size)
+        if self.y() + self.d_speed > self.window_y - self.y_size:
+            self.setY(self.window_y - self.y_size)
         else:
             self.setY(self.y() + self.d_speed)
 
-
     def keyPressEvent(self, event):
-        if event.text() in ['Ц', 'ц', 'W', 'w']:
-            self.move_direction_U = 1
+            if event.text() in ['Ц', 'ц', 'W', 'w']:
+                self.move_direction_U = 1
 
-        elif event.text() in ['Ф', 'ф', 'A', 'a']:
-            self.move_direction_L = 1
+            elif event.text() in ['Ф', 'ф', 'A', 'a']:
+                self.move_direction_L = 1
 
-        elif event.text() in ['Ы', 'ы', 'S', 's']:
-            self.move_direction_D = 1
+            elif event.text() in ['Ы', 'ы', 'S', 's']:
+                self.move_direction_D = 1
 
-        elif event.text() in ['В', 'в', 'D', 'd']:
-            self.move_direction_R = 1
+            elif event.text() in ['В', 'в', 'D', 'd']:
+                self.move_direction_R = 1
 
-        if event.text() in ['C', 'c', 'С', 'с']:
-            self.shoot = 1
-
-
+            if event.text() in ['C', 'c', 'С', 'с']:
+                self.shoot = 1
 
     def keyReleaseEvent(self, event):
-        if event.text() in ['Ц', 'ц', 'W', 'w']:
-            self.move_direction_U = 0
+            if event.text() in ['Ц', 'ц', 'W', 'w']:
+                self.move_direction_U = 0
 
-        elif event.text() in ['Ф', 'ф', 'A', 'a']:
-            self.move_direction_L = 0
+            elif event.text() in ['Ф', 'ф', 'A', 'a']:
+                self.move_direction_L = 0
 
-        elif event.text() in ['Ы', 'ы', 'S', 's']:
-            self.move_direction_D = 0
+            elif event.text() in ['Ы', 'ы', 'S', 's']:
+                self.move_direction_D = 0
 
-        elif event.text() in ['В', 'в', 'D', 'd']:
-            self.move_direction_R = 0
+            elif event.text() in ['В', 'в', 'D', 'd']:
+                self.move_direction_R = 0
 
-        if event.text() in ['C', 'c', 'С', 'с']:
-            self.shoot = 0
-
-
-
-
-class Shooting(QGraphicsItem):
-    def __init__(self, x=0, y=0, step=15, x_size=30, y_size=10):
-        super().__init__()
-        self.setX(x)
-        self.setY(y)
-        self.mode = 0
-        self.modifications(step, x_size, y_size)
-
-        self.l_speed = 0
-        self.r_speed = 0
-        self.u_speed = 0
-        self.d_speed = 0
-
-    def boundingRect(self):
-        return QRectF(self.x(), self.y(), self.x_size, self.y_size)
-
-    def paint(self, painter, option=None, widget=None):
-        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
-
-        if self.mode == 1: painter.drawImage(self.boundingRect(), QImage('low_tesak.jpg'))
-        elif self.mode == 2: painter.drawImage(self.boundingRect(), QImage('low_amogus.png'))
-        else:
-            painter.setBrush(QColor(0, 255, 0))
-            painter.drawRect(self.boundingRect())
-        pass
-
-    def modifications(self, step, x_size, y_size):
-            self.step_x = step
-            self.step_y = step
-            self.max_step_x = step
-            self.max_step_y = step
-            self.x_size = x_size
-            self.max_x_size = x_size
-            self.y_size = y_size
-            self.max_y_size = y_size
-
-
-    def move(self):
-
-        self.r_speed = self.step_x
-
-        # self.setX(self.x() - self.l_speed)
-        #
-        self.setX(self.x() + self.r_speed)
-        #
-        # self.setY(self.y() - self.u_speed)
-        #
-        # self.setY(self.y() + self.d_speed)
+            if event.text() in ['C', 'c', 'С', 'с']:
+                self.shoot = 0
 
 
 
@@ -1033,12 +1039,12 @@ class StartGame(QWidget):
         self.restart_timer = QTimer()
         self.restart_timer.timeout.connect(self.restart_timer.stop)
 
-        self.bullet = Shooting()  # этот предатель существует, но не виден глазу
+        self.bullet = MovingObject("bullet","default",0,0,1,1,1,0,30,10,self.width(),self.height())  # этот предатель существует, но не виден глазу
 
-        self.enemy = MovingEnemy()  # этот предатель существует, но не виден глазу
+        self.enemy = MovingObject("enemy","default",0,0,1,1,1,0,70,70,self.width(),self.height())  # этот предатель существует, но не виден глазу
         # думаю, что вполне возможно исп только один
 
-        self.player1 = MovingPlayer()
+        self.player1 = MovingObject("player","default",0,0,3,2,8,370,50,50,self.width(),self.height())
 
         self.chest = Chest()
 
@@ -1063,7 +1069,7 @@ class StartGame(QWidget):
         self.enemies = []
         self.enemy_deserters = []
 
-        self.player1.modifications()
+        # self.player1.modifications()
 
 
         self.resizeEvent(None)
@@ -1103,8 +1109,8 @@ class StartGame(QWidget):
             self.player1.height_window = (self.height() * 0.8)
             pro_x_player_position = self.player1.x() / previous_width
             pro_y_player_position = self.player1.y() / previous_height
-            pro_x_player_speed = self.player1.max_step / self.fullW
-            pro_y_player_speed = self.player1.max_step / self.fullH
+            pro_x_player_speed = self.player1.max_step_x / self.fullW
+            pro_y_player_speed = self.player1.max_step_y / self.fullH
             self.player1.setX(round(self.width() * pro_x_player_position, 1))
             self.player1.setY(round(self.height() * pro_y_player_position, 1))
             self.player1.step_x = round(self.width() * pro_x_player_speed, 1)
@@ -1194,41 +1200,44 @@ class StartGame(QWidget):
             # self.enemy.difficult(self.min, self.sec)
             y_size = self.enemy.y_size
             enemy_y = random.randint(0, int(self.height() * 0.8) - y_size)
-            enemy = MovingEnemy(self.width(), enemy_y)
+            enemy = MovingObject("enemy","default",self.width(),enemy_y,3,1,1,0,70,70,self.width(),self.height())
             # сложность можно писать в MovingEnemy
-            enemy.difficult(self.min, self.sec)
-            enemy.modifications(self.enemy.HP_E,self.enemy.step_x, self.enemy.speed_shoot,self.enemy.x_size,self.enemy.y_size)
+            # enemy.difficult(self.min, self.sec)
+            # enemy.modifications(self.enemy.HP_O,self.enemy.step_x, self.enemy.speed_shoot,self.enemy.x_size,self.enemy.y_size)
             if enemy.y()+enemy.y_size > int(self.height()*0.8):
                 enemy.setY(int(self.height()*0.8)-enemy.y())
-            if self.player1.mode == 1:
-                enemy.secret_mode = 1
-            elif self.player1.mode == 2:
-                enemy.secret_mode = 2
+            # if self.player1.mode == 1:
+            #     enemy.secret_mode = 1
+            # elif self.player1.mode == 2:
+            #     enemy.secret_mode = 2
             self.enemies.append(enemy)
             self.enemy_timer.start(msec)
             self.enemy_timer.timeout.connect(self.enemy_timer.stop)
 
-        for enemy in self.enemies:
-            if enemy.mode == 3:
-                if enemy.bullet_enemy_timer.isActive() is False:
-                    bullet_enemy = MovingEnemy(ceil(enemy.x()),
-                                      (ceil(enemy.y() + enemy.y_size // 2) - self.enemy.y_size // 2),
-                                      self.enemy.HP_E, self.enemy.step_x, self.enemy.x_size, self.enemy.y_size)
-                    bullet_enemy.mode = 4
-                    bullet_enemy.modifications(self.enemy.HP_E,self.enemy.step_x,self.enemy.x_size,self.enemy.y_size)
-                    self.enemies.append(bullet_enemy)
-                    enemy.bullet_enemy_timer.start(shoot_msec)
-                    enemy.bullet_enemy_timer.timeout.connect(enemy.bullet_enemy_timer.stop)
+        # for enemy in self.enemies:
+        #     if enemy.mode == 3:
+        #         if enemy.bullet_enemy_timer.isActive() is False:
+        #             bullet_enemy = MovingEnemy(ceil(enemy.x()),
+        #                               (ceil(enemy.y() + enemy.y_size // 2) - self.enemy.y_size // 2),
+        #                               self.enemy.HP_E, self.enemy.step_x, self.enemy.x_size, self.enemy.y_size)
+        #             bullet_enemy.mode = 4
+        #             bullet_enemy.modifications(self.enemy.HP_E,self.enemy.step_x,self.enemy.x_size,self.enemy.y_size)
+        #             self.enemies.append(bullet_enemy)
+        #             enemy.bullet_enemy_timer.start(shoot_msec)
+        #             enemy.bullet_enemy_timer.timeout.connect(enemy.bullet_enemy_timer.stop)
 
     def create_bullet(self, msec1):
         if self.player1.shoot == 1 and self.bullet_timer1.isActive() is False:
-            bullet = Shooting(ceil(self.player1.x() + self.player1.x_size),
-                              (ceil(self.player1.y() + self.player1.y_size // 2)-self.bullet.y_size//2),
-                              self.bullet.step_x, self.bullet.x_size, self.bullet.y_size)
-            if self.player1.mode == 1:
-                bullet.mode = 1
-            elif self.player1.mode == 2:
-                bullet.mode = 2
+            # bullet = Shooting(ceil(self.player1.x() + self.player1.x_size),
+            #                   (ceil(self.player1.y() + self.player1.y_size // 2)-self.bullet.y_size//2),
+            #                   self.bullet.step_x, self.bullet.x_size, self.bullet.y_size)
+            bullet = MovingObject("bullet","default",ceil(self.player1.x() + self.player1.x_size),
+                                  (ceil(self.player1.y() + self.player1.y_size // 2)-self.bullet.y_size//2),
+                                  1,1,15,0,30,10,self.width(),self.height())
+            # if self.player1.mode == 1:
+            #     bullet.mode = 1
+            # elif self.player1.mode == 2:
+            #     bullet.mode = 2
             self.bullets.append(bullet)
             self.bullet_timer1.start(msec1)
             self.bullet_timer1.timeout.connect(self.bullet_timer1.stop)
@@ -1245,7 +1254,7 @@ class StartGame(QWidget):
                 self.chest_timer.timeout.connect(self.chest_timer.stop)
 
     def check_collision(self):
-        if self.player1.HP_P <= 0:
+        if self.player1.HP_O <= 0:
             self.menu.stackWidget.setCurrentWidget(self.menu.game_over_page)
         # Проверяем столкновение пуль с врагами
         for enemy in self.enemies:
@@ -1288,7 +1297,7 @@ class StartGame(QWidget):
 
             if enemy.x() <= -enemy.x_size:
                 self.enemies.remove(enemy)
-                self.player1.HP_P -= 1  # Уменьшение здоровья игрока
+                self.player1.HP_O -= 1  # Уменьшение здоровья игрока
                 continue
             if self.boundingRect().contains(enemy.boundingRect()) is False:
                 self.enemies.remove(enemy)
@@ -1314,13 +1323,13 @@ class StartGame(QWidget):
         if self.menu.stackWidget.currentWidget() == self and self.count_restart_sec <= 1 and self.restart_timer.isActive() is False:
             if self.isActiveWindow() is True:
                 self.create_bullet(self.player1.speed_shoot)
-                self.create_enemy(self.enemy.enemy_creator_msec, self.enemy.speed_shoot)
+                self.create_enemy(2000, self.enemy.speed_shoot)
                 self.create_chest()
                 self.player1.new_move()
                 for bullet in self.bullets:
-                    bullet.move()
+                    bullet.new_move()
                 for enemy in self.enemies:
-                    enemy.move()
+                    enemy.new_move()
                 self.check_collision()
                 # print(self.player1.x_size,' ',self.player1.y_size)
             else: self.player1.new_move(0)
@@ -1353,7 +1362,7 @@ class StartGame(QWidget):
                              QColor(50, 50, 50))  # Очищаем окно, закрашивая его зеленым
         painter.fillRect(0, ceil(self.height() * 0.8), self.width(), self.height(), QColor(100, 100, 100))
 
-        for i in range(self.player1.HP_P):
+        for i in range(self.player1.HP_O):
             painter.fillRect(ceil(self.width() * 0.05) + i * (ceil(self.width() * 0.01) + 2),
                                  ceil(self.height() * 0.82),
                                  ceil(self.width() * 0.01), ceil(self.width() * 0.03), QColor(200, 100, 100))
