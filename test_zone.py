@@ -11,21 +11,22 @@ from PyQt6.QtCore import QTimer, Qt, QSize, QRectF, QPointF, QPropertyAnimation,
 class MovingObject(QGraphicsItem):
     def __init__(self,typec,modifc,x,y,hp,damage,step,speed_shoot,size_x,size_y,window_x,window_y):
         super().__init__()
-        type_object = {
+        self.type_object = {
             "player": {
-                "default",
-                "IShowSpeed",
-                "BurgerKing"
+                0:"default",
+                1:"IShowSpeed",
+                2:"BurgerKing"
             },
             "enemy": {
-                "default",
-                "tiny",
-                "fat"
+                0:"default",
+                1:"tiny",
+                2:"fat"
             },
             "bullet": {
-                "default"
+                0:"default"
             }
         }
+        self.list_key_keys = list(self.type_object[typec].keys())
         self.timer = QTimer()
 
         self.setX(x)
@@ -63,10 +64,12 @@ class MovingObject(QGraphicsItem):
                 self.speed_shoot = self.speed_shoot
                 self.damage = self.primary_damage
                 self.HP_O = self.hp
+                self.primary_HP_O = self.HP_O
                 self.x_size = self.main_size_x
                 self.max_x_size = self.x_size
                 self.y_size = self.main_size_y
                 self.max_y_size = self.y_size
+                self.draw_color = QColor(0,0,255)
             elif chosen_config == "IShowSpeed":
                 self.step_x = self.step + 2
                 self.step_y = self.step + 2
@@ -74,12 +77,13 @@ class MovingObject(QGraphicsItem):
                 self.max_step_y = self.step_y
                 self.speed_shoot = self.speed_shoot - 70
                 self.damage = self.primary_damage
-                self.HP_O = self.hp - 3
+                self.HP_O = self.hp - 2
+                self.primary_HP_O = self.HP_O
                 self.x_size = self.main_size_x
                 self.max_x_size = self.x_size
                 self.y_size = self.main_size_y
                 self.max_y_size = self.y_size
-                self.draw_color = QColor(200,150,255)
+                self.draw_color = QColor(200,150,0)
             elif chosen_config == "BurgerKing":
                 self.step_x = self.step - 3
                 self.step_y = self.step - 3
@@ -88,6 +92,7 @@ class MovingObject(QGraphicsItem):
                 self.speed_shoot = self.speed_shoot + 50
                 self.damage = self.primary_damage + 1
                 self.HP_O = self.hp + 2
+                self.primary_HP_O = self.HP_O
                 self.x_size = self.main_size_x + 20
                 self.max_x_size = self.x_size
                 self.y_size = self.main_size_y + 20
@@ -105,6 +110,7 @@ class MovingObject(QGraphicsItem):
                 self.speed_shoot = self.speed_shoot
                 self.damage = self.primary_damage
                 self.HP_O = self.hp
+                self.primary_HP_O = self.HP_O
                 self.x_size = self.main_size_x
                 self.max_x_size = self.x_size
                 self.y_size = self.main_size_y
@@ -118,6 +124,7 @@ class MovingObject(QGraphicsItem):
                 self.speed_shoot = self.speed_shoot
                 self.damage = self.primary_damage
                 self.HP_O = self.hp - 2
+                self.primary_HP_O = self.HP_O
                 self.x_size = self.main_size_x - 30
                 self.max_x_size = self.x_size
                 self.y_size = self.main_size_y - 30
@@ -130,6 +137,7 @@ class MovingObject(QGraphicsItem):
                 self.speed_shoot = self.speed_shoot
                 self.damage = self.primary_damage
                 self.HP_O = self.hp + 2
+                self.primary_HP_O = self.HP_O
                 self.x_size = self.main_size_x + 20
                 self.max_x_size = self.x_size
                 self.y_size = self.main_size_y + 20
@@ -146,6 +154,7 @@ class MovingObject(QGraphicsItem):
                 self.speed_shoot = self.speed_shoot
                 self.damage = self.primary_damage
                 self.HP_O = self.hp
+                self.primary_HP_O = self.HP_O
                 self.x_size = self.main_size_x
                 self.max_x_size = self.x_size
                 self.y_size = self.main_size_y
@@ -669,6 +678,7 @@ class Menu(QMainWindow):
         self.current_player_txt = create_txt('About player', 'color: green;', [500, 300, 150, 100])
         self.start_1mode_button = QPushButton('back')
         self.start_1mode_button.setGeometry(100 // 3, 100 // 3, 80, 30)
+        self.chosen_config = 0
         self.start_1mode_button.clicked.connect(self.onemode)
         self.start_2mode_button = QPushButton('next')
         self.start_2mode_button.clicked.connect(self.twomode)
@@ -726,7 +736,6 @@ class Menu(QMainWindow):
         self.choose_effect_page = Func_Chest(self.start_game.player1, self.start_game.enemy,self.start_game, self)
         self.stackWidget.addWidget(self.choose_effect_page)
         # Включить полноэкранный режим
-        # self.showFullScreen()
         self.showMaximized()
 
 
@@ -958,22 +967,29 @@ class Menu(QMainWindow):
         self.start_game.game_restart(0)
 
     def onemode(self):
-        if self.start_game.player1.mode > 0:
-            self.start_game.player1.mode -= 1
-        self.current_player_txt.setText(f'mode: {self.start_game.player1.mode}')
-        if self.start_game.player1.mode == 1:
-            self.current_player_txt.setText('Fanist 17000')
-        elif self.start_game.player1.mode == 2:
-            self.current_player_txt.setText('Psyho')
+        self.chosen_config -= 1
+        maxx = self.start_game.player1.list_key_keys[-1]
+        if self.chosen_config < 0:
+            self.chosen_config = self.start_game.player1.list_key_keys[-1]
+        elif self.chosen_config > maxx:
+            self.chosen_config = 0
+        self.start_game.player1.modifications("player",
+                                              self.start_game.player1.type_object["player"][self.chosen_config])
+        self.start_game.player1.x_size = ceil(self.width() * 0.13)
+        self.start_game.player1.y_size = ceil(self.width() * 0.13)
+
 
     def twomode(self):
-        if self.start_game.player1.mode < 2:
-            self.start_game.player1.mode += 1
-        self.current_player_txt.setText(f'mode: {self.start_game.player1.mode}')
-        if self.start_game.player1.mode == 1:
-            self.current_player_txt.setText('Fanist 17000')
-        elif self.start_game.player1.mode == 2:
-            self.current_player_txt.setText('Psyho')
+        self.chosen_config += 1
+        maxx = self.start_game.player1.list_key_keys[-1]
+        if self.chosen_config < 0:
+            self.chosen_config = self.start_game.player1.list_key_keys[-1]
+        elif self.chosen_config > maxx:
+            self.chosen_config = 0
+        self.start_game.player1.modifications("player",
+                                              self.start_game.player1.type_object["player"][self.chosen_config])
+        self.start_game.player1.x_size = ceil(self.width() * 0.13)
+        self.start_game.player1.y_size = ceil(self.width() * 0.13)
 
     def resume_game(self):
         self.stackWidget.setCurrentWidget(self.start_game)
@@ -1082,6 +1098,8 @@ class StartGame(QWidget):
 
         self.player1 = MovingObject("player", "default", 0, 0, 3, 1, 10, 370,
                                     50, 50, self.width(), self.height())
+        # self.player1.modifications("player",
+        #                                       self.player1.type_object["player"][self.menu.chosen_config])
 
         self.chest = Chest()
 
@@ -1103,7 +1121,7 @@ class StartGame(QWidget):
         self.min = 0
         self.score_label.setText('00:00')
 
-        self.player1.HP_O = 3  # костыль
+        self.player1.HP_O = self.player1.primary_HP_O
         self.player1.setPos(10,300)
         self.bullets = []
         self.enemies = []
