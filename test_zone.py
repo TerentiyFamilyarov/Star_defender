@@ -34,13 +34,14 @@ class MovingObject(QGraphicsItem):
         self.hp = hp
         self.primary_damage = damage
         self.step = step
-        self.speed_shoot = speed_shoot
+        self.soap_koef = 25
+        self.primary_speed_shoot = speed_shoot
         self.main_size_x = size_x
         self.main_size_y = size_y
         self.window_x = window_x
         self.window_y = window_y
 
-        self.draw_color = QColor(0,0,255)
+        self.draw_color = QColor(0, 0, 255)
         self.modifications(typec, modifc)
 
         self.move_direction_L = 0
@@ -59,9 +60,10 @@ class MovingObject(QGraphicsItem):
             if chosen_config == "default":
                 self.step_x = self.step
                 self.step_y = self.step
+                self.soap_koef = 25
                 self.max_step_x = self.step_x
                 self.max_step_y = self.step_y
-                self.speed_shoot = self.speed_shoot
+                self.speed_shoot = self.primary_speed_shoot
                 self.damage = self.primary_damage
                 self.HP_O = self.hp
                 self.primary_HP_O = self.HP_O
@@ -71,25 +73,27 @@ class MovingObject(QGraphicsItem):
                 self.max_y_size = self.y_size
                 self.draw_color = QColor(0,0,255)
             elif chosen_config == "IShowSpeed":
-                self.step_x = self.step + 2
-                self.step_y = self.step + 2
+                self.step_x = self.step + 6
+                self.step_y = self.step + 6
+                self.soap_koef = 40
                 self.max_step_x = self.step_x
                 self.max_step_y = self.step_y
-                self.speed_shoot = self.speed_shoot - 70
-                self.damage = self.primary_damage
+                self.speed_shoot = self.primary_speed_shoot - 80
+                self.damage = self.primary_damage * 0.5
                 self.HP_O = self.hp - 2
                 self.primary_HP_O = self.HP_O
-                self.x_size = self.main_size_x
+                self.x_size = self.main_size_x - 10
                 self.max_x_size = self.x_size
-                self.y_size = self.main_size_y
+                self.y_size = self.main_size_y - 10
                 self.max_y_size = self.y_size
                 self.draw_color = QColor(200,150,0)
             elif chosen_config == "BurgerKing":
                 self.step_x = self.step - 3
                 self.step_y = self.step - 3
+                self.soap_koef = 15
                 self.max_step_x = self.step_x
                 self.max_step_y = self.step_y
-                self.speed_shoot = self.speed_shoot + 50
+                self.speed_shoot = self.primary_speed_shoot + 50
                 self.damage = self.primary_damage + 1
                 self.HP_O = self.hp + 2
                 self.primary_HP_O = self.HP_O
@@ -107,7 +111,7 @@ class MovingObject(QGraphicsItem):
                 self.step_y = self.step
                 self.max_step_x = self.step_x
                 self.max_step_y = self.step_y
-                self.speed_shoot = self.speed_shoot
+                self.speed_shoot = self.primary_speed_shoot
                 self.damage = self.primary_damage
                 self.HP_O = self.hp
                 self.primary_HP_O = self.HP_O
@@ -121,7 +125,7 @@ class MovingObject(QGraphicsItem):
                 self.step_y = self.step + 2
                 self.max_step_x = self.step_x
                 self.max_step_y = self.step_y
-                self.speed_shoot = self.speed_shoot
+                self.speed_shoot = self.primary_speed_shoot
                 self.damage = self.primary_damage
                 self.HP_O = self.hp - 2
                 self.primary_HP_O = self.HP_O
@@ -134,7 +138,7 @@ class MovingObject(QGraphicsItem):
                 self.step_y = self.step - 0.5
                 self.max_step_x = self.step_x
                 self.max_step_y = self.step_y
-                self.speed_shoot = self.speed_shoot
+                self.speed_shoot = self.primary_speed_shoot
                 self.damage = self.primary_damage
                 self.HP_O = self.hp + 2
                 self.primary_HP_O = self.HP_O
@@ -151,7 +155,7 @@ class MovingObject(QGraphicsItem):
                 self.step_y = self.step
                 self.max_step_x = self.step_x
                 self.max_step_y = self.step_y
-                self.speed_shoot = self.speed_shoot
+                self.speed_shoot = self.primary_speed_shoot
                 self.damage = self.primary_damage
                 self.HP_O = self.hp
                 self.primary_HP_O = self.HP_O
@@ -203,7 +207,7 @@ class MovingObject(QGraphicsItem):
                     self.d_speed = 0
 
                 self.timer.timeout.connect(self.timer.stop)
-                self.timer.start(25)
+                self.timer.start(self.soap_koef)
         else:
             if self.l_speed < self.step_x and self.move_direction_L == 1:
                 self.l_speed = self.step_x
@@ -439,165 +443,6 @@ class Func_Chest(QWidget):
         painter.fillRect(0,0,self.width(),self.height(),QColor(0,0,0,200))
 
 
-class MovingEnemy(QGraphicsItem):
-    def __init__(self, x=0, y=50, HP_E=3, step=1, x_size=70, y_size=70, width_window=1920, height_window=1080):
-        super().__init__()
-        self.width_window = width_window
-        self.height_window = height_window
-        self.setX(x)
-        self.setY(y)
-        self.mode = 0
-        self.speed_shoot = 5000 # настоящ
-        self.modifications(HP_E,step,self.speed_shoot,x_size,y_size)
-        self.a = 100
-        self.r = 239
-        self.g = 223
-        self.b = 200
-        self.secret_mode = 0
-        self.enemy_creator_msec = 1800
-
-        self.l_speed = 0
-        self.r_speed = 0
-        self.u_speed = 0
-        self.d_speed = 0
-
-    def boundingRect(self):
-        return QRectF(self.x(), self.y(), self.x_size, self.y_size)
-
-    def paint(self, painter, option=None, widget=None):
-        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
-        if self.mode == -1:
-            painter.setBrush(QColor(self.r,self.g,self.b,self.a))
-            painter.drawRect(self.boundingRect())
-        elif self.secret_mode == 1:
-            painter.drawImage(self.boundingRect(), QImage('low_low_Nik Saltykov.jpg'))
-        elif self.secret_mode == 2: painter.drawImage(self.boundingRect(), QImage('low_loot_bug.jpg'))
-        elif self.mode == 0:
-            painter.setBrush(QColor(255,0,0))
-            painter.drawRect(self.boundingRect())
-        elif self.mode == 1:
-            painter.setBrush(QColor(255, 150, 150))
-            painter.drawRect(self.boundingRect())
-        elif self.mode == 2:
-            painter.setBrush(QColor(200, 200, 150))
-            painter.drawRect(self.boundingRect())
-        elif self.mode == 3:
-            painter.setBrush(QColor(150, 200, 150))
-            painter.drawRect(self.boundingRect())
-        elif self.mode == 4:
-            painter.setBrush(QColor(150, 0, 0))
-            painter.drawRect(self.boundingRect())
-        elif self.mode == 5:
-            painter.setBrush(QColor(0, 255, 0))
-            painter.drawRect(self.boundingRect())
-
-    def modifications(self, HP_E=3, step=1, speed_shoot=2000, x_size=70, y_size=70):
-        if self.mode == -1:
-            self.step_x = step + (random.randint(0, 3))
-            self.x_size = random.randint(1, 10)
-            self.y_size = self.x_size
-            self.a = random.randint(150,255)
-            self.r += random.randint(-20,21)
-            self.g += random.randint(-20, 21)
-            self.b += random.randint(-20, 21)
-
-        elif self.mode == 0:
-            self.step_x = step
-            self.step_y = step
-            self.max_step_x = step
-            self.max_step_y = step
-            self.HP_E = HP_E
-            self.x_size = x_size
-            self.max_x_size = x_size
-            self.y_size = y_size
-            self.max_y_size = y_size
-
-        elif self.mode == 1:
-            self.step_x = step+2
-            self.step_y = step+2
-            self.max_step_x = step+2
-            self.max_step_y = step+2
-            self.HP_E = HP_E-2
-            self.x_size = x_size-20
-            self.max_x_size = x_size-20
-            self.y_size = y_size-20
-            self.max_y_size = y_size-20
-
-        elif self.mode == 2:
-            self.step_x = step-0.2
-            self.step_y = step-0.2
-            self.max_step_x = step-0.2
-            self.max_step_y = step-0.2
-            self.HP_E = HP_E+4
-            self.x_size = x_size+20
-            self.max_x_size = x_size+20
-            self.y_size = y_size+20
-            self.max_y_size = y_size+20
-
-        elif self.mode == 3:
-            self.step_x = step
-            self.step_y = step
-            self.max_step_x = step
-            self.max_step_y = step
-            self.HP_E = HP_E
-            self.x_size = x_size
-            self.max_x_size = x_size
-            self.y_size = y_size
-            self.max_y_size = y_size
-            self.shoot = 0
-            self.main_speed_shoot = speed_shoot - 3000 # фальшивка
-            self.bullet_enemy_timer = QTimer()
-
-        elif self.mode == 4:
-            self.step_x = step + 5
-            self.step_y = step + 5
-            self.max_step_x = step + 5
-            self.max_step_y = step + 5
-            self.HP_E = HP_E + 25
-            self.x_size = x_size - 30
-            self.max_x_size = x_size - 30
-            self.y_size = y_size - 30
-            self.max_y_size = y_size - 30
-
-
-    def difficult(self, min, sec):
-        if sec >= 30 or min >= 1:
-            if min >= 1:
-                self.enemy_creator_msec = 1750
-            random_chance = random.randint(0,101)
-            if random_chance <= 30:
-                self.mode = 1
-            else:
-                self.mode = 0
-        elif min >= 2:
-            self.enemy_creator_msec = 1700
-            random_chance = random.randint(0,101)
-            if random_chance <= 15:
-                self.mode = 2
-            else:
-                self.mode = 0
-        elif min >= 1 and sec >= 30 or min >= 2:
-            self.enemy_creator_msec = 1650
-            random_chance = random.randint(0,101)
-            if random_chance <= 25:
-                self.mode = 3
-            else:
-                self.mode = 0
-
-    def move(self):
-        if self.x() - self.step_x >= -50:
-
-            self.l_speed = self.step_x
-
-            self.setX(self.x() - self.l_speed)
-            #
-            self.setX(self.x() + self.r_speed)
-            #
-            self.setY(self.y() - self.u_speed)
-            #
-            self.setY(self.y() + self.d_speed)
-
-
 
 
 def create_page(this_page, addwidgets: list):
@@ -622,7 +467,6 @@ class Menu(QMainWindow):
         self.setCentralWidget(self.stackWidget)
         self.setMinimumSize(1120,600)
         self.setGeometry(0,0,700,375)
-        # self.resize(1536,793)
         self.font = QFont()
         self.timer = QTimer()
         self.timer.timeout.connect(self.update_bg)
@@ -631,13 +475,9 @@ class Menu(QMainWindow):
         self.puls_timer = QTimer()
         self.switch = 0
         self.a = 16
-        self.star = MovingEnemy()
         self.previous_size = QSize()
         self.stars = []
 
-
-
-        self.current_page = -1
         # Main menu 0
         self.main_menu_page = QWidget()
         self.Main_Title_txt = create_txt('STAR DEFENDER', '',
@@ -671,11 +511,8 @@ class Menu(QMainWindow):
         self.choose_player_page = QWidget()
         self.choose_player_txt = create_txt('CHOOSE PLAYER', '',
                                        [100 // 4, 0, 100 // 2, 100])
-        self.current_player_txt = create_txt('mode: 0', 'color: green;', [500, 300, 150, 100])
-        self.current_player_txt = create_txt('Speed', 'color: green;', [500, 300, 150, 100])
-        self.current_player_txt = create_txt('Health', 'color: green;', [500, 300, 150, 100])
-
         self.current_player_txt = create_txt('About player', 'color: green;', [500, 300, 150, 100])
+        self.current_player_txt.setAlignment(Qt.AlignmentFlag.AlignLeft)
         self.start_1mode_button = QPushButton('back')
         self.start_1mode_button.setGeometry(100 // 3, 100 // 3, 80, 30)
         self.chosen_config = 0
@@ -731,6 +568,7 @@ class Menu(QMainWindow):
         # Game page 5
         self.start_game = StartGame(self,True)
         self.stackWidget.addWidget(self.start_game)
+        self.twomode() # для того чтобы 1 перс был сначала
 
         # choose effect page 6
         self.choose_effect_page = Func_Chest(self.start_game.player1, self.start_game.enemy,self.start_game, self)
@@ -746,10 +584,10 @@ class Menu(QMainWindow):
             if self.stackWidget.currentWidget() != self.pause_page:
                 self.start_game.player1.window_x = self.width()
                 self.start_game.player1.window_y = self.height()
-                self.start_game.player1.setX(ceil(self.width() * 0.6))
-                self.start_game.player1.setY(ceil(self.height() * 0.1))
-                self.start_game.player1.x_size = ceil(self.width() * 0.13)
-                self.start_game.player1.y_size = ceil(self.width() * 0.13)
+                self.start_game.player1.setX(self.width() * 0.6)
+                self.start_game.player1.setY(self.height() * 0.1)
+                self.start_game.player1.x_size = (self.width() * 0.13)
+                self.start_game.player1.y_size = (self.width() * 0.13)
 
             previous_width = 1536
             previous_height = 793
@@ -762,11 +600,9 @@ class Menu(QMainWindow):
             if self.isMaximized() is True:
                 self.fullW = self.width()
                 self.fullH = self.height()
-            pro_x_star_speed = self.star.max_step_x / self.fullW
-            self.star.step_x = round(self.width() * pro_x_star_speed, 1)
-            self.star.width_window = self.width()
-            self.star.height_window = self.height()
             for star in self.stars:
+                pro_x_star_speed = star.max_step_x / self.fullW
+                star.step_x = round(self.width() * pro_x_star_speed, 1)
                 pro_x_star_position = star.x() / previous_width
                 pro_y_star_position = star.y() / previous_height
                 star.setX(round(self.width() * pro_x_star_position, 1))
@@ -775,9 +611,9 @@ class Menu(QMainWindow):
             self.previous_size = self.size()
 
     # Main menu
-            self.Main_Title_txt.setGeometry(0, ceil(self.height()*0.1), self.width(), 100)
-            # self.Main_Title_txt.setStyleSheet("font-family: Courier, monospace; color: rgba(200,200,200,50)")
-            self.font.setPointSize(ceil(self.width()*0.07))
+            self.Main_Title_txt.setGeometry(0, ceil(self.height()*0.1), self.width(), 150)
+            self.Main_Title_txt.setStyleSheet("font-family: Courier, monospace; color: rgba(200,200,200,50); letter-spacing: 15px;")
+            self.font.setPointSize(ceil(self.width()*0.08))
             self.Main_Title_txt.setFont(self.font)
             self.start_button.setGeometry(0, ceil(self.height()*0.7),ceil(self.width()*0.2), ceil(self.width()*0.03))
             self.start_button.setStyleSheet(
@@ -828,7 +664,7 @@ class Menu(QMainWindow):
             self.choose_player_txt.setStyleSheet("font-family: Courier, monospace; color: rgb(200,200,200)")
             self.font.setPointSize(ceil(self.width() * 0.03))
             self.choose_player_txt.setFont(self.font)
-            self.current_player_txt.setGeometry(ceil(self.width()*0.5), ceil(self.height() * 0.39), self.width(), 100)
+            self.current_player_txt.setGeometry(ceil(self.width()*0.5), ceil(self.height() * 0.45), self.width(), self.height()-self.y())
             self.current_player_txt.setStyleSheet("font-family: Courier New, monospace; color: rgb(200,200,200)")
             self.font.setPointSize(ceil(self.width() * 0.023))
             self.current_player_txt.setFont(self.font)
@@ -928,32 +764,44 @@ class Menu(QMainWindow):
 
 
     def create_star(self, msec):
-        if self.star_timer.isActive() is False:
-            enemy_y = random.randint(0, self.height())
-            star = MovingEnemy(self.width(), enemy_y)
-            star.mode = -1
-            star.modifications(self.star.HP_E, self.star.step_x, self.star.x_size, self.star.y_size)
+        if self.star_timer.isActive() is False and len(self.stars) < 100:
+            rand_y = random.randint(0, self.height() - 10)
+            rand_step = random.randint(1, 8)
+            x_size = random.randint(1, 5)
+            y_size = x_size
+            a = 255
+            r = random.randint(219, 255)
+            g = random.randint(203, 244)
+            b = random.randint(190, 221)
+            star = MovingObject("enemy", "default", self.width(), rand_y, 0, 0, rand_step, 0,
+                                     x_size, y_size, self.width(), self.height())
+            star.draw_color = QColor(a, r, g, b)
             self.stars.append(star)
             self.star_timer.start(msec)
             self.star_timer.timeout.connect(self.star_timer.stop)
+
+    def reborn_star(self, star):
+        star.x_size = random.randint(1, 4)
+        star.y_size = star.x_size
+        star.setX(self.width()+star.x_size)
+        rand_y = random.randint(0, self.height() - 10)
+        star.setY(rand_y)
+        a = 255
+        r = random.randint(219, 255)
+        g = random.randint(203, 244)
+        b = random.randint(190, 221)
+        star.draw_color = QColor(a, r, g, b)
     def update_bg(self):
         if self.stackWidget.currentWidget() != self.start_game:
             randomint = random.randint(0,101)
             if randomint <= 4:
-                self.success = 1
-            else:
-                self.success = 0
-            if self.success == 1:
                 self.create_star(1)
             for star in self.stars:
-                star.move()
-                if star.x() <= 0 or star.step_x == 0:
-                    self.stars.remove(star)
-            if self.current_page != self.stackWidget.currentIndex():
-                self.resizeEvent(None)
-                self.current_page = self.stackWidget.currentIndex()
+                star.move_direction_L = 1
+                star.new_move(1, 0, 0)
+                if star.x() <= -star.x_size:
+                    self.reborn_star(star)
             self.update()
-            # print(len(self.stars))
 
     def main_menu_button(self):
         main_menu_button = QPushButton('Main menu', self)
@@ -975,8 +823,13 @@ class Menu(QMainWindow):
             self.chosen_config = 0
         self.start_game.player1.modifications("player",
                                               self.start_game.player1.type_object["player"][self.chosen_config])
-        self.start_game.player1.x_size = ceil(self.width() * 0.13)
-        self.start_game.player1.y_size = ceil(self.width() * 0.13)
+        self.current_player_txt.setText(f"Name: {self.start_game.player1.type_object["player"][self.chosen_config]} \n"
+                                        f"Health: {self.start_game.player1.primary_HP_O} \n"
+                                        f"Speed: {self.start_game.player1.max_step_x} \n"
+                                        f"Soap move: {self.start_game.player1.soap_koef} \n"
+                                        f"Damage: {self.start_game.player1.damage} \n"
+                                        f"Speed shoot: {self.start_game.player1.speed_shoot} \n"
+                                        f"Size: {self.start_game.player1.max_x_size}")
 
 
     def twomode(self):
@@ -988,38 +841,35 @@ class Menu(QMainWindow):
             self.chosen_config = 0
         self.start_game.player1.modifications("player",
                                               self.start_game.player1.type_object["player"][self.chosen_config])
-        self.start_game.player1.x_size = ceil(self.width() * 0.13)
-        self.start_game.player1.y_size = ceil(self.width() * 0.13)
+        self.current_player_txt.setText(f"Name: {self.start_game.player1.type_object["player"][self.chosen_config]} \n"
+                                        f"Health: {self.start_game.player1.primary_HP_O} \n"
+                                        f"Speed: {self.start_game.player1.max_step_x} \n"
+                                        f"Soap move: {self.start_game.player1.soap_koef} \n"
+                                        f"Damage: {self.start_game.player1.damage} \n"
+                                        f"Speed shoot: {self.start_game.player1.speed_shoot} \n"
+                                        f"Size: {self.start_game.player1.max_x_size}")
 
     def resume_game(self):
         self.stackWidget.setCurrentWidget(self.start_game)
         self.start_game.resizeEvent(None)
         self.start_game.count_restart_sec = 4
+
     def paintEvent(self, event):
         painter = QPainter(self)
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
         painter.fillRect(0,0,self.width(),self.height(),QColor('black'))
-        if self.stackWidget.currentWidget()== self.main_menu_page:
-            self.a = self.pulsation(self.a,15,70,self.puls_timer,100)
-        self.Main_Title_txt.setStyleSheet(f"font-family: Courier, monospace; color: rgba(200,200,200,{self.a})")# вот она
         for star in self.stars:
             star.paint(painter)
         if self.stackWidget.currentWidget() == self.choose_player_page:
+            if self.start_game.player1.x() != (self.width() * 0.6):
+                self.start_game.player1.setX((self.width() * 0.6))
+            if self.start_game.player1.y() != (self.width() * 0.1):
+                self.start_game.player1.setY((self.height() * 0.1))
+            if self.start_game.player1.x_size != self.width() * 0.13:
+                self.start_game.player1.x_size = (self.width() * 0.13)
+                self.start_game.player1.y_size = (self.width() * 0.13)
+            # позиция не та
             self.start_game.player1.paint(painter)
-
-    def pulsation(self, a, a_low, a_high,timer, msec):
-        if self.puls_timer.isActive() is False:
-            if a > a_low and self.switch == 0:
-                    a -= 1
-                    if a == a_low:
-                        self.switch = 1
-            elif self.switch == 1:
-                a += 1
-                if a == a_high:
-                    self.switch = 0
-            timer.timeout.connect(self.puls_timer.stop)
-            timer.start(msec)
-        return a
 
 
 
@@ -1090,14 +940,14 @@ class StartGame(QWidget):
         self.restart_timer.timeout.connect(self.restart_timer.stop)
 
         self.bullet = MovingObject("bullet", "default", 0, 0, 1, 1, 1,
-                                   0, 30, 10, self.width(), self.height())  # этот предатель существует, но не виден глазу
+                                   0, 20, 5, self.width(), self.height())  # этот предатель существует, но не виден глазу
 
         self.enemy = MovingObject("enemy", "default", 0, 0, 3, 1, 1,
-                                  0, 70, 70, self.width(), self.height())  # этот предатель существует, но не виден глазу
+                                  0, 65, 65, self.width(), self.height())  # этот предатель существует, но не виден глазу
         # думаю, что вполне возможно исп только один
 
         self.player1 = MovingObject("player", "default", 0, 0, 3, 1, 10, 370,
-                                    50, 50, self.width(), self.height())
+                                    45, 45, self.width(), self.height())
         # self.player1.modifications("player",
         #                                       self.player1.type_object["player"][self.menu.chosen_config])
 
@@ -1317,13 +1167,13 @@ class StartGame(QWidget):
             if self.boundingRect().contains(enemy.boundingRect()) is False:
                 self.enemies.remove(enemy)
             for bullet in self.bullets:
-                if bullet.x() + bullet.x_size > self.width():
+                if self.boundingRect().contains(bullet.boundingRect()) is False:
                     self.bullets.remove(bullet)
                     continue
                 if enemy.x() <= self.width() - (enemy.x_size // 2):
                         if enemy.boundingRect().intersects(bullet.boundingRect()):
                             self.bullets.remove(bullet)
-                            enemy.HP_O -= (self.bullet.damage + self.player1.damage)
+                            enemy.HP_O -= (self.bullet.damage * self.player1.damage)
                             if enemy.HP_O <= 0:
                                 self.enemies.remove(enemy)
 
@@ -1348,7 +1198,7 @@ class StartGame(QWidget):
                 enemy.new_move(1,0,0)
             self.check_collision()
         else: self.player1.new_move(0)
-        if self.isActiveWindow() is False:
+        if self.isActiveWindow() is False and self.menu.stackWidget.currentWidget() == self:
             self.menu.stackWidget.setCurrentWidget(self.menu.pause_page)
         self.update()
 
