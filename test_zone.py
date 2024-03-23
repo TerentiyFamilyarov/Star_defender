@@ -298,35 +298,53 @@ class MovingObject(QGraphicsItem):
 
 
 
-class Chest(QGraphicsRectItem):
-    def __init__(self, x=0, y=50, width_window=1920, height_window=1080):
+class Card(QPushButton):
+    def __init__(self):
         super().__init__()
-        self.width_window = width_window
-        self.height_window = height_window
-        self.setX(x)
-        self.setY(y)
         self.modifications()
-        self.used_value = []
+        self.setGeometry(0, 0, self.x_size, self.y_size)
+        self.txt_chosen_object_1, self.txt_effect_1, self.chosen_object_1, self.effect_1 = self.random_effect()
+        self.effect_power_1 = random.randint(0, 6)
+        self.setText(f"{self.txt_chosen_object_1} {self.txt_effect_1} + {self.effect_power_1}%")
+        self.setStyleSheet("text-align: top"
+                           "")
+        self.clicked.connect(self.close)
 
-    def boundingRect(self):
-        return QRectF(self.x(), self.y(), self.x_size, self.y_size)
-
-    def paint(self, painter, option=None, widget=None):
-        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
-        painter.setBrush(QColor(0,0,0))
-        painter.drawRect(self.boundingRect())
-
-    def spawn(self):
-        rand_x = random.randint(self.width_window//4, self.width_window - self.x_size)
-        self.setX(rand_x)
-        rand_y = random.randint(0, self.height_window - self.y_size)
-        self.setY(rand_y)
-
-    def modifications(self, x_size=40, y_size=40):
+    def modifications(self, x_size=200, y_size=500):
         self.x_size = x_size
         self.y_size = y_size
         self.max_x_size = x_size
         self.max_y_size = y_size
+
+    def random_effect(self):
+        robject = {
+            "Player": "player1",
+            "Enemies": "enemy",
+            "Bullets": "bullet"
+        }
+        chobject = random.choice(list(robject.keys()))
+        if chobject == "Player":
+            effects = {
+                "Speed": "step",
+                "Speed shoot": "speed_shoot",
+                "Hp": "HP_O",
+                "Size": "x_size",
+                "Damage": "damage",
+                "Soap Coefficient":"soap_koef"
+            }
+        else:
+            effects = {
+                "Speed": "step",
+                "Speed shoot": "speed_shoot",
+                "Hp": "HP_O",
+                "Size": "x_size",
+                "Damage": "damage",
+            }
+        effect = random.choice(list(effects.keys()))
+        return chobject, effect, robject[chobject], effects[effect]
+
+
+
 
 
 class Func_Chest(QWidget):
@@ -571,15 +589,25 @@ class Menu(QMainWindow):
         self.twomode() # для того чтобы 1 перс был сначала
 
         # choose effect page 6
-        self.choose_effect_page = Func_Chest(self.start_game.player1, self.start_game.enemy,self.start_game, self)
-        self.stackWidget.addWidget(self.choose_effect_page)
+        self.choose_card_page = QWidget()
+        self.card_button = Card()
+        obj_1 = getattr(self.start_game, self.card_button.chosen_object_1)
+        # setattr(obj_1, f"{self.card_button.effect_1}",getattr(obj_1, f"{self.card_button.effect_1}")*(self.card_button.effect_power_1/100))
+        self.card_button.clicked.connect(lambda: (self.stackWidget.setCurrentWidget(self.start_game), setattr(obj_1, f"{self.card_button.effect_1}",
+                                                 ceil(getattr(obj_1, self.card_button.effect_1) *
+                                                 (self.card_button.effect_power_1/100)))))
+        # self.card_button.clicked.connect(lambda: setattr(obj_1, f"{self.card_button.effect_1}",
+        #                                          getattr(obj_1, self.card_button.effect_1) *
+        #                                          (self.card_button.effect_power_1/100)))
+
+        create_page(self.choose_card_page, [self.card_button])
+        self.stackWidget.addWidget(self.choose_card_page)
         # Включить полноэкранный режим
         self.showMaximized()
 
-
     def resizeEvent(self, event):
         pass
-        if self.stackWidget.currentWidget() != self.start_game and self.stackWidget.currentWidget() != self.choose_effect_page:
+        if self.stackWidget.currentWidget() != self.start_game and self.stackWidget.currentWidget() != self.choose_card_page:
 
             if self.stackWidget.currentWidget() != self.pause_page:
                 self.start_game.player1.window_x = self.width()
@@ -613,34 +641,34 @@ class Menu(QMainWindow):
     # Main menu
             self.Main_Title_txt.setGeometry(0, ceil(self.height()*0.1), self.width(), 150)
             self.Main_Title_txt.setStyleSheet("font-family: Courier, monospace; color: rgba(200,200,200,50); letter-spacing: 15px;")
-            self.font.setPointSize(ceil(self.width()*0.08))
+            self.font.setPointSize(ceil(((self.width()+(self.height()*1.78))/2)*0.08))
             self.Main_Title_txt.setFont(self.font)
             self.start_button.setGeometry(0, ceil(self.height()*0.7),ceil(self.width()*0.2), ceil(self.width()*0.03))
             self.start_button.setStyleSheet(
                 "QPushButton {font-family: Courier New, monospace; color: white; letter-spacing: 10px;"
                 "             text-align: left; margin: 0px; background-color: rgba(255,0,0,0);}"
                 "QPushButton:hover {color: rgb(219,203,180)}")
-            self.font.setPointSize(ceil(self.width()*0.02))
+            self.font.setPointSize(ceil(((self.width()+(self.height()*1.78))/2)*0.02))
             self.start_button.setFont(self.font)
             self.exit_button.setGeometry(0, ceil(self.height()*0.79), ceil(self.width()*0.2), ceil(self.width()*0.03))
             self.exit_button.setStyleSheet(
                 "QPushButton {font-family: Courier New, monospace; color: white; letter-spacing: 10px;"
                 "             text-align: left; margin: 0px; background-color: rgba(0,0,0,0);}"
                 "QPushButton:hover {color: rgb(219,203,180)}")
-            self.font.setPointSize(ceil(self.width() * 0.02))
+            self.font.setPointSize(ceil(((self.width()+(self.height()*1.78))/2) * 0.02))
             self.exit_button.setFont(self.font)
 
     # Choose mode
             self.choose_mode_txt.setGeometry(0, ceil(self.height() * 0.11), self.width(), 100)
             self.choose_mode_txt.setStyleSheet("font-family: Courier, monospace; color: rgb(200,200,200)")
-            self.font.setPointSize(ceil(self.width() * 0.03))
+            self.font.setPointSize(ceil(((self.width()+(self.height()*1.78))/2) * 0.03))
             self.choose_mode_txt.setFont(self.font)
             self.start_1p_button.setGeometry(0, ceil(self.height() * 0.3), ceil(self.width() * 0.2), ceil(self.width() * 0.03))
             self.start_1p_button.setStyleSheet(
                 "QPushButton {font-family: Courier New, monospace; color: white; letter-spacing: 10px;"
                 "             text-align: left; margin: 0px; background-color: rgba(255,0,0,0);}"
                 "QPushButton:hover {color: rgb(219,203,180)}")
-            self.font.setPointSize(ceil(self.width() * 0.02))
+            self.font.setPointSize(ceil(((self.width()+(self.height()*1.78))/2) * 0.02))
             self.start_1p_button.setFont(self.font)
             self.start_2p_button.setGeometry(0, ceil(self.height() * 0.39), ceil(self.width() * 0.2),
                                              ceil(self.width() * 0.03))
@@ -648,7 +676,7 @@ class Menu(QMainWindow):
                 "QPushButton {font-family: Courier New, monospace; color: white; letter-spacing: 10px;"
                 "             text-align: left; margin: 0px; background-color: rgba(255,0,0,0);}"
                 "QPushButton:hover {color: rgb(219,203,180)}")
-            self.font.setPointSize(ceil(self.width() * 0.02))
+            self.font.setPointSize(ceil(((self.width()+(self.height()*1.78))/2) * 0.02))
             self.start_2p_button.setFont(self.font)
             self.choose_mode_back_button.setGeometry(0, ceil(self.height() * 0.48), ceil(self.width() * 0.25),
                                              ceil(self.width() * 0.03))
@@ -656,24 +684,24 @@ class Menu(QMainWindow):
                 "QPushButton {font-family: Courier New, monospace; color: white; word-spacing: -7px; letter-spacing: 10px;"
                 "             text-align: left; margin: 0px; background-color: rgba(255,0,0,0);}"
                 "QPushButton:hover {color: rgb(219,203,180)}")
-            self.font.setPointSize(ceil(self.width() * 0.02))
+            self.font.setPointSize(ceil(((self.width()+(self.height()*1.78))/2) * 0.02))
             self.choose_mode_back_button.setFont(self.font)
 
     # choose player
             self.choose_player_txt.setGeometry(0, ceil(self.height() * 0.12), self.width(), 100)
             self.choose_player_txt.setStyleSheet("font-family: Courier, monospace; color: rgb(200,200,200)")
-            self.font.setPointSize(ceil(self.width() * 0.03))
+            self.font.setPointSize(ceil(((self.width()+(self.height()*1.78))/2) * 0.03))
             self.choose_player_txt.setFont(self.font)
             self.current_player_txt.setGeometry(ceil(self.width()*0.5), ceil(self.height() * 0.45), self.width(), self.height()-self.y())
             self.current_player_txt.setStyleSheet("font-family: Courier New, monospace; color: rgb(200,200,200)")
-            self.font.setPointSize(ceil(self.width() * 0.023))
+            self.font.setPointSize(ceil(((self.width()+(self.height()*1.78))/2) * 0.023))
             self.current_player_txt.setFont(self.font)
             self.start_1mode_button.setGeometry(ceil(self.width()*0.75), ceil(self.height() * 0.1), ceil(self.width() * 0.1), ceil(self.width() * 0.03))
             self.start_1mode_button.setStyleSheet(
                 "QPushButton {font-family: Courier New, monospace; color: white; letter-spacing: 10px;"
                 "             text-align: left; margin: 0px; background-color: rgba(255,0,0,0);}"
                 "QPushButton:hover {color: rgb(219,203,180)}")
-            self.font.setPointSize(ceil(self.width() * 0.02))
+            self.font.setPointSize(ceil(((self.width()+(self.height()*1.78))/2) * 0.02))
             self.start_1mode_button.setFont(self.font)
             self.start_2mode_button.setGeometry(ceil(self.width()*0.87), ceil(self.height() * 0.1), ceil(self.width() * 0.1),
                                                 ceil(self.width() * 0.03))
@@ -681,27 +709,27 @@ class Menu(QMainWindow):
                 "QPushButton {font-family: Courier New, monospace; color: white; letter-spacing: 10px;"
                 "             text-align: left; margin: 0px; background-color: rgba(255,0,0,0);}"
                 "QPushButton:hover {color: rgb(219,203,180)}")
-            self.font.setPointSize(ceil(self.width() * 0.02))
+            self.font.setPointSize(ceil(((self.width()+(self.height()*1.78))/2) * 0.02))
             self.start_2mode_button.setFont(self.font)
             self.confirm_button.setGeometry(ceil(self.width()*0.75), ceil(self.height() * 0.29), ceil(self.width() * 0.2), ceil(self.width() * 0.03))
             self.confirm_button.setStyleSheet(
                 "QPushButton {font-family: Courier New, monospace; color: white; letter-spacing: 10px;"
                 "             text-align: left; margin: 0px; background-color: rgba(255,0,0,0);}"
                 "QPushButton:hover {color: rgb(219,203,180)}")
-            self.font.setPointSize(ceil(self.width() * 0.02))
+            self.font.setPointSize(ceil(((self.width()+(self.height()*1.78))/2) * 0.02))
             self.confirm_button.setFont(self.font)
             self.choose_player_back_button.setGeometry(0, ceil(self.height() * 0.48), ceil(self.width() * 0.25), ceil(self.width() * 0.03))
             self.choose_player_back_button.setStyleSheet(
                 "QPushButton {font-family: Courier New, monospace; color: white; word-spacing: -20px; letter-spacing: 10px;"
                 "             text-align: left; margin: 0px; background-color: rgba(255,0,0,0);}"
                 "QPushButton:hover {color: rgb(219,203,180)}")
-            self.font.setPointSize(ceil(self.width() * 0.02))
+            self.font.setPointSize(ceil(((self.width()+(self.height()*1.78))/2) * 0.02))
             self.choose_player_back_button.setFont(self.font)
 
     # game over
             self.game_over_txt.setGeometry(0, ceil(self.height() * 0.1), self.width(), 100)
             self.game_over_txt.setStyleSheet("font-family: Courier, monospace; color: Crimson")
-            self.font.setPointSize(ceil(self.width() * 0.07))
+            self.font.setPointSize(ceil(((self.width()+(self.height()*1.78))/2) * 0.07))
             self.game_over_txt.setFont(self.font)
             self.retry_button.setGeometry(0, ceil(self.height() * 0.3), ceil(self.width() * 0.2),
                                              ceil(self.width() * 0.03))
@@ -709,7 +737,7 @@ class Menu(QMainWindow):
                 "QPushButton {font-family: Courier New, monospace; color: white; letter-spacing: 10px;"
                 "             text-align: left; margin: 0px; background-color: rgba(255,0,0,0);}"
                 "QPushButton:hover {color: rgb(219,203,180)}")
-            self.font.setPointSize(ceil(self.width() * 0.02))
+            self.font.setPointSize(ceil(((self.width()+(self.height()*1.78))/2) * 0.02))
             self.retry_button.setFont(self.font)
             self.game_over_choose_player_button.setGeometry(0, ceil(self.height() * 0.39), ceil(self.width() * 0.35),
                                           ceil(self.width() * 0.03))
@@ -717,7 +745,7 @@ class Menu(QMainWindow):
                 "QPushButton {font-family: Courier New, monospace; color: white; word-spacing: -7px; letter-spacing: 10px;"
                 "             text-align: left; margin: 0px; background-color: rgba(255,0,0,0);}"
                 "QPushButton:hover {color: rgb(219,203,180)}")
-            self.font.setPointSize(ceil(self.width() * 0.02))
+            self.font.setPointSize(ceil(((self.width()+(self.height()*1.78))/2) * 0.02))
             self.game_over_choose_player_button.setFont(self.font)
             self.game_over_main_menu_button.setGeometry(0, ceil(self.height() * 0.48), ceil(self.width() * 0.25),
                                                             ceil(self.width() * 0.03))
@@ -725,13 +753,13 @@ class Menu(QMainWindow):
                 "QPushButton {font-family: Courier New, monospace; color: white; word-spacing: -7px; letter-spacing: 10px;"
                 "             text-align: left; margin: 0px; background-color: rgba(255,0,0,0);}"
                 "QPushButton:hover {color: rgb(219,203,180)}")
-            self.font.setPointSize(ceil(self.width() * 0.02))
+            self.font.setPointSize(ceil(((self.width()+(self.height()*1.78))/2) * 0.02))
             self.game_over_main_menu_button.setFont(self.font)
 
     # pause game
             self.pause_game_txt.setGeometry(0, ceil(self.height() * 0.1), self.width(), 100)
             self.pause_game_txt.setStyleSheet("font-family: Courier, monospace; color: rgb(200,200,200)")
-            self.font.setPointSize(ceil(self.width() * 0.03))
+            self.font.setPointSize(ceil(((self.width()+(self.height()*1.78))/2) * 0.03))
             self.pause_game_txt.setFont(self.font)
             self.resume_button.setGeometry(0, ceil(self.height() * 0.3), ceil(self.width() * 0.2),
                                           ceil(self.width() * 0.03))
@@ -739,7 +767,7 @@ class Menu(QMainWindow):
                 "QPushButton {font-family: Courier New, monospace; color: white; letter-spacing: 10px;"
                 "             text-align: left; margin: 0px; background-color: rgba(255,0,0,0);}"
                 "QPushButton:hover {color: rgb(219,203,180)}")
-            self.font.setPointSize(ceil(self.width() * 0.02))
+            self.font.setPointSize(ceil(((self.width()+(self.height()*1.78))/2) * 0.02))
             self.resume_button.setFont(self.font)
             self.pause_game_retry_button.setGeometry(0, ceil(self.height() * 0.39), ceil(self.width() * 0.2),
                                            ceil(self.width() * 0.03))
@@ -747,7 +775,7 @@ class Menu(QMainWindow):
                 "QPushButton {font-family: Courier New, monospace; color: white; letter-spacing: 10px;"
                 "             text-align: left; margin: 0px; background-color: rgba(255,0,0,0);}"
                 "QPushButton:hover {color: rgb(219,203,180)}")
-            self.font.setPointSize(ceil(self.width() * 0.02))
+            self.font.setPointSize(ceil(((self.width()+(self.height()*1.78))/2) * 0.02))
             self.pause_game_retry_button.setFont(self.font)
             self.pause_game_main_menu_button.setGeometry(0, ceil(self.height() * 0.48), ceil(self.width() * 0.25),
                                                      ceil(self.width() * 0.03))
@@ -755,7 +783,7 @@ class Menu(QMainWindow):
                 "QPushButton {font-family: Courier New, monospace; color: white; letter-spacing: 10px;"
                 "             text-align: left; margin: 0px; background-color: rgba(255,0,0,0);}"
                 "QPushButton:hover {color: rgb(219,203,180)}")
-            self.font.setPointSize(ceil(self.width() * 0.02))
+            self.font.setPointSize(ceil(((self.width()+(self.height()*1.78))/2) * 0.02))
             self.pause_game_main_menu_button.setFont(self.font)
 
 
@@ -939,7 +967,7 @@ class StartGame(QWidget):
         self.restart_timer = QTimer()
         self.restart_timer.timeout.connect(self.restart_timer.stop)
 
-        self.bullet = MovingObject("bullet", "default", 0, 0, 1, 1, 1,
+        self.bullet = MovingObject("bullet", "default", 0, 0, 1, 1, 15,
                                    0, 20, 5, self.width(), self.height())  # этот предатель существует, но не виден глазу
 
         self.enemy = MovingObject("enemy", "default", 0, 0, 3, 1, 1,
@@ -948,13 +976,6 @@ class StartGame(QWidget):
 
         self.player1 = MovingObject("player", "default", 0, 0, 3, 1, 10, 370,
                                     45, 45, self.width(), self.height())
-        # self.player1.modifications("player",
-        #                                       self.player1.type_object["player"][self.menu.chosen_config])
-
-        self.chest = Chest()
-
-        self.chest_timer = QTimer()
-        self.chests = []
 
         self.game_restart(0)
 
@@ -1022,20 +1043,6 @@ class StartGame(QWidget):
             self.player1.step_y = round(self.height() * pro_y_player_speed, 1)
             # сохранение позиции player1 при изменении экрана
             # (в процентном соотношении с округлением до 1 десятой)
-
-            pro_x_chest_size = self.chest.max_x_size / self.fullW
-            pro_y_chest_size = self.chest.max_y_size / self.fullH
-            self.chest.x_size = int(self.width() * pro_x_chest_size)
-            self.chest.y_size = int(self.height() * pro_y_chest_size)
-            self.chest.width_window = self.width()
-            self.chest.height_window = self.height()
-            for chest in self.chests:
-                chest.modifications(self.chest.x_size,self.chest.y_size)
-                pro_x_chest_position = chest.x() / previous_width
-                pro_y_chest_position = chest.y() / previous_height
-                chest.setX(round(self.width() * pro_x_chest_position, 1))
-                chest.setY(round(self.height() * pro_y_chest_position, 1))
-
 
             pro_x_enemy_size = self.enemy.max_x_size / self.fullW
             pro_y_enemy_size = self.enemy.max_y_size / self.fullH
@@ -1117,35 +1124,17 @@ class StartGame(QWidget):
         if self.player1.shoot == 1 and self.bullet_timer1.isActive() is False:
             bullet = MovingObject("bullet","default",ceil(self.player1.x() + self.player1.x_size),
                                   (ceil(self.player1.y() + self.player1.y_size // 2)-self.bullet.y_size//2),
-                                  1,1,15,0,30,10,self.width(),self.height())
+                                  self.bullet.hp, self.bullet.damage, self.bullet.step, self.bullet.speed_shoot,
+                                  self.bullet.x_size, self.bullet.y_size, self.width(), self.height())
             self.bullets.append(bullet)
             self.bullet_timer1.start(msec1)
             self.bullet_timer1.timeout.connect(self.bullet_timer1.stop)
-
-    def create_chest(self):
-        if self.min >= 0:
-            msec = random.randint(3000,45000)
-            if self.chest_timer.isActive() is False:
-                chest = Chest(0, 0, ceil(self.width()*0.9), ceil(self.height()*0.8))
-                chest.modifications(self.chest.x_size,self.chest.y_size)
-                chest.spawn()
-                self.chests.append(chest)
-                self.chest_timer.start(msec)
-                self.chest_timer.timeout.connect(self.chest_timer.stop)
 
     def check_collision(self):
         if self.player1.HP_O <= 0:
             self.menu.stackWidget.setCurrentWidget(self.menu.game_over_page)
         # Проверяем столкновение пуль с врагами
         for enemy in self.enemies:
-            for chest in self.chests:
-                if self.player1.boundingRect().intersects(chest.boundingRect()):
-                    self.menu.choose_effect_page.open()
-                    self.menu.stackWidget.setCurrentWidget(self.menu.choose_effect_page)
-                    self.chests.remove(chest)
-                elif enemy.boundingRect().intersects(chest.boundingRect()):
-                    self.menu.choose_effect_page.enemy_open()
-                    self.chests.remove(chest)
             if self.player1.boundingRect().intersects(enemy.boundingRect()):
                     if self.player1.x() + self.player1.x_size//2 < enemy.x():
                         self.player1.l_speed = self.player1.step_x*1.2
@@ -1161,8 +1150,8 @@ class StartGame(QWidget):
                         self.player1.u_speed = 0
 
             if enemy.x() <= -enemy.x_size:
+                self.player1.HP_O -= enemy.damage  # Уменьшение здоровья игрока
                 self.enemies.remove(enemy)
-                self.player1.HP_O -= 1  # Уменьшение здоровья игрока
                 continue
             if self.boundingRect().contains(enemy.boundingRect()) is False:
                 self.enemies.remove(enemy)
@@ -1172,7 +1161,9 @@ class StartGame(QWidget):
                     continue
                 if enemy.x() <= self.width() - (enemy.x_size // 2):
                         if enemy.boundingRect().intersects(bullet.boundingRect()):
-                            self.bullets.remove(bullet)
+                            bullet.HP_O -= 1
+                            if bullet. HP_O <= 0:
+                                self.bullets.remove(bullet)
                             enemy.HP_O -= (self.bullet.damage * self.player1.damage)
                             if enemy.HP_O <= 0:
                                 self.enemies.remove(enemy)
@@ -1186,9 +1177,11 @@ class StartGame(QWidget):
                 self.count_restart_sec -= 1
 
         if self.menu.stackWidget.currentWidget() == self and self.count_restart_sec <= 1 and self.restart_timer.isActive() is False:
+            if self.sec == 3:
+                self.menu.stackWidget.setCurrentWidget(self.menu.choose_card_page)
+                self.sec +=1
             self.create_bullet(self.player1.speed_shoot)
-            self.create_enemy(2000, self.enemy.speed_shoot)
-            # self.create_chest()
+            self.create_enemy(2000-(10*self.min), self.enemy.speed_shoot)
             self.player1.new_move()
             for bullet in self.bullets:
                 bullet.move_direction_R = 1
@@ -1229,8 +1222,6 @@ class StartGame(QWidget):
             painter.fillRect(ceil(self.width() * 0.05) + i * (ceil(self.width() * 0.01) + 2),
                                  ceil(self.height() * 0.82),
                                  ceil(self.width() * 0.01), ceil(self.width() * 0.03), QColor(200, 100, 100))
-        for chest in self.chests:
-            chest.paint(painter)
         self.player1.paint(painter)
         for bullet in self.bullets:
             bullet.paint(painter)
