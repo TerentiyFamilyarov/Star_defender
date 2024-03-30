@@ -310,193 +310,40 @@ class Choice_Card(QWidget):
         num_cards = 3
         self.cards = []
         self.Create_Cards(num_cards, x_window, y_window)
-        for card in self.cards:
-            # self.Set_Content(card, way_attr)
-            self.Create_Card_func(way_attr,card,'ABoBa','health player pluses 10',['player1'],['HP_O'],['+'],['10'])
+
 
     def Create_Cards(self, count, x_window, y_window):
         for i in range(count):
             card = QPushButton(self)
             card.setGeometry(i * ceil((x_window / count)), 0, ceil(x_window / count) - 50, y_window - 50)
+            # card.setStyleSheet("QPushButton { "
+            #              "white-space: pre-wrap; "
+            #              "word-wrap: break-word; }")
             self.cards.append(card)
 
-    def Set_Content(self, card, way_attr):
-        txt = ""
-        power_koef = 1
-        while power_koef > 0:
-            if random.randint(0, 2) == 0:
-                plus_or_minus = "+"
-            else:
-                plus_or_minus = "-"
-            txt_obj, txt_effect, obj, effect, power_koef, power = self.random_effect()
-            txt += f"{txt_obj} {txt_effect} {plus_or_minus} {power}%\n"
-            objj = getattr(way_attr, obj)
-            if plus_or_minus == "+":
-                plus_or_minus = 1
-            else:
-                plus_or_minus = -1
-            card.clicked.connect(
-                lambda: (setattr(objj, effect, getattr(objj, effect) * (1 + (plus_or_minus * (power / 100))))))
-            power_koef -= 1
-        card.setText(f"{txt}")
+    def Set_Content(self,way_for_eff,card:any,Name:str,description:str,effects:list):
+        card.setStyleSheet('text-align: top; font-size: 25px;')
+        card.setText(f'{Name} \n \n \n \n \n {description}')
+        for i in range(len(effects)): # effects = [( object(player), effect(HP_O), value(+10) )]
+            obj = getattr(way_for_eff, effects[i][0])
+            card.clicked.connect(lambda: setattr(obj, effects[i][1], eval(f'{getattr(obj,effects[i][1])}{effects[i][2]}')))
 
+    def randomize_cards(self, way_to_attr):
+        types_cards = [
+            ('Blessing','you lucky,\n'
+                        'you are blessed from the Universe.\n'
+                        'Gain you 1 HP', 'player1', 'HP_O', '+1'),
+            ('OnePanchMan','100 squats,\n'
+                           '100 push-ups,\n'
+                           '100 crunches,\n'
+                           '10km run.\n'
+                           'your damage + 10', 'player1', 'damage', '+10') # лучше использовать лабел - тк можно будет разные стили сделать,
+            # а еще переносить по словам
+        ]
+        for card in self.cards:
+            name, description, obj, effect, value = random.choice(list(types_cards))
+            self.Set_Content(way_to_attr,card, name, description, [(obj, effect, value)])
 
-
-    def Create_Card_func(self,way_for_eff,card:any,Name:str,description:str,object_keys:list,effects_keys:list,operations:list,effects_values:list):
-        card.setText(f'{Name} \n \n \n \n {description}')
-        for i in range(len(effects_keys)):
-            obj = getattr(way_for_eff,object_keys[i])
-            card.clicked.connect(lambda: setattr(obj,effects_keys[i],eval(f'{getattr(obj, effects_keys[i])} {operations[i]} int({effects_values[i]})')))
-            # Работающая дрисня
-
-
-
-
-    def random_effect(self):
-        power_koef = random.randint(1, 6)
-        power = 1.5 * power_koef
-        robject = {
-            "Player": "player1",
-            "Enemies": "enemy",
-            "Bullets": "bullet"
-        }
-        chobject = random.choice(list(robject.keys()))
-        if chobject == "Player":
-            effects = {
-                "Speed": "step",
-                "Speed shoot": "speed_shoot",
-                "Hp": "HP_O",
-                "Size x": "x_size",
-                "Damage": "damage",
-                "Soap Coefficient": "soap_koef"
-            }
-        elif chobject == "Enemies":
-            effects = {
-                "Speed": "step",
-                "Hp": "HP_O",
-                "Size x": "x_size",
-                "Damage": "damage",
-            }
-        else:
-            effects = {
-                "Speed": "step",
-                "Size x": "x_size",
-                "Damage": "damage",
-            }
-        effect = random.choice(list(effects.keys()))
-        return chobject, effect, robject[chobject], effects[effect], power_koef, power
-
-
-class Func_Chest(QWidget):
-    def __init__(self, player, enemy, resize_window, menu):
-        super().__init__()
-        self.resize_window = resize_window
-        self.menu = menu
-        self.player = player
-        self.enemy = enemy
-        self.x_size = 40
-        self.y_size = 40
-        self.type_cards_1 = ''
-        self.effect_card_1 = ''
-        self.value_card_1 = 0
-        self.type_cards_2 = ''
-        self.effect_card_2 = ''
-        self.value_card_2 = 0
-        self.type_cards_3 = ''
-        self.effect_card_3 = ''
-        self.value_card_3 = 0
-
-        self.button_one = QPushButton(f'{self.effect_card_1}', self)
-        self.button_one.clicked.connect(self.first_button)
-
-        self.button_two = QPushButton(f'{self.effect_card_2}', self)
-        self.button_two.move(0, 50)
-        self.button_two.clicked.connect(self.second_button)
-
-        self.button_three = QPushButton(f'{self.effect_card_3}', self)
-        self.button_three.move(0, 100)
-        self.button_three.clicked.connect(self.third_button)
-
-    def open(self):
-        self.storage()
-        for i in range(3):
-            random_type_cards = random.choice(list(self.cards))
-            random_effect = random.choice(list(self.cards[random_type_cards]))
-            effect_value = self.cards[random_type_cards][random_effect]
-            if i == 0:
-                self.type_cards_1 = random_type_cards
-                self.effect_card_1 = random_effect
-                self.value_card_1 = effect_value
-            elif i == 1:
-                self.type_cards_2 = random_type_cards
-                self.effect_card_2 = random_effect
-                self.value_card_2 = effect_value
-            elif i == 2:
-                self.type_cards_3 = random_type_cards
-                self.effect_card_3 = random_effect
-                self.value_card_3 = effect_value
-        self.button_one.setText(f'{self.effect_card_1}')
-        self.button_two.setText(f'{self.effect_card_2}')
-        self.button_three.setText(f'{self.effect_card_3}')
-
-    def storage(self):
-        self.cards = {
-            "speed_cards": {
-                "Slow_down": 0.9,
-                "Speed_Up": 1.1,
-                "Very_slow": 0.5
-            },
-            "hp_cards": {
-                "Fat_player": 2,
-                "Tiny_player": -2
-            }
-        }
-
-    def use_card(self, cards: dict, type_card: str, effect: str):
-        if type_card == 'speed_cards':
-            self.player.max_step *= cards[type_card][effect]
-        elif type_card == 'hp_cards':
-            self.player.HP_P += cards[type_card][effect]
-        self.resize_window.resizeEvent(None)
-        self.menu.stackWidget.setCurrentWidget(self.menu.start_game)
-
-    def first_button(self):
-        self.use_card(self.cards, self.type_cards_1, self.effect_card_1)
-
-    def second_button(self):
-        self.use_card(self.cards, self.type_cards_2, self.effect_card_2)
-        self.close()
-
-    def third_button(self):
-        self.use_card(self.cards, self.type_cards_3, self.effect_card_3)
-        self.close()
-
-    def enemy_open(self):
-        self.enemy_storage()
-        random_type_cards = random.choice(list(self.enemy_cards))
-        random_effect = random.choice(list(self.enemy_cards[random_type_cards]))
-        effect_value = self.enemy_cards[random_type_cards][random_effect]
-        if random_type_cards == 'speed_cards':
-            self.enemy.max_step_x *= self.enemy_cards[random_type_cards][random_effect]
-        elif random_type_cards == 'hp_cards':
-            self.enemy.HP_E += self.enemy_cards[random_type_cards][random_effect]
-        self.resize_window.resizeEvent(None)
-
-    def enemy_storage(self):
-        self.enemy_cards = {
-            "speed_cards": {
-                "Speed_Up": 1.1,
-                "Very_Speed_Up": 1.5
-            },
-            "hp_cards": {
-                "Fat_enemy": 1,
-            }
-        }
-
-    def paintEvent(self, event):
-        painter = QPainter(self)
-        self.menu.start_game.paint(painter)
-        painter.fillRect(0, 0, self.width(), self.height(), QColor(0, 0, 0, 200))
 
 
 def create_page(this_page, addwidgets: list):
@@ -1180,8 +1027,7 @@ class StartGame(QWidget):
         if self.menu.stackWidget.currentWidget() == self and self.count_restart_sec <= 1 and self.restart_timer.isActive() is False:
             if self.sec == 3 or self.sec % 10 == 0 and self.sec > 0:
                 self.menu.stackWidget.setCurrentWidget(self.menu.choose_card_page)  # Костыль, переделай
-                # for card in self.menu.choose_card_page.cards:
-                    # self.menu.choose_card_page.Set_Content(card, self)
+                self.menu.choose_card_page.randomize_cards(self)
 
                 self.sec += 1
             self.create_bullet(int(self.player1.speed_shoot))

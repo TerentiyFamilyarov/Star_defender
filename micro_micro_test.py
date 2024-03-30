@@ -1,4 +1,4 @@
-# import random
+import random
 # import sys
 # from typing import Dict
 #
@@ -131,3 +131,4 @@
 #     game_window = Card()
 #     game_window.show()
 #     sys.exit(app.exec())
+
