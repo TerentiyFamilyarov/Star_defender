@@ -311,7 +311,8 @@ class Choice_Card(QWidget):
         self.cards = []
         self.Create_Cards(num_cards, x_window, y_window)
         for card in self.cards:
-            self.Set_Content(card, way_attr)
+            # self.Set_Content(card, way_attr)
+            self.Create_Card_func(way_attr,card,'ABoBa','health player pluses 10',['player1'],['HP_O'],['+'],['10'])
 
     def Create_Cards(self, count, x_window, y_window):
         for i in range(count):
@@ -338,6 +339,18 @@ class Choice_Card(QWidget):
                 lambda: (setattr(objj, effect, getattr(objj, effect) * (1 + (plus_or_minus * (power / 100))))))
             power_koef -= 1
         card.setText(f"{txt}")
+
+
+
+    def Create_Card_func(self,way_for_eff,card:any,Name:str,description:str,object_keys:list,effects_keys:list,operations:list,effects_values:list):
+        card.setText(f'{Name} \n \n \n \n {description}')
+        for i in range(len(effects_keys)):
+            obj = getattr(way_for_eff,object_keys[i])
+            card.clicked.connect(lambda: setattr(obj,effects_keys[i],eval(f'{getattr(obj, effects_keys[i])} {operations[i]} int({effects_values[i]})')))
+            # Работающая дрисня
+
+
+
 
     def random_effect(self):
         power_koef = random.randint(1, 6)
@@ -1167,8 +1180,9 @@ class StartGame(QWidget):
         if self.menu.stackWidget.currentWidget() == self and self.count_restart_sec <= 1 and self.restart_timer.isActive() is False:
             if self.sec == 3 or self.sec % 10 == 0 and self.sec > 0:
                 self.menu.stackWidget.setCurrentWidget(self.menu.choose_card_page)  # Костыль, переделай
-                for card in self.menu.choose_card_page.cards:
-                    self.menu.choose_card_page.Set_Content(card, self)
+                # for card in self.menu.choose_card_page.cards:
+                    # self.menu.choose_card_page.Set_Content(card, self)
+
                 self.sec += 1
             self.create_bullet(int(self.player1.speed_shoot))
             self.create_enemy(2000 - (10 * self.min), int(self.enemy.speed_shoot))
@@ -1235,3 +1249,5 @@ if __name__ == '__main__':
     game_window = Menu()
     game_window.show()
     sys.exit(app.exec())
+
+# 355
