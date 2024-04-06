@@ -1,5 +1,7 @@
 import random
 import sys
+import threading
+from concurrent.futures import ThreadPoolExecutor
 from math import ceil
 
 from PyQt6.QtWidgets import QApplication, QMainWindow, QLabel, QPushButton, QGraphicsItem, QGraphicsView, \
@@ -32,13 +34,13 @@ class MovingObject(QGraphicsItem):
 
         self.setX(x)
         self.setY(y)
-        self.hp = hp
+        self.primary_hp = hp
         self.primary_damage = damage
-        self.step = step
-        self.soap_koef = 25
+        self.primary_step = step
+        self.primary_soap_koef = 25
         self.primary_speed_shoot = speed_shoot
-        self.main_size_x = size_x
-        self.main_size_y = size_y
+        self.primary_size_x = size_x
+        self.primary_size_y = size_y
         self.window_x = window_x
         self.window_y = window_y
 
@@ -56,51 +58,67 @@ class MovingObject(QGraphicsItem):
         self.u_speed = 0
         self.d_speed = 0
 
+
+    def set_default(self):
+        self.step_x = self.primary_step
+        self.step_y = self.primary_step
+        self.soap_koef = self.primary_soap_koef
+        self.max_step_x = self.step_x
+        self.max_step_y = self.step_y
+        self.speed_shoot = self.primary_speed_shoot
+        self.damage = self.primary_damage
+        self.HP_O = self.primary_hp
+        self.primary_HP_O = self.HP_O
+        self.x_size = self.primary_size_x
+        self.max_x_size = self.x_size
+        self.y_size = self.primary_size_y
+        self.max_y_size = self.y_size
+
     def modifications(self, chosen_type, chosen_config):
         if chosen_type == "player":
             if chosen_config == "default":
-                self.step_x = self.step
-                self.step_y = self.step
+                self.step_x = self.primary_step
+                self.step_y = self.primary_step
                 self.soap_koef = 25
                 self.max_step_x = self.step_x
                 self.max_step_y = self.step_y
                 self.speed_shoot = self.primary_speed_shoot
                 self.damage = self.primary_damage
-                self.HP_O = self.hp
+                self.HP_O = self.primary_hp
                 self.primary_HP_O = self.HP_O
-                self.x_size = self.main_size_x
+                self.x_size = self.primary_size_x
                 self.max_x_size = self.x_size
-                self.y_size = self.main_size_y
+                self.y_size = self.primary_size_y
                 self.max_y_size = self.y_size
                 self.draw_color = QColor(0, 0, 255)
             elif chosen_config == "IShowSpeed":
-                self.step_x = self.step + 6
-                self.step_y = self.step + 6
+                self.step_x = self.primary_step + 6
+                self.step_y = self.primary_step + 6
                 self.soap_koef = 40
                 self.max_step_x = self.step_x
                 self.max_step_y = self.step_y
                 self.speed_shoot = self.primary_speed_shoot - 80
                 self.damage = self.primary_damage * 0.5
-                self.HP_O = self.hp - 2
+                self.HP_O = self.primary_hp - 2
                 self.primary_HP_O = self.HP_O
-                self.x_size = self.main_size_x - 10
+                self.x_size = self.primary_size_x - 10
                 self.max_x_size = self.x_size
-                self.y_size = self.main_size_y - 10
+                self.y_size = self.primary_size_y - 10
                 self.max_y_size = self.y_size
                 self.draw_color = QColor(200, 150, 0)
             elif chosen_config == "BurgerKing":
-                self.step_x = self.step - 3
-                self.step_y = self.step - 3
+                self.step_x = self.primary_step - 3
+                self.step_y = self.primary_step - 3
                 self.soap_koef = 15
                 self.max_step_x = self.step_x
                 self.max_step_y = self.step_y
                 self.speed_shoot = self.primary_speed_shoot + 50
                 self.damage = self.primary_damage + 1
-                self.HP_O = self.hp + 2
+                self.HP_O = self.primary_hp + 2
                 self.primary_HP_O = self.HP_O
-                self.x_size = self.main_size_x + 20
+                self.x_size = self.primary_size_x + 20
                 self.max_x_size = self.x_size
-                self.y_size = self.main_size_y + 20
+                self.y_size = self.primary_size_y + 20
                 self.max_y_size = self.y_size
                 self.draw_color = QColor(100, 255, 255)
 
@@ -108,61 +126,61 @@ class MovingObject(QGraphicsItem):
 
         elif chosen_type == "enemy":
             if chosen_config == "default":
-                self.step_x = self.step
-                self.step_y = self.step
+                self.step_x = self.primary_step
+                self.step_y = self.primary_step
                 self.max_step_x = self.step_x
                 self.max_step_y = self.step_y
                 self.speed_shoot = self.primary_speed_shoot
                 self.damage = self.primary_damage
-                self.HP_O = self.hp
+                self.HP_O = self.primary_hp
                 self.primary_HP_O = self.HP_O
-                self.x_size = self.main_size_x
+                self.x_size = self.primary_size_x
                 self.max_x_size = self.x_size
-                self.y_size = self.main_size_y
+                self.y_size = self.primary_size_y
                 self.max_y_size = self.y_size
                 self.draw_color = QColor(255, 0, 0)
             elif chosen_config == "tiny":
-                self.step_x = self.step + 2
-                self.step_y = self.step + 2
+                self.step_x = self.primary_step + 2
+                self.step_y = self.primary_step + 2
                 self.max_step_x = self.step_x
                 self.max_step_y = self.step_y
                 self.speed_shoot = self.primary_speed_shoot
                 self.damage = self.primary_damage
-                self.HP_O = self.hp - 2
+                self.HP_O = self.primary_hp - 2
                 self.primary_HP_O = self.HP_O
-                self.x_size = self.main_size_x - 30
+                self.x_size = self.primary_size_x - 30
                 self.max_x_size = self.x_size
-                self.y_size = self.main_size_y - 30
+                self.y_size = self.primary_size_y - 30
                 self.max_y_size = self.y_size
             elif chosen_config == "fat":
-                self.step_x = self.step - 0.5
-                self.step_y = self.step - 0.5
+                self.step_x = self.primary_step - 0.5
+                self.step_y = self.primary_step - 0.5
                 self.max_step_x = self.step_x
                 self.max_step_y = self.step_y
                 self.speed_shoot = self.primary_speed_shoot
                 self.damage = self.primary_damage
-                self.HP_O = self.hp + 2
+                self.HP_O = self.primary_hp + 2
                 self.primary_HP_O = self.HP_O
-                self.x_size = self.main_size_x + 20
+                self.x_size = self.primary_size_x + 20
                 self.max_x_size = self.x_size
-                self.y_size = self.main_size_y + 20
+                self.y_size = self.primary_size_y + 20
                 self.max_y_size = self.y_size
 
 
 
         elif chosen_type == "bullet":
             if chosen_config == "default":
-                self.step_x = self.step
-                self.step_y = self.step
+                self.step_x = self.primary_step
+                self.step_y = self.primary_step
                 self.max_step_x = self.step_x
                 self.max_step_y = self.step_y
                 self.speed_shoot = self.primary_speed_shoot
                 self.damage = self.primary_damage
-                self.HP_O = self.hp
+                self.HP_O = self.primary_hp
                 self.primary_HP_O = self.HP_O
-                self.x_size = self.main_size_x
+                self.x_size = self.primary_size_x
                 self.max_x_size = self.x_size
-                self.y_size = self.main_size_y
+                self.y_size = self.primary_size_y
                 self.max_y_size = self.y_size
                 self.draw_color = QColor(0, 255, 0)
 
@@ -250,21 +268,25 @@ class MovingObject(QGraphicsItem):
         if window_borders == 1:
             if self.x() - self.l_speed < 0:
                 self.setX(0)
+                self.l_speed = 0
             else:
                 self.setX(self.x() - self.l_speed)
 
             if self.x() + self.r_speed > self.window_x - self.x_size:
                 self.setX(self.window_x - self.x_size)
+                self.r_speed = 0
             else:
                 self.setX(self.x() + self.r_speed)
 
             if self.y() - self.u_speed < 0:
                 self.setY(0)
+                self.u_speed = 0
             else:
                 self.setY(self.y() - self.u_speed)
 
             if self.y() + self.d_speed > self.window_y - self.y_size:
                 self.setY(self.window_y - self.y_size)
+                self.d_speed = 0
             else:
                 self.setY(self.y() + self.d_speed)
         else:
@@ -314,30 +336,28 @@ class Choice_Card(QWidget):
 
     def Create_Cards(self, count, x_window, y_window):
         for i in range(count):
+            card_text = QLabel(self)
+            card_text.setWordWrap(True)
             card = QPushButton(self)
             card.setGeometry(i * ceil((x_window / count)), 0, ceil(x_window / count) - 50, y_window - 50)
-            # card.setStyleSheet("QPushButton { "
-            #              "white-space: pre-wrap; "
-            #              "word-wrap: break-word; }")
-            self.cards.append(card)
+            card_text.setStyleSheet("background-color: grey;"
+                         "font-size: 25px;"
+                         "padding: 15px;")
+            card_text.setAlignment(Qt.AlignmentFlag.AlignCenter)
+            card_text.setGeometry((i * ceil((x_window / count))), ((y_window) - (y_window - 50))//2, ceil(x_window / count) - 50, y_window - 50)
+            card.setStyleSheet('background-color: rgba(0,0,0,0);')
+            self.cards.append((card_text, card))
 
     def Set_Content(self,way_for_eff,card:any,Name:str,description:str,effects:list):
-        card.setStyleSheet('text-align: top; font-size: 25px;')
-        card.setText(f'{Name} \n \n \n \n \n {description}')
+        card[0].setText(f'{Name}\n\n\n\n\n\n{description}')
         for i in range(len(effects)): # effects = [( object(player), effect(HP_O), value(+10) )]
             obj = getattr(way_for_eff, effects[i][0])
-            card.clicked.connect(lambda: setattr(obj, effects[i][1], eval(f'{getattr(obj,effects[i][1])}{effects[i][2]}')))
+            card[1].clicked.connect(lambda: setattr(obj, effects[i][1], eval(f'{getattr(obj,effects[i][1])}{effects[i][2]}')))
 
     def randomize_cards(self, way_to_attr):
         types_cards = [
-            ('Blessing','you lucky,\n'
-                        'you are blessed from the Universe.\n'
-                        'Gain you 1 HP', 'player1', 'HP_O', '+1'),
-            ('OnePanchMan','100 squats,\n'
-                           '100 push-ups,\n'
-                           '100 crunches,\n'
-                           '10km run.\n'
-                           'your damage + 10', 'player1', 'damage', '+10') # лучше использовать лабел - тк можно будет разные стили сделать,
+            ('Blessing','you lucky, you are blessed from the Universe. Gain you 1 HP', 'player1', 'HP_O', '+1'),
+            ('OnePanchMan','100 squats, 100 push-ups, 100 crunches, 10km run. your damage + 10', 'player1', 'damage', '+10') # лучше использовать лабел - тк можно будет разные стили сделать,
             # а еще переносить по словам
         ]
         for card in self.cards:
@@ -380,7 +400,7 @@ class Menu(QMainWindow):
         self.font = QFont()
         self.timer = QTimer()
         self.timer.timeout.connect(self.update_bg)
-        self.timer.start(14)
+        self.timer.start(10)
         self.star_timer = QTimer()
         self.puls_timer = QTimer()
         self.switch = 0
@@ -482,8 +502,9 @@ class Menu(QMainWindow):
 
         # choose effect page 6
         self.choose_card_page = Choice_Card(self.width(), self.height(), self.start_game)
-        for card in self.choose_card_page.cards:
-            card.clicked.connect(lambda: self.stackWidget.setCurrentWidget(self.start_game))
+        card = self.choose_card_page.cards
+        for i in range(len(self.choose_card_page.cards)):
+            card[i][1].clicked.connect(lambda: self.stackWidget.setCurrentWidget(self.start_game))
 
         create_page(self.choose_card_page, [])
         self.stackWidget.addWidget(self.choose_card_page)
@@ -672,31 +693,35 @@ class Menu(QMainWindow):
     def create_star(self, msec):
         if self.star_timer.isActive() is False and len(self.stars) < 100:
             rand_y = random.randint(0, self.height() - 10)
-            rand_step = random.randint(1, 8)
-            x_size = random.randint(1, 5)
+            rand_step = round(random.uniform(0, 2), 1)
+            x_size = random.randint(1, 4)
             y_size = x_size
             a = 255
-            r = random.randint(219, 255)
-            g = random.randint(203, 244)
-            b = random.randint(190, 221)
+            randomint = random.randint(150, 200)
+            r = randomint - random.randint(0,20)
+            g = randomint - random.randint(0,20)
+            b = randomint - random.randint(0,20)
             star = MovingObject("enemy", "default", self.width(), rand_y, 0, 0, rand_step, 0,
                                 x_size, y_size, self.width(), self.height())
-            star.draw_color = QColor(a, r, g, b)
+            star.draw_color = QColor(r, g, b, a)
             self.stars.append(star)
             self.star_timer.start(msec)
             self.star_timer.timeout.connect(self.star_timer.stop)
 
     def reborn_star(self, star):
+        star.max_step_x = round(random.uniform(0, 2), 1)
+        star.step_x = round(random.uniform(0, 2), 1)
         star.x_size = random.randint(1, 4)
         star.y_size = star.x_size
         star.setX(self.width() + star.x_size)
         rand_y = random.randint(0, self.height() - 10)
         star.setY(rand_y)
         a = 255
-        r = random.randint(219, 255)
-        g = random.randint(203, 244)
-        b = random.randint(190, 221)
-        star.draw_color = QColor(a, r, g, b)
+        randomint = random.randint(150, 200)
+        r = randomint - random.randint(0,20)
+        g = randomint - random.randint(0,20)
+        b = randomint - random.randint(0,20)
+        star.draw_color = QColor(r, g, b, a)
 
     def update_bg(self):
         if self.stackWidget.currentWidget() != self.start_game:
@@ -763,8 +788,9 @@ class Menu(QMainWindow):
         painter = QPainter(self)
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
         painter.fillRect(0, 0, self.width(), self.height(), QColor('black'))
-        for star in self.stars:
-            star.paint(painter)
+        if self.stackWidget.currentWidget() != self.game_over_page:
+            for star in self.stars:
+                star.paint(painter)
         if self.stackWidget.currentWidget() == self.choose_player_page:
             if self.start_game.player1.x() != (self.width() * 0.6):
                 self.start_game.player1.setX((self.width() * 0.6))
@@ -807,7 +833,7 @@ class StartGame(QWidget):
 
         self.timer = QTimer()
         self.timer.timeout.connect(self.updateScene)
-        self.timer.start(16)
+        self.timer.start(10)
         self.enemy_timer = QTimer(self)
         self.bullet_timer1 = QTimer(self)
 
@@ -818,7 +844,7 @@ class StartGame(QWidget):
         self.restart_timer = QTimer()
         self.restart_timer.timeout.connect(self.restart_timer.stop)
 
-        self.bullet = MovingObject("bullet", "default", 0, 0, 1, 1, 15,
+        self.bullet = MovingObject("bullet", "default", 0, 0, 1, 1, 13,
                                    0, 20, 5, self.width(),
                                    self.height())  # этот предатель существует, но не виден глазу
 
@@ -962,8 +988,8 @@ class StartGame(QWidget):
         if self.enemy_timer.isActive() is False:
             y_size = self.enemy.y_size
             enemy_y = random.randint(0, int(self.height() * 0.8) - y_size)
-            enemy = MovingObject("enemy", "default", self.width(), enemy_y, self.enemy.hp, self.enemy.damage,
-                                 self.enemy.step, self.enemy.speed_shoot, self.enemy.x_size, self.enemy.y_size,
+            enemy = MovingObject("enemy", "default", self.width(), enemy_y, self.enemy.primary_hp, self.enemy.damage,
+                                 self.enemy.primary_step, self.enemy.speed_shoot, self.enemy.x_size, self.enemy.y_size,
                                  self.width(), self.height())
             if enemy.y() + enemy.y_size > int(self.height() * 0.8):
                 enemy.setY(int(self.height() * 0.8) - enemy.y())
@@ -975,7 +1001,7 @@ class StartGame(QWidget):
         if self.player1.shoot == 1 and self.bullet_timer1.isActive() is False:
             bullet = MovingObject("bullet", "default", ceil(self.player1.x() + self.player1.x_size),
                                   (ceil(self.player1.y() + self.player1.y_size // 2) - self.bullet.y_size // 2),
-                                  self.bullet.hp, self.bullet.damage, self.bullet.step, self.bullet.speed_shoot,
+                                  self.bullet.primary_hp, self.bullet.damage, self.bullet.primary_step, self.bullet.speed_shoot,
                                   self.bullet.x_size, self.bullet.y_size, self.width(), self.height())
             self.bullets.append(bullet)
             self.bullet_timer1.start(msec1)
@@ -1030,6 +1056,18 @@ class StartGame(QWidget):
                 self.menu.choose_card_page.randomize_cards(self)
 
                 self.sec += 1
+            if len(self.menu.stars) < 100:
+                randomint = random.randint(0, 101)
+                if randomint <= 4:
+                    self.menu.create_star(1)
+            for star in self.menu.stars:
+                star.move_direction_L = 1
+                # if star.max_step_x < star.primary_step*1.5:
+                #     star.step_x += 1
+                star.new_move(1, 0, 0)
+                if star.x() <= -star.x_size:
+                    self.menu.reborn_star(star)
+
             self.create_bullet(int(self.player1.speed_shoot))
             self.create_enemy(2000 - (10 * self.min), int(self.enemy.speed_shoot))
             self.player1.new_move()
@@ -1064,9 +1102,14 @@ class StartGame(QWidget):
         if event.key() == Qt.Key.Key_Escape:
             s = 0
 
+
     def paint(self, painter):
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+
         painter.fillRect(0, 0, self.width(), self.height(),
-                         QColor(50, 50, 50))  # Очищаем окно, закрашивая его зеленым
+                         QColor(0,0,0))  # Очищаем окно, закрашивая его зеленым
+        for star in self.menu.stars:
+            star.paint(painter)
         painter.fillRect(0, ceil(self.height() * 0.8), self.width(), self.height(), QColor(100, 100, 100))
 
         for i in range(int(self.player1.HP_O)):
@@ -1088,6 +1131,7 @@ class StartGame(QWidget):
         painter = QPainter(self)
         self.paint(painter)
 
+# с помощью лебел можно сделать переход по словам, также модификации у обьектов должен быть как у карточек
 
 
 if __name__ == '__main__':
@@ -1095,5 +1139,3 @@ if __name__ == '__main__':
     game_window = Menu()
     game_window.show()
     sys.exit(app.exec())
-
-# 355

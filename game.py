@@ -389,7 +389,7 @@ class Func_Chest(QWidget):
 
     def paintEvent(self, event):
         painter = QPainter(self)
-        self.menu.start_game.paint(painter)
+        self.menu.start_game.paint(painter,,
         painter.fillRect(0,0,self.width(),self.height(),QColor(0,0,0,200))
 
 
@@ -945,7 +945,7 @@ class Menu(QMainWindow):
             self.a = self.pulsation(self.a,15,70,self.puls_timer,100)
         self.Main_Title_txt.setStyleSheet(f"font-family: Courier, monospace; color: rgba(200,200,200,{self.a})")# вот она
         for star in self.stars:
-            star.paint(painter)
+            star.paint(painter,,
         if self.stackWidget.currentWidget() == self.choose_player_page:
             self.start_game.player1.paint(painter)
 
@@ -1357,12 +1357,12 @@ class StartGame(QWidget):
                                  ceil(self.height() * 0.82),
                                  ceil(self.width() * 0.01), ceil(self.width() * 0.03), QColor(200, 100, 100))
         for chest in self.chests:
-            chest.paint(painter)
+            chest.paint(painter,,
         self.player1.paint(painter)
         for bullet in self.bullets:
-            bullet.paint(painter)
+            bullet.paint(painter,,
         for enemy in self.enemies:
-            enemy.paint(painter)
+            enemy.paint(painter,,
         # painter.fillRect(0,0,self.width(),self.height(), QColor(0,0,0,100))
         if self.count_restart_sec <= 1 and self.restart_timer.isActive() is False:
             self.restart_timer_txt.hide()

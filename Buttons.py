@@ -240,7 +240,7 @@ class MainWindow(QMainWindow):
         painter = QPainter(self)
         self.player.paint(painter)
         for chest in self.chests:
-            chest.paint(painter)
+            chest.paint(painter,,
 
 
     # def use_card(self, cards: dict, type_card: str, effect: str):
