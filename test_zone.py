@@ -3,10 +3,11 @@ import sys
 import threading
 from concurrent.futures import ThreadPoolExecutor
 from math import ceil
+from time import sleep
 
 from PyQt6.QtWidgets import QApplication, QMainWindow, QLabel, QPushButton, QGraphicsItem, QGraphicsView, \
     QGraphicsScene, QWidget, QStackedWidget, QVBoxLayout, QGraphicsRectItem
-from PyQt6.QtGui import QPainter, QColor, QFont, QBrush, QResizeEvent, QPalette, QImage, QPixmap
+from PyQt6.QtGui import QPainter, QColor, QFont, QBrush, QResizeEvent, QPalette, QImage, QPixmap, QPen
 from PyQt6.QtCore import QTimer, Qt, QSize, QRectF, QPointF, QPropertyAnimation, QEasingCurve, QPoint, QEvent, \
     QVariantAnimation
 
@@ -343,7 +344,7 @@ class Choice_Card(QWidget):
             card_text.setStyleSheet("background-color: grey;"
                          "font-size: 25px;"
                          "padding: 15px;")
-            card_text.setAlignment(Qt.AlignmentFlag.AlignCenter)
+            card_text.setAlignment(Qt.AlignmentFlag.AlignTop)
             card_text.setGeometry((i * ceil((x_window / count))), ((y_window) - (y_window - 50))//2, ceil(x_window / count) - 50, y_window - 50)
             card.setStyleSheet('background-color: rgba(0,0,0,0);')
             self.cards.append((card_text, card))
@@ -414,7 +415,7 @@ class Menu(QMainWindow):
                                          [0, 0, 370, 50])
         self.start_button = QPushButton('Start')
         self.start_button.setGeometry(self.width() // 2, self.height() - 200, 200, 40)
-        self.start_button.clicked.connect(lambda: self.stackWidget.setCurrentWidget(self.choose_menu_page))
+        self.start_button.clicked.connect(lambda: self.stackWidget.setCurrentWidget(self.choose_player_page))
         self.exit_button = QPushButton('Exit')
         self.exit_button.setGeometry(100 // 3, (100 // 3) + 100, 80, 30)
         self.exit_button.clicked.connect(self.close)
@@ -422,20 +423,20 @@ class Menu(QMainWindow):
         self.stackWidget.addWidget(self.main_menu_page)
 
         # Choose mode 1
-        self.choose_menu_page = QWidget()
-        self.choose_mode_txt = create_txt('CHOOSE MODE', '',
-                                          [100 // 4, 0, 100 // 2, 100])
-        self.start_1p_button = QPushButton('Solo')
-        self.start_1p_button.setGeometry(100 // 3, 100 // 3, 80, 30)
-        self.start_1p_button.clicked.connect(lambda: self.stackWidget.setCurrentWidget(self.choose_player_page))
-        self.start_2p_button = QPushButton('2Players')
-        self.start_2p_button.setGeometry(100 // 3, (100 // 3) + 100, 80, 30)
-        self.choose_mode_back_button = QPushButton('Main menu')
-        self.choose_mode_back_button.clicked.connect(lambda: self.stackWidget.setCurrentWidget(self.main_menu_page))
-        self.choose_mode_back_button.setGeometry(100 // 3, (100 // 3) + 200, 80, 30)
-        create_page(self.choose_menu_page, [self.choose_mode_txt, self.start_1p_button,
-                                            self.start_2p_button, self.choose_mode_back_button])
-        self.stackWidget.addWidget(self.choose_menu_page)
+        # self.choose_menu_page = QWidget()
+        # self.choose_mode_txt = create_txt('CHOOSE MODE', '',
+        #                                   [100 // 4, 0, 100 // 2, 100])
+        # self.start_1p_button = QPushButton('Solo')
+        # self.start_1p_button.setGeometry(100 // 3, 100 // 3, 80, 30)
+        # self.start_1p_button.clicked.connect(lambda: self.stackWidget.setCurrentWidget(self.choose_player_page))
+        # self.start_2p_button = QPushButton('2Players')
+        # self.start_2p_button.setGeometry(100 // 3, (100 // 3) + 100, 80, 30)
+        # self.choose_mode_back_button = QPushButton('Main menu')
+        # self.choose_mode_back_button.clicked.connect(lambda: self.stackWidget.setCurrentWidget(self.main_menu_page))
+        # self.choose_mode_back_button.setGeometry(100 // 3, (100 // 3) + 200, 80, 30)
+        # create_page(self.choose_menu_page, [self.choose_mode_txt, self.start_1p_button,
+        #                                     self.start_2p_button, self.choose_mode_back_button])
+        # self.stackWidget.addWidget(self.choose_menu_page)
 
         # Choose player mode 2
         self.choose_player_page = QWidget()
@@ -453,8 +454,8 @@ class Menu(QMainWindow):
         self.confirm_button = QPushButton('Play')
         self.confirm_button.clicked.connect(self.restart_game)
         self.confirm_button.setGeometry(100 // 3, (100 // 3) + 300, 80, 30)
-        self.choose_player_back_button = QPushButton('Go to mode')
-        self.choose_player_back_button.clicked.connect(lambda: self.stackWidget.setCurrentWidget(self.choose_menu_page))
+        self.choose_player_back_button = QPushButton('Go to menu')
+        self.choose_player_back_button.clicked.connect(lambda: self.stackWidget.setCurrentWidget(self.main_menu_page))
         self.choose_player_back_button.setGeometry(100 // 3, (100 // 3) + 200, 80, 30)
         create_page(self.choose_player_page,
                     [self.choose_player_txt, self.about_player_txt, self.back_mode_button, self.next_mode_button,
@@ -566,33 +567,33 @@ class Menu(QMainWindow):
                     font_size=ceil(((self.width() + (self.height() * 1.78)) / 2) * 0.02))
 
             # Choose mode
-            Sett_for_Resize(
-                self.choose_mode_txt,
-                    [0, ceil(self.height() * 0.11), self.width(), 100],
-                    "font-family: Courier, monospace; color: rgb(200,200,200)",
-                    font_size =ceil(((self.width() + (self.height() * 1.78)) / 2) * 0.03))
-            Sett_for_Resize(
-                self.start_1p_button,
-                    [0, ceil(self.height() * 0.3), ceil(self.width() * 0.2), ceil(self.width() * 0.03)],
-                    "QPushButton {font-family: Courier New, monospace; color: white; letter-spacing: 10px;"
-                    "             text-align: left; margin: 0px; background-color: rgba(255,0,0,0);}"
-                    "QPushButton:hover {color: rgb(219,203,180)}",
-                    font_size=ceil(((self.width() + (self.height() * 1.78)) / 2) * 0.02))
-            Sett_for_Resize(
-                self.start_2p_button,
-                    [0, ceil(self.height() * 0.39), ceil(self.width() * 0.2), ceil(self.width() * 0.03)],
-                    "QPushButton {font-family: Courier New, monospace; color: white; letter-spacing: 10px;"
-                    "             text-align: left; margin: 0px; background-color: rgba(255,0,0,0);}"
-                    "QPushButton:hover {color: rgb(219,203,180)}",
-                    font_size=ceil(((self.width() + (self.height() * 1.78)) / 2) * 0.02))
-            Sett_for_Resize(
-                self.choose_mode_back_button,
-                    [0, ceil(self.height() * 0.48), ceil(self.width() * 0.25), ceil(self.width() * 0.03)],
-                    "QPushButton {font-family: Courier New, monospace; color: white; word-spacing: -7px;"
-                    "letter-spacing: 10px;"
-                    "             text-align: left; margin: 0px; background-color: rgba(255,0,0,0);}"
-                    "QPushButton:hover {color: rgb(219,203,180)}",
-                    font_size=ceil(((self.width() + (self.height() * 1.78)) / 2) * 0.02))
+            # Sett_for_Resize(
+            #     self.choose_mode_txt,
+            #         [0, ceil(self.height() * 0.11), self.width(), 100],
+            #         "font-family: Courier, monospace; color: rgb(200,200,200)",
+            #         font_size =ceil(((self.width() + (self.height() * 1.78)) / 2) * 0.03))
+            # Sett_for_Resize(
+            #     self.start_1p_button,
+            #         [0, ceil(self.height() * 0.3), ceil(self.width() * 0.2), ceil(self.width() * 0.03)],
+            #         "QPushButton {font-family: Courier New, monospace; color: white; letter-spacing: 10px;"
+            #         "             text-align: left; margin: 0px; background-color: rgba(255,0,0,0);}"
+            #         "QPushButton:hover {color: rgb(219,203,180)}",
+            #         font_size=ceil(((self.width() + (self.height() * 1.78)) / 2) * 0.02))
+            # Sett_for_Resize(
+            #     self.start_2p_button,
+            #         [0, ceil(self.height() * 0.39), ceil(self.width() * 0.2), ceil(self.width() * 0.03)],
+            #         "QPushButton {font-family: Courier New, monospace; color: white; letter-spacing: 10px;"
+            #         "             text-align: left; margin: 0px; background-color: rgba(255,0,0,0);}"
+            #         "QPushButton:hover {color: rgb(219,203,180)}",
+            #         font_size=ceil(((self.width() + (self.height() * 1.78)) / 2) * 0.02))
+            # Sett_for_Resize(
+            #     self.choose_mode_back_button,
+            #         [0, ceil(self.height() * 0.48), ceil(self.width() * 0.25), ceil(self.width() * 0.03)],
+            #         "QPushButton {font-family: Courier New, monospace; color: white; word-spacing: -7px;"
+            #         "letter-spacing: 10px;"
+            #         "             text-align: left; margin: 0px; background-color: rgba(255,0,0,0);}"
+            #         "QPushButton:hover {color: rgb(219,203,180)}",
+            #         font_size=ceil(((self.width() + (self.height() * 1.78)) / 2) * 0.02))
 
             # choose player
             Sett_for_Resize(
@@ -628,7 +629,7 @@ class Menu(QMainWindow):
                     font_size=ceil(((self.width() + (self.height() * 1.78)) / 2) * 0.02))
             Sett_for_Resize(
                 self.choose_player_back_button,
-                    [0, ceil(self.height() * 0.48), ceil(self.width() * 0.25),ceil(self.width() * 0.03)],
+                    [0, ceil(self.height() * 0.65), ceil(self.width() * 0.25),ceil(self.width() * 0.03)],
                     "QPushButton {font-family: Courier New, monospace; color: white; word-spacing: -20px; letter-spacing: 10px;"
                     "             text-align: left; margin: 0px; background-color: rgba(255,0,0,0);}"
                     "QPushButton:hover {color: rgb(219,203,180)}",
@@ -855,6 +856,9 @@ class StartGame(QWidget):
 
         self.player1 = MovingObject("player", "default", 0, 0, 3, 1, 10, 370,
                                     45, 45, self.width(), self.height())
+        # thread = threading.Thread(target=self.draw_stars)
+        # thread.start()
+        # thread.join()
         self.game_restart(0)
 
     def boundingRect(self):
@@ -1051,11 +1055,11 @@ class StartGame(QWidget):
                 self.count_restart_sec -= 1
 
         if self.menu.stackWidget.currentWidget() == self and self.count_restart_sec <= 1 and self.restart_timer.isActive() is False:
-            if self.sec == 3 or self.sec % 10 == 0 and self.sec > 0:
-                self.menu.stackWidget.setCurrentWidget(self.menu.choose_card_page)  # Костыль, переделай
-                self.menu.choose_card_page.randomize_cards(self)
-
-                self.sec += 1
+            # if self.sec == 3 or self.sec % 10 == 0 and self.sec > 0:
+            #     self.menu.stackWidget.setCurrentWidget(self.menu.choose_card_page)  # Костыль, переделай
+            #     self.menu.choose_card_page.randomize_cards(self)
+            #
+            #     self.sec += 1
             if len(self.menu.stars) < 100:
                 randomint = random.randint(0, 101)
                 if randomint <= 4:
@@ -1110,6 +1114,7 @@ class StartGame(QWidget):
                          QColor(0,0,0))  # Очищаем окно, закрашивая его зеленым
         for star in self.menu.stars:
             star.paint(painter)
+
         painter.fillRect(0, ceil(self.height() * 0.8), self.width(), self.height(), QColor(100, 100, 100))
 
         for i in range(int(self.player1.HP_O)):
@@ -1130,6 +1135,7 @@ class StartGame(QWidget):
     def paintEvent(self, event):
         painter = QPainter(self)
         self.paint(painter)
+
 
 # с помощью лебел можно сделать переход по словам, также модификации у обьектов должен быть как у карточек
 

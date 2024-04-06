@@ -139,3 +139,18 @@ from PyQt6.QtWidgets import QApplication, QGraphicsRectItem, QGraphicsScene, QGr
 #     game_window.show()
 #     sys.exit(app.exec())
 
+from concurrent.futures import ThreadPoolExecutor
+
+def square_number(number):
+    return number ** 2
+
+
+# Создаем пул потоков
+with ThreadPoolExecutor() as executor:
+    numbers = [1, 2, 3, 4, 5]
+
+
+    # Параллельно вычисляем квадраты чисел
+    results = list(executor.map(square_number, numbers))
+
+print("Квадраты чисел:", results)
