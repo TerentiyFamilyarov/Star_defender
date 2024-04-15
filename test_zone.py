@@ -12,25 +12,10 @@ from PyQt6.QtCore import QTimer, Qt, QSize, QRectF, QPointF, QPropertyAnimation,
     QVariantAnimation
 
 
-class MovingObject(QGraphicsItem):
-    def __init__(self, typec, modifc, x, y, hp, damage, step, speed_shoot, size_x, size_y, window_x, window_y):
+class MovingObject(QGraphicsRectItem):
+    def __init__(self, x, y, hp, damage, step, speed_shoot, size_x, size_y, window_x, window_y):
         super().__init__()
-        self.type_object = {
-            "player": {
-                0: "default",
-                1: "IShowSpeed",
-                2: "BurgerKing"
-            },
-            "enemy": {
-                0: "default",
-                1: "tiny",
-                2: "fat"
-            },
-            "bullet": {
-                0: "default"
-            }
-        }
-        self.list_key_keys = list(self.type_object[typec].keys())
+
         self.timer = QTimer()
 
         self.setX(x)
@@ -46,7 +31,6 @@ class MovingObject(QGraphicsItem):
         self.window_y = window_y
 
         self.draw_color = QColor(0, 0, 255)
-        self.modifications(typec, modifc)
 
         self.move_direction_L = 0
         self.move_direction_R = 0
@@ -58,6 +42,8 @@ class MovingObject(QGraphicsItem):
         self.r_speed = 0
         self.u_speed = 0
         self.d_speed = 0
+
+        self.set_default()
 
 
     def set_default(self):
@@ -75,115 +61,6 @@ class MovingObject(QGraphicsItem):
         self.y_size = self.primary_size_y
         self.max_y_size = self.y_size
 
-    def modifications(self, chosen_type, chosen_config):
-        if chosen_type == "player":
-            if chosen_config == "default":
-                self.step_x = self.primary_step
-                self.step_y = self.primary_step
-                self.soap_koef = 25
-                self.max_step_x = self.step_x
-                self.max_step_y = self.step_y
-                self.speed_shoot = self.primary_speed_shoot
-                self.damage = self.primary_damage
-                self.HP_O = self.primary_hp
-                self.primary_HP_O = self.HP_O
-                self.x_size = self.primary_size_x
-                self.max_x_size = self.x_size
-                self.y_size = self.primary_size_y
-                self.max_y_size = self.y_size
-                self.draw_color = QColor(0, 0, 255)
-            elif chosen_config == "IShowSpeed":
-                self.step_x = self.primary_step + 6
-                self.step_y = self.primary_step + 6
-                self.soap_koef = 40
-                self.max_step_x = self.step_x
-                self.max_step_y = self.step_y
-                self.speed_shoot = self.primary_speed_shoot - 80
-                self.damage = self.primary_damage * 0.5
-                self.HP_O = self.primary_hp - 2
-                self.primary_HP_O = self.HP_O
-                self.x_size = self.primary_size_x - 10
-                self.max_x_size = self.x_size
-                self.y_size = self.primary_size_y - 10
-                self.max_y_size = self.y_size
-                self.draw_color = QColor(200, 150, 0)
-            elif chosen_config == "BurgerKing":
-                self.step_x = self.primary_step - 3
-                self.step_y = self.primary_step - 3
-                self.soap_koef = 15
-                self.max_step_x = self.step_x
-                self.max_step_y = self.step_y
-                self.speed_shoot = self.primary_speed_shoot + 50
-                self.damage = self.primary_damage + 1
-                self.HP_O = self.primary_hp + 2
-                self.primary_HP_O = self.HP_O
-                self.x_size = self.primary_size_x + 20
-                self.max_x_size = self.x_size
-                self.y_size = self.primary_size_y + 20
-                self.max_y_size = self.y_size
-                self.draw_color = QColor(100, 255, 255)
-
-
-
-        elif chosen_type == "enemy":
-            if chosen_config == "default":
-                self.step_x = self.primary_step
-                self.step_y = self.primary_step
-                self.max_step_x = self.step_x
-                self.max_step_y = self.step_y
-                self.speed_shoot = self.primary_speed_shoot
-                self.damage = self.primary_damage
-                self.HP_O = self.primary_hp
-                self.primary_HP_O = self.HP_O
-                self.x_size = self.primary_size_x
-                self.max_x_size = self.x_size
-                self.y_size = self.primary_size_y
-                self.max_y_size = self.y_size
-                self.draw_color = QColor(255, 0, 0)
-            elif chosen_config == "tiny":
-                self.step_x = self.primary_step + 2
-                self.step_y = self.primary_step + 2
-                self.max_step_x = self.step_x
-                self.max_step_y = self.step_y
-                self.speed_shoot = self.primary_speed_shoot
-                self.damage = self.primary_damage
-                self.HP_O = self.primary_hp - 2
-                self.primary_HP_O = self.HP_O
-                self.x_size = self.primary_size_x - 30
-                self.max_x_size = self.x_size
-                self.y_size = self.primary_size_y - 30
-                self.max_y_size = self.y_size
-            elif chosen_config == "fat":
-                self.step_x = self.primary_step - 0.5
-                self.step_y = self.primary_step - 0.5
-                self.max_step_x = self.step_x
-                self.max_step_y = self.step_y
-                self.speed_shoot = self.primary_speed_shoot
-                self.damage = self.primary_damage
-                self.HP_O = self.primary_hp + 2
-                self.primary_HP_O = self.HP_O
-                self.x_size = self.primary_size_x + 20
-                self.max_x_size = self.x_size
-                self.y_size = self.primary_size_y + 20
-                self.max_y_size = self.y_size
-
-
-
-        elif chosen_type == "bullet":
-            if chosen_config == "default":
-                self.step_x = self.primary_step
-                self.step_y = self.primary_step
-                self.max_step_x = self.step_x
-                self.max_step_y = self.step_y
-                self.speed_shoot = self.primary_speed_shoot
-                self.damage = self.primary_damage
-                self.HP_O = self.primary_hp
-                self.primary_HP_O = self.HP_O
-                self.x_size = self.primary_size_x
-                self.max_x_size = self.x_size
-                self.y_size = self.primary_size_y
-                self.max_y_size = self.y_size
-                self.draw_color = QColor(0, 255, 0)
 
     def boundingRect(self):
         return QRectF(self.x(), self.y(), self.x_size, self.y_size)
@@ -199,36 +76,36 @@ class MovingObject(QGraphicsItem):
                 if self.l_speed < self.step_x * 0.2 and self.move_direction_L == 1:
                     self.l_speed = self.step_x * 0.2
                 elif self.l_speed < self.step_x and self.move_direction_L == 1:
-                    self.l_speed += 1
+                    self.l_speed += 0.5
                 elif self.move_direction_L == 0 and self.l_speed > 0:
-                    self.l_speed -= 1
+                    self.l_speed -= 0.5
                 elif self.l_speed < 0:
                     self.l_speed = 0
 
                 if self.r_speed < self.step_x * 0.2 and self.move_direction_R == 1:
                     self.r_speed = self.step_x * 0.2
                 elif self.r_speed < self.step_x and self.move_direction_R == 1:
-                    self.r_speed += 1
+                    self.r_speed += 0.5
                 elif self.move_direction_R == 0 and self.r_speed > 0:
-                    self.r_speed -= 1
+                    self.r_speed -= 0.5
                 elif self.r_speed < 0:
                     self.r_speed = 0
 
                 if self.u_speed < self.step_y * 0.2 and self.move_direction_U == 1:
                     self.u_speed = self.step_y * 0.2
                 elif self.u_speed < self.step_y and self.move_direction_U == 1:
-                    self.u_speed += 1
+                    self.u_speed += 0.5
                 elif self.move_direction_U == 0 and self.u_speed > 0:
-                    self.u_speed -= 1
+                    self.u_speed -= 0.5
                 elif self.u_speed < 0:
                     self.u_speed = 0
 
                 if self.d_speed < self.step_y * 0.2 and self.move_direction_D == 1:
                     self.d_speed = self.step_y * 0.2
                 elif self.d_speed < self.step_y and self.move_direction_D == 1:
-                    self.d_speed += 1
+                    self.d_speed += 0.5
                 elif self.move_direction_D == 0 and self.d_speed > 0:
-                    self.d_speed -= 1
+                    self.d_speed -= 0.5
                 elif self.d_speed < 0:
                     self.d_speed = 0
 
@@ -293,38 +170,6 @@ class MovingObject(QGraphicsItem):
         else:
             self.setX(self.x() - self.l_speed + self.r_speed)
             self.setY(self.y() - self.u_speed + self.d_speed)
-
-    def keyPressEvent(self, event):
-        if event.text() in ['Ц', 'ц', 'W', 'w']:
-            self.move_direction_U = 1
-
-        elif event.text() in ['Ф', 'ф', 'A', 'a']:
-            self.move_direction_L = 1
-
-        elif event.text() in ['Ы', 'ы', 'S', 's']:
-            self.move_direction_D = 1
-
-        elif event.text() in ['В', 'в', 'D', 'd']:
-            self.move_direction_R = 1
-
-        if event.text() in ['C', 'c', 'С', 'с']:
-            self.shoot = 1
-
-    def keyReleaseEvent(self, event):
-        if event.text() in ['Ц', 'ц', 'W', 'w']:
-            self.move_direction_U = 0
-
-        elif event.text() in ['Ф', 'ф', 'A', 'a']:
-            self.move_direction_L = 0
-
-        elif event.text() in ['Ы', 'ы', 'S', 's']:
-            self.move_direction_D = 0
-
-        elif event.text() in ['В', 'в', 'D', 'd']:
-            self.move_direction_R = 0
-
-        if event.text() in ['C', 'c', 'С', 'с']:
-            self.shoot = 0
 
 
 class Choice_Card(QWidget):
@@ -422,23 +267,7 @@ class Menu(QMainWindow):
         create_page(self.main_menu_page, [self.Main_Title_txt, self.start_button, self.exit_button])
         self.stackWidget.addWidget(self.main_menu_page)
 
-        # Choose mode 1
-        # self.choose_menu_page = QWidget()
-        # self.choose_mode_txt = create_txt('CHOOSE MODE', '',
-        #                                   [100 // 4, 0, 100 // 2, 100])
-        # self.start_1p_button = QPushButton('Solo')
-        # self.start_1p_button.setGeometry(100 // 3, 100 // 3, 80, 30)
-        # self.start_1p_button.clicked.connect(lambda: self.stackWidget.setCurrentWidget(self.choose_player_page))
-        # self.start_2p_button = QPushButton('2Players')
-        # self.start_2p_button.setGeometry(100 // 3, (100 // 3) + 100, 80, 30)
-        # self.choose_mode_back_button = QPushButton('Main menu')
-        # self.choose_mode_back_button.clicked.connect(lambda: self.stackWidget.setCurrentWidget(self.main_menu_page))
-        # self.choose_mode_back_button.setGeometry(100 // 3, (100 // 3) + 200, 80, 30)
-        # create_page(self.choose_menu_page, [self.choose_mode_txt, self.start_1p_button,
-        #                                     self.start_2p_button, self.choose_mode_back_button])
-        # self.stackWidget.addWidget(self.choose_menu_page)
-
-        # Choose player mode 2
+        # Choose player mode 1
         self.choose_player_page = QWidget()
         self.choose_player_txt = create_txt('CHOOSE PLAYER', '',
                                             [100 // 4, 0, 100 // 2, 100])
@@ -463,7 +292,7 @@ class Menu(QMainWindow):
 
         self.stackWidget.addWidget(self.choose_player_page)
 
-        # Game over 3
+        # Game over 2
         self.game_over_page = QWidget()
         self.game_over_txt = create_txt('YOU DESTROYED !', '',
                                         [0, 0, 100, 100])
@@ -481,7 +310,7 @@ class Menu(QMainWindow):
                                           self.game_over_main_menu_button])
         self.stackWidget.addWidget(self.game_over_page)
 
-        # Pause 4
+        # Pause 3
         self.pause_page = QWidget()
         self.pause_game_txt = create_txt('PAUSE', '', [0, 0, 100, 100])
         self.resume_button = QPushButton('Resume', self)
@@ -496,12 +325,12 @@ class Menu(QMainWindow):
                                       self.pause_game_main_menu_button])
         self.stackWidget.addWidget(self.pause_page)
 
-        # Game page 5
+        # Game page 4
         self.start_game = StartGame(self, True)
         self.stackWidget.addWidget(self.start_game)
         self.twomode()  # для того чтобы 1 перс был сначала
 
-        # choose effect page 6
+        # choose effect page 5
         self.choose_card_page = Choice_Card(self.width(), self.height(), self.start_game)
         card = self.choose_card_page.cards
         for i in range(len(self.choose_card_page.cards)):
@@ -565,35 +394,6 @@ class Menu(QMainWindow):
                     "             text-align: left; margin: 0px; background-color: rgba(0,0,0,0);}"
                     "QPushButton:hover {color: rgb(219,203,180)}",
                     font_size=ceil(((self.width() + (self.height() * 1.78)) / 2) * 0.02))
-
-            # Choose mode
-            # Sett_for_Resize(
-            #     self.choose_mode_txt,
-            #         [0, ceil(self.height() * 0.11), self.width(), 100],
-            #         "font-family: Courier, monospace; color: rgb(200,200,200)",
-            #         font_size =ceil(((self.width() + (self.height() * 1.78)) / 2) * 0.03))
-            # Sett_for_Resize(
-            #     self.start_1p_button,
-            #         [0, ceil(self.height() * 0.3), ceil(self.width() * 0.2), ceil(self.width() * 0.03)],
-            #         "QPushButton {font-family: Courier New, monospace; color: white; letter-spacing: 10px;"
-            #         "             text-align: left; margin: 0px; background-color: rgba(255,0,0,0);}"
-            #         "QPushButton:hover {color: rgb(219,203,180)}",
-            #         font_size=ceil(((self.width() + (self.height() * 1.78)) / 2) * 0.02))
-            # Sett_for_Resize(
-            #     self.start_2p_button,
-            #         [0, ceil(self.height() * 0.39), ceil(self.width() * 0.2), ceil(self.width() * 0.03)],
-            #         "QPushButton {font-family: Courier New, monospace; color: white; letter-spacing: 10px;"
-            #         "             text-align: left; margin: 0px; background-color: rgba(255,0,0,0);}"
-            #         "QPushButton:hover {color: rgb(219,203,180)}",
-            #         font_size=ceil(((self.width() + (self.height() * 1.78)) / 2) * 0.02))
-            # Sett_for_Resize(
-            #     self.choose_mode_back_button,
-            #         [0, ceil(self.height() * 0.48), ceil(self.width() * 0.25), ceil(self.width() * 0.03)],
-            #         "QPushButton {font-family: Courier New, monospace; color: white; word-spacing: -7px;"
-            #         "letter-spacing: 10px;"
-            #         "             text-align: left; margin: 0px; background-color: rgba(255,0,0,0);}"
-            #         "QPushButton:hover {color: rgb(219,203,180)}",
-            #         font_size=ceil(((self.width() + (self.height() * 1.78)) / 2) * 0.02))
 
             # choose player
             Sett_for_Resize(
@@ -702,7 +502,7 @@ class Menu(QMainWindow):
             r = randomint - random.randint(0,20)
             g = randomint - random.randint(0,20)
             b = randomint - random.randint(0,20)
-            star = MovingObject("enemy", "default", self.width(), rand_y, 0, 0, rand_step, 0,
+            star = MovingObject(self.width(), rand_y, 0, 0, rand_step, 0,
                                 x_size, y_size, self.width(), self.height())
             star.draw_color = QColor(r, g, b, a)
             self.stars.append(star)
@@ -748,14 +548,17 @@ class Menu(QMainWindow):
 
     def onemode(self):
         self.chosen_config -= 1
-        maxx = self.start_game.player1.list_key_keys[-1]
+        maxx = len(self.start_game.players)-1
         if self.chosen_config < 0:
-            self.chosen_config = self.start_game.player1.list_key_keys[-1]
+            self.chosen_config = len(self.start_game.players)-1
         elif self.chosen_config > maxx:
             self.chosen_config = 0
-        self.start_game.player1.modifications("player",
-                                              self.start_game.player1.type_object["player"][self.chosen_config])
-        self.about_player_txt.setText(f"Name: {self.start_game.player1.type_object["player"][self.chosen_config]} \n"
+        players = self.start_game.players
+        self.start_game.set_player(players[self.chosen_config][1], players[self.chosen_config][2],
+                                   players[self.chosen_config][3], players[self.chosen_config][4],
+                                   players[self.chosen_config][5], players[self.chosen_config][6],
+                                   players[self.chosen_config][7], players[self.chosen_config][8])
+        self.about_player_txt.setText(f"Name: {self.start_game.players[self.chosen_config][0]} \n"
                                         f"Health: {self.start_game.player1.primary_HP_O} \n"
                                         f"Speed: {self.start_game.player1.max_step_x} \n"
                                         f"Soap move: {self.start_game.player1.soap_koef} \n"
@@ -765,20 +568,23 @@ class Menu(QMainWindow):
 
     def twomode(self):
         self.chosen_config += 1
-        maxx = self.start_game.player1.list_key_keys[-1]
+        maxx = len(self.start_game.players) - 1
         if self.chosen_config < 0:
-            self.chosen_config = self.start_game.player1.list_key_keys[-1]
+            self.chosen_config = len(self.start_game.players) - 1
         elif self.chosen_config > maxx:
             self.chosen_config = 0
-        self.start_game.player1.modifications("player",
-                                              self.start_game.player1.type_object["player"][self.chosen_config])
-        self.about_player_txt.setText(f"Name: {self.start_game.player1.type_object["player"][self.chosen_config]} \n"
-                                        f"Health: {self.start_game.player1.primary_HP_O} \n"
-                                        f"Speed: {self.start_game.player1.max_step_x} \n"
-                                        f"Soap move: {self.start_game.player1.soap_koef} \n"
-                                        f"Damage: {self.start_game.player1.damage} \n"
-                                        f"Speed shoot: {self.start_game.player1.speed_shoot} \n"
-                                        f"Size: {self.start_game.player1.max_x_size}")
+        players = self.start_game.players
+        self.start_game.set_player(players[self.chosen_config][1], players[self.chosen_config][2],
+                                   players[self.chosen_config][3], players[self.chosen_config][4],
+                                   players[self.chosen_config][5], players[self.chosen_config][6],
+                                   players[self.chosen_config][7], players[self.chosen_config][8])
+        self.about_player_txt.setText(f"Name: {self.start_game.players[self.chosen_config][0]} \n"
+                                      f"Health: {self.start_game.player1.primary_HP_O} \n"
+                                      f"Speed: {self.start_game.player1.max_step_x} \n"
+                                      f"Soap move: {self.start_game.player1.soap_koef} \n"
+                                      f"Damage: {self.start_game.player1.damage} \n"
+                                      f"Speed shoot: {self.start_game.player1.speed_shoot} \n"
+                                      f"Size: {self.start_game.player1.max_x_size}")
 
     def resume_game(self):
         self.stackWidget.setCurrentWidget(self.start_game)
@@ -786,22 +592,21 @@ class Menu(QMainWindow):
         self.start_game.count_restart_sec = 4
 
     def paintEvent(self, event):
-        painter = QPainter(self)
-        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
-        painter.fillRect(0, 0, self.width(), self.height(), QColor('black'))
-        if self.stackWidget.currentWidget() != self.game_over_page:
-            for star in self.stars:
-                star.paint(painter)
-        if self.stackWidget.currentWidget() == self.choose_player_page:
-            if self.start_game.player1.x() != (self.width() * 0.6):
-                self.start_game.player1.setX((self.width() * 0.6))
-            if self.start_game.player1.y() != (self.width() * 0.1):
-                self.start_game.player1.setY((self.height() * 0.1))
-            if self.start_game.player1.x_size != self.width() * 0.13:
-                self.start_game.player1.x_size = (self.width() * 0.13)
-                self.start_game.player1.y_size = (self.width() * 0.13)
-            # позиция не та
-            self.start_game.player1.paint(painter)
+            painter = QPainter(self)
+            painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+            painter.fillRect(0, 0, self.width(), self.height(), QColor('black'))
+            if self.stackWidget.currentWidget() != self.game_over_page:
+                for star in self.stars:
+                    star.paint(painter)
+            if self.stackWidget.currentWidget() == self.choose_player_page:
+                if self.start_game.player1.x() != (self.width() * 0.6):
+                    self.start_game.player1.setX((self.width() * 0.6))
+                if self.start_game.player1.y() != (self.width() * 0.1):
+                    self.start_game.player1.setY((self.height() * 0.1))
+                if self.start_game.player1.x_size != self.width() * 0.13:
+                    self.start_game.player1.x_size = (self.width() * 0.13)
+                    self.start_game.player1.y_size = (self.width() * 0.13)
+                self.start_game.player1.paint(painter)
 
 
 class StartGame(QWidget):
@@ -829,6 +634,8 @@ class StartGame(QWidget):
         self.Player1_HP.setAlignment(Qt.AlignmentFlag.AlignLeft)
         self.Player1_HP.setStyleSheet("color: rgb(255,155,155);")
 
+
+
         self.restart_timer_txt = QLabel(self)
         self.restart_timer_txt.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
@@ -845,21 +652,40 @@ class StartGame(QWidget):
         self.restart_timer = QTimer()
         self.restart_timer.timeout.connect(self.restart_timer.stop)
 
-        self.bullet = MovingObject("bullet", "default", 0, 0, 1, 1, 13,
+        self.bullet = MovingObject(0, 0, 1, 1, 13,
                                    0, 20, 5, self.width(),
                                    self.height())  # этот предатель существует, но не виден глазу
 
-        self.enemy = MovingObject("enemy", "default", 0, 0, 3, 1, 1,
+        self.enemy = MovingObject(0, 0, 3, 1, 1,
                                   0, 65, 65, self.width(),
                                   self.height())  # этот предатель существует, но не виден глазу
         # думаю, что вполне возможно исп только один
-
-        self.player1 = MovingObject("player", "default", 0, 0, 3, 1, 10, 370,
-                                    45, 45, self.width(), self.height())
+        # players = [ (name, hp, damage, step, soap_koef, speed_shoot, size_x, size_y, color) ]
+        self.players = [
+            ('Default',      3,  1,      10,   25,        370,         45,     45,     QColor(0, 0, 255)),
+            ('IFeelPain',    1,  0.5,    16,   40,        290,         35,     35,     QColor(200, 150, 0)),
+            ('UPower',       5,  2,      7,    15,        420,         65,     65,     QColor(100, 255, 255))
+        ]
+        # players = [ (name, hp, damage, step, soap_koef, speed_shoot, size_x, size_y, color) ]
+        self.enemies = [
+            ('Default',      3,  1,      1,    0,         0,           65,     65,     QColor(255, 0, 0)),
+            ('Tiny',         1,  1,      3,    0,         0,           35,     35,     QColor(255, 111, 0)),
+            ('Fat',          5,  1,      0.5,  0,         0,           85,     85,     QColor(255, 111, 111)),
+        ]
+        self.set_player(self.players[0][1],self.players[0][2],self.players[0][3],self.players[0][4], self.players[0][5],
+                        self.players[0][6], self.players[0][7], self.players[0][8])
         # thread = threading.Thread(target=self.draw_stars)
         # thread.start()
         # thread.join()
         self.game_restart(0)
+
+
+    def set_player(self,hp, damage, step, soap_koef, speed_shoot, size_x, size_y, color):
+        self.player1 = MovingObject(0, 0, hp, damage, step,  speed_shoot,
+                                    size_x, size_y, self.width(), self.height())
+        self.player1.set_default()
+        self.player1.draw_color = color
+        self.player1.soap_koef = soap_koef
 
     def boundingRect(self):
         return QRectF(-100, -100, (self.width() + 200), (self.height() + 200))
@@ -876,8 +702,9 @@ class StartGame(QWidget):
 
         self.player1.HP_O = self.player1.primary_HP_O
         self.player1.setPos(10, 300)
-        self.bullets = []
-        self.enemies = []
+        self.player1.direction = 1
+        self.array_bullets = []
+        self.array_enemies = []
         self.enemy_deserters = []
 
         self.resizeEvent(None)
@@ -936,7 +763,7 @@ class StartGame(QWidget):
             self.enemy.step_y = round(self.width() * pro_x_enemy_speed, 1)
             self.enemy.window_x = self.width()
             self.enemy.window_y = self.height()
-            for enemy in self.enemies:
+            for enemy in self.array_enemies:
                 enemy.x_size = int(self.width() * pro_x_enemy_size)
                 enemy.y_size = int(self.height() * pro_y_enemy_size)
                 pro_x_bullet_position = enemy.x() / previous_width
@@ -956,7 +783,7 @@ class StartGame(QWidget):
             pro_y_bullet_speed = self.bullet.max_step_y / self.fullW
             self.bullet.step_x = round(self.width() * pro_x_bullet_speed, 1)
             self.bullet.step_y = round(self.width() * pro_y_bullet_speed, 1)
-            for bullet in self.bullets:
+            for bullet in self.array_bullets:
                 bullet.x_size = int(self.width() * pro_x_bullet_size)
                 bullet.y_size = int(self.height() * pro_y_bullet_size)
                 pro_x_bullet_position = bullet.x() / previous_width
@@ -966,7 +793,6 @@ class StartGame(QWidget):
                 bullet.step_x = round(self.width() * pro_x_bullet_speed, 1)
                 bullet.step_y = round(self.width() * pro_y_bullet_speed, 1)
             self.previous_size = current_size
-            self.paintEvent(event)
 
             self.restart_timer_txt.setGeometry(0, ceil(self.height() * 0.1), self.width(), 150)
             self.restart_timer_txt.setStyleSheet("font-family: Courier, monospace; color: rgb(200,200,200)")
@@ -988,64 +814,52 @@ class StartGame(QWidget):
             else:
                 self.score_label.setText(f"{self.min}:{self.sec}")
 
-    def create_enemy(self, msec, shoot_msec):
-        if self.enemy_timer.isActive() is False:
-            y_size = self.enemy.y_size
-            enemy_y = random.randint(0, int(self.height() * 0.8) - y_size)
-            enemy = MovingObject("enemy", "default", self.width(), enemy_y, self.enemy.primary_hp, self.enemy.damage,
-                                 self.enemy.primary_step, self.enemy.speed_shoot, self.enemy.x_size, self.enemy.y_size,
-                                 self.width(), self.height())
-            if enemy.y() + enemy.y_size > int(self.height() * 0.8):
-                enemy.setY(int(self.height() * 0.8) - enemy.y())
-            self.enemies.append(enemy)
-            self.enemy_timer.start(msec)
-            self.enemy_timer.timeout.connect(self.enemy_timer.stop)
-
-    def create_bullet(self, msec1):
-        if self.player1.shoot == 1 and self.bullet_timer1.isActive() is False:
-            bullet = MovingObject("bullet", "default", ceil(self.player1.x() + self.player1.x_size),
-                                  (ceil(self.player1.y() + self.player1.y_size // 2) - self.bullet.y_size // 2),
-                                  self.bullet.primary_hp, self.bullet.damage, self.bullet.primary_step, self.bullet.speed_shoot,
-                                  self.bullet.x_size, self.bullet.y_size, self.width(), self.height())
-            self.bullets.append(bullet)
-            self.bullet_timer1.start(msec1)
-            self.bullet_timer1.timeout.connect(self.bullet_timer1.stop)
+    def create_obj(self,cd,timer,array_objs,pos,hp,damage,step,speed_shoot,x_size,y_size,color):
+        if timer.isActive() is False:
+            obj = MovingObject(pos[0], pos[1], hp, damage, step,  speed_shoot,
+                                        x_size, y_size, self.width(), self.height())
+            obj.set_default()
+            obj.draw_color = color
+            array_objs.append(obj)
+            timer.start(cd)
+            timer.timeout.connect(timer.stop)
+            return obj
 
     def check_collision(self):
         if self.player1.HP_O <= 0:
             self.menu.stackWidget.setCurrentWidget(self.menu.game_over_page)
         # Проверяем столкновение пуль с врагами
-        for enemy in self.enemies:
+        for enemy in self.array_enemies:
             if self.player1.boundingRect().intersects(enemy.boundingRect()):
                 if self.player1.x() + self.player1.x_size // 2 < enemy.x():
-                    self.player1.l_speed = self.player1.step_x * 1.2
+                    self.player1.l_speed = self.player1.step_x * 1
                     self.player1.r_speed = 0
                 elif self.player1.x() + self.player1.x_size // 2 > enemy.x() + enemy.x_size:
-                    self.player1.r_speed = self.player1.step_x * 1.2
+                    self.player1.r_speed = self.player1.step_x * 1
                     self.player1.l_speed = 0
                 elif self.player1.y() + self.player1.y_size // 2 < enemy.y():  # Отталкивание игрока от врага
-                    self.player1.u_speed = self.player1.step_y * 1.2
+                    self.player1.u_speed = self.player1.step_y * 1
                     self.player1.d_speed = 0
                 elif self.player1.y() + self.player1.y_size // 2 > enemy.y() + enemy.y_size:
-                    self.player1.d_speed = self.player1.step_y * 1.2
+                    self.player1.d_speed = self.player1.step_y * 1
                     self.player1.u_speed = 0
 
             if enemy.x() <= -enemy.x_size:
                 self.player1.HP_O -= enemy.damage  # Уменьшение здоровья игрока
-                self.enemies.remove(enemy)
+                self.array_enemies.remove(enemy)
                 continue
             if self.boundingRect().contains(enemy.boundingRect()) is False:
-                self.enemies.remove(enemy)
-            for bullet in self.bullets:
+                self.array_enemies.remove(enemy)
+            for bullet in self.array_bullets:
                 if self.boundingRect().contains(bullet.boundingRect()) is False:
-                    self.bullets.remove(bullet)
+                    self.array_bullets.remove(bullet)
                     continue
                 if enemy.x() <= self.width() - (enemy.x_size // 2):
                     if enemy.boundingRect().intersects(bullet.boundingRect()):
-                        self.bullets.remove(bullet)
+                        self.array_bullets.remove(bullet)
                         enemy.HP_O -= (self.bullet.damage * self.player1.damage)
                         if enemy.HP_O <= 0:
-                            self.enemies.remove(enemy)
+                            self.array_enemies.remove(enemy)
 
     def updateScene(self):
         self.restart_timer_txt.setText(f'{self.count_restart_sec}')
@@ -1072,13 +886,30 @@ class StartGame(QWidget):
                 if star.x() <= -star.x_size:
                     self.menu.reborn_star(star)
 
-            self.create_bullet(int(self.player1.speed_shoot))
-            self.create_enemy(2000 - (10 * self.min), int(self.enemy.speed_shoot))
+            if self.player1.shoot == 1:
+                x_size = 20
+                y_size = 5
+                if self.bullet_timer1.isActive() is False:
+                    bullet = self.create_obj(int(self.player1.speed_shoot),self.bullet_timer1,self.array_bullets,
+                                    (ceil(self.player1.x() + (self.player1.x_size*self.player1.direction) +
+                                          (x_size*(self.player1.direction-1))),
+                                          (ceil(self.player1.y() + self.player1.y_size // 2) - self.bullet.y_size // 2)),
+                                    1, 1, 13, 0, x_size, y_size, QColor(0, 255, 0))
+                    if self.player1.direction == 1:
+                        bullet.move_direction_R = 1
+                        bullet.move_direction_L = 0  # Почему то не изчезают пули --> они не пропадают тк врагов нет
+                    else:
+                        bullet.move_direction_L = 1
+                        bullet.move_direction_R = 0
+
+            self.create_obj(2000, self.enemy_timer, self.array_enemies,
+                            (self.width(), random.randint(0, int(self.height()*0.8)-self.enemies[0][7])),
+                            self.enemies[0][1], self.enemies[0][2], self.enemies[0][3], self.enemies[0][5],
+                            self.enemies[0][6], self.enemies[0][7], self.enemies[0][8])
             self.player1.new_move()
-            for bullet in self.bullets:
-                bullet.move_direction_R = 1
+            for bullet in self.array_bullets:
                 bullet.new_move(1, 0, 0)
-            for enemy in self.enemies:
+            for enemy in self.array_enemies:
                 enemy.move_direction_L = 1
                 enemy.new_move(1, 0, 0)
             self.check_collision()
@@ -1088,28 +919,49 @@ class StartGame(QWidget):
             self.menu.stackWidget.setCurrentWidget(self.menu.pause_page)
         self.update()
 
+
     def keyPressEvent(self, event):
         if self.count_restart_sec <= 1 and self.restart_timer.isActive() is False:
-            self.player1.keyPressEvent(event)
-            if event.text() == 'p':
-                pass
+            if event.text() in ['Ц', 'ц', 'W', 'w']:
+                self.player1.move_direction_U = 1
+
+            elif event.text() in ['Ф', 'ф', 'A', 'a']:
+                self.player1.move_direction_L = 1
+                self.player1.direction = 0
+
+            elif event.text() in ['Ы', 'ы', 'S', 's']:
+                self.player1.move_direction_D = 1
+
+            elif event.text() in ['В', 'в', 'D', 'd']:
+                self.player1.move_direction_R = 1
+                self.player1.direction = 1
+
+            if event.text() in ['C', 'c', 'С', 'с']:
+                self.player1.shoot = 1
+
             if event.key() == Qt.Key.Key_Escape:  # кнопку надо ограничить в свое нажатии, можно прям в меню ее нажать
                 self.menu.stackWidget.setCurrentWidget(self.menu.pause_page)
-                pass
 
     def keyReleaseEvent(self, event):
-        self.player1.keyReleaseEvent(event)
+        if event.text() in ['Ц', 'ц', 'W', 'w']:
+            self.player1.move_direction_U = 0
 
-        if event.text() == 'p':
-            s = 0
+        elif event.text() in ['Ф', 'ф', 'A', 'a']:
+            self.player1.move_direction_L = 0
 
-        if event.key() == Qt.Key.Key_Escape:
-            s = 0
+        elif event.text() in ['Ы', 'ы', 'S', 's']:
+            self.player1.move_direction_D = 0
+
+        elif event.text() in ['В', 'в', 'D', 'd']:
+            self.player1.move_direction_R = 0
+
+        if event.text() in ['C', 'c', 'С', 'с']:
+            self.player1.shoot = 0
+
 
 
     def paint(self, painter):
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
-
         painter.fillRect(0, 0, self.width(), self.height(),
                          QColor(0,0,0))  # Очищаем окно, закрашивая его зеленым
         for star in self.menu.stars:
@@ -1122,15 +974,17 @@ class StartGame(QWidget):
                              ceil(self.height() * 0.82),
                              ceil(self.width() * 0.01), ceil(self.width() * 0.03), QColor(200, 100, 100))
         self.player1.paint(painter)
-        for bullet in self.bullets:
+        for bullet in self.array_bullets:
             bullet.paint(painter)
-        for enemy in self.enemies:
+        for enemy in self.array_enemies:
             enemy.paint(painter)
+
         if self.count_restart_sec <= 1 and self.restart_timer.isActive() is False:
             self.restart_timer_txt.hide()
         else:
             self.restart_timer_txt.show()
             painter.fillRect(0, 0, self.width(), self.height(), QColor(0, 0, 0, 200))
+
 
     def paintEvent(self, event):
         painter = QPainter(self)
