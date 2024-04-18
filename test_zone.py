@@ -609,11 +609,20 @@ class Menu(QMainWindow):
                 self.start_game.player1.paint(painter)
 
 
-class StartGame(QWidget):
+class StartGame(QGraphicsScene):
     def __init__(self, menu, game_begin=False):
         super().__init__()
         self.game_begin = game_begin
         self.menu = menu
+        self.view = QGraphicsView()
+        self.view.setScene(self)
+        # self.view.setBackgroundBrush(QColor(100,100,100))
+        self.view.setMinimumSize(1120,600)
+        self.view.show()
+        # self.setSceneRect(0, 0, self.width(), self.height())
+        self.setSceneRect(0,0,1120,600)
+        self.addRect(self.boundingRect(),QColor('black'),QBrush(QColor('black')))
+
 
         self.previous_size = QSize()
 
@@ -624,20 +633,18 @@ class StartGame(QWidget):
         self.sec = -1
         self.min = 0
 
-        self.font = QFont()
-        self.score_label = QLabel(self)
-        self.score_label.setText('00:00')
-        self.score_label.setAlignment(Qt.AlignmentFlag.AlignLeft)
-        self.score_label.setStyleSheet("color: white;")
-        self.Player1_HP = QLabel(self)
-        self.Player1_HP.setText("HP")
-        self.Player1_HP.setAlignment(Qt.AlignmentFlag.AlignLeft)
-        self.Player1_HP.setStyleSheet("color: rgb(255,155,155);")
-
-
-
-        self.restart_timer_txt = QLabel(self)
-        self.restart_timer_txt.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        # self.font = QFont()
+        # self.score_label = QLabel(self)
+        # self.score_label.setText('00:00')
+        # self.score_label.setAlignment(Qt.AlignmentFlag.AlignLeft)
+        # self.score_label.setStyleSheet("color: white;")
+        # self.Player1_HP = QLabel(self)
+        # self.Player1_HP.setText("HP")
+        # self.Player1_HP.setAlignment(Qt.AlignmentFlag.AlignLeft)
+        # self.Player1_HP.setStyleSheet("color: rgb(255,155,155);")
+        #
+        # self.restart_timer_txt = QLabel(self)
+        # self.restart_timer_txt.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
         self.timer = QTimer()
         self.timer.timeout.connect(self.updateScene)
@@ -672,13 +679,23 @@ class StartGame(QWidget):
             ('Tiny',         1,  1,      3,    0,         0,           35,     35,     QColor(255, 111, 0)),
             ('Fat',          5,  1,      0.5,  0,         0,           85,     85,     QColor(255, 111, 111)),
         ]
+
         self.set_player(self.players[0][1],self.players[0][2],self.players[0][3],self.players[0][4], self.players[0][5],
                         self.players[0][6], self.players[0][7], self.players[0][8])
+        self.player1.setBrush(Qt.GlobalColor.blue)
+        self.addItem(self.player1)
+        self.player2=self.addRect(QRectF(0,0,45,45),QColor('green'),QBrush(QColor('green')))
         # thread = threading.Thread(target=self.draw_stars)
         # thread.start()
         # thread.join()
+        self.info_bar = QGraphicsRectItem(0,0,0,0)
+        self.info_bar.setBrush(QColor(0, 0, 0))
+        self.addItem(self.info_bar)
         self.game_restart(0)
 
+
+        self.view.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignTop)
+        # self.view.scale(0.4, 0.4)
 
     def set_player(self,hp, damage, step, soap_koef, speed_shoot, size_x, size_y, color):
         self.player1 = MovingObject(0, 0, hp, damage, step,  speed_shoot,
@@ -688,7 +705,8 @@ class StartGame(QWidget):
         self.player1.soap_koef = soap_koef
 
     def boundingRect(self):
-        return QRectF(-100, -100, (self.width() + 200), (self.height() + 200))
+        # return QRectF(-100, -100, (self.scene.width() + 200), (self.scene.height() + 200))
+        return QRectF(0,0,self.width(),self.height())
 
     def game_restart(self, mode_player):
         self.count_restart_sec = 1
@@ -698,121 +716,130 @@ class StartGame(QWidget):
 
         self.sec = 0
         self.min = 0
-        self.score_label.setText('00:00')
+        # self.score_label.setText('00:00')
 
         self.player1.HP_O = self.player1.primary_HP_O
-        self.player1.setPos(10, 300)
+        self.player1.setPos(0, 0)
         self.player1.direction = 1
         self.array_bullets = []
         self.array_enemies = []
         self.enemy_deserters = []
 
-        self.resizeEvent(None)
-        self.showMaximized()
+        self.setSceneRect(0,0,1120,600)
+        # self.resizeEvent(None)
+        # self.showMaximized()
 
     def resizeEvent(self, event):
-        if self.menu.stackWidget.currentWidget() == self:
-            print(self.size())
-            self.fullW = 1536
-            self.fullH = 793
-            if self.isMaximized() is True:
-                self.fullW = self.width()
-                self.fullH = self.height()
+        # self.setSceneRect(0, 0, self.view.width(), self.view.height())
+        # self.scale(self.width()/1537,self.height()/793)
+        self.player1.window_x = self.width()
+        self.player1.window_y = self.height()
+        # self.info_bar.setRect(0, ceil(self.height() * 0.8), self.width(), self.height())
 
-            previous_width = 1536
-            previous_height = 793
-            current_size = self.size()
-            if self.previous_size.isValid():
-                previous_width = self.previous_size.width()
-                previous_height = self.previous_size.height()
-
-            self.score_label.setGeometry(ceil(self.width() * 0.85), ceil(self.height() * 0.81),
-                                         ceil(self.width() * 0.14), 50)
-            self.font.setPointSize(ceil(self.width() * 0.02))
-            self.score_label.setFont(self.font)
-
-            self.Player1_HP.setGeometry(ceil(self.width() * 0.01), ceil(self.height() * 0.81),
-                                        ceil(self.width() * 0.04),
-                                        100)
-            self.Player1_HP.setFont(self.font)
-
-            pro_x_player_size = self.player1.max_x_size / self.fullW
-            pro_y_player_size = self.player1.max_y_size / self.fullH
-            self.player1.x_size = int(self.width() * pro_x_player_size)
-            self.player1.y_size = int(self.height() * pro_y_player_size)
-            self.player1.window_x = (self.width())
-            self.player1.window_y = (self.height() * 0.8)
-            pro_x_player_position = self.player1.x() / previous_width
-            pro_y_player_position = self.player1.y() / previous_height
-            pro_x_player_speed = self.player1.max_step_x / self.fullW
-            pro_y_player_speed = self.player1.max_step_y / self.fullH
-            self.player1.setX(round(self.width() * pro_x_player_position, 1))
-            self.player1.setY(round(self.height() * pro_y_player_position, 1))
-            self.player1.step_x = round(self.width() * pro_x_player_speed, 1)
-            self.player1.step_y = round(self.height() * pro_y_player_speed, 1)
-            # сохранение позиции player1 при изменении экрана
-            # (в процентном соотношении с округлением до 1 десятой)
-
-            pro_x_enemy_size = self.enemy.max_x_size / self.fullW
-            pro_y_enemy_size = self.enemy.max_y_size / self.fullH
-            self.enemy.x_size = int(self.width() * pro_x_enemy_size)
-            self.enemy.y_size = int(self.height() * pro_y_enemy_size)
-            pro_x_enemy_speed = self.enemy.max_step_x / self.fullW
-            self.enemy.step_x = round(self.width() * pro_x_enemy_speed, 1)
-            pro_y_enemy_speed = self.enemy.max_step_y / self.fullH
-            self.enemy.step_y = round(self.width() * pro_x_enemy_speed, 1)
-            self.enemy.window_x = self.width()
-            self.enemy.window_y = self.height()
-            for enemy in self.array_enemies:
-                enemy.x_size = int(self.width() * pro_x_enemy_size)
-                enemy.y_size = int(self.height() * pro_y_enemy_size)
-                pro_x_bullet_position = enemy.x() / previous_width
-                pro_y_bullet_position = enemy.y() / previous_height
-                enemy.setX(round(self.width() * pro_x_bullet_position, 1))
-                enemy.setY(round(self.height() * pro_y_bullet_position, 1))
-                enemy.step_x = round(self.width() * pro_x_enemy_speed, 1)
-                enemy.step_y = round(self.width() * pro_y_enemy_speed, 1)
-
-            pro_x_bullet_size = self.bullet.max_x_size / self.fullW
-            pro_y_bullet_size = self.bullet.max_y_size / self.fullH
-            self.bullet.x_size = int(self.width() * pro_x_bullet_size)
-            self.bullet.y_size = int(self.height() * pro_y_bullet_size)
-            # self.bullet.width_window = self.fullW
-            # self.bullet.height_window = self.fullH
-            pro_x_bullet_speed = self.bullet.max_step_x / self.fullW
-            pro_y_bullet_speed = self.bullet.max_step_y / self.fullW
-            self.bullet.step_x = round(self.width() * pro_x_bullet_speed, 1)
-            self.bullet.step_y = round(self.width() * pro_y_bullet_speed, 1)
-            for bullet in self.array_bullets:
-                bullet.x_size = int(self.width() * pro_x_bullet_size)
-                bullet.y_size = int(self.height() * pro_y_bullet_size)
-                pro_x_bullet_position = bullet.x() / previous_width
-                pro_y_bullet_position = bullet.y() / previous_height
-                bullet.setX(round(self.width() * pro_x_bullet_position, 1))
-                bullet.setY(round(self.height() * pro_y_bullet_position, 1))
-                bullet.step_x = round(self.width() * pro_x_bullet_speed, 1)
-                bullet.step_y = round(self.width() * pro_y_bullet_speed, 1)
-            self.previous_size = current_size
-
-            self.restart_timer_txt.setGeometry(0, ceil(self.height() * 0.1), self.width(), 150)
-            self.restart_timer_txt.setStyleSheet("font-family: Courier, monospace; color: rgb(200,200,200)")
-            self.font.setPointSize(ceil(self.width() * 0.1))
-            self.restart_timer_txt.setFont(self.font)
+        self.info_bar.setRect(self.boundingRect())
+        print('Grey',self.info_bar.x(),'x ',self.info_bar.y(),'y ',self.width(),'w ',self.height(),'h')
+    #     # if self.menu.stackWidget.currentWidget() == self:
+    #         # print(self.size())
+    #         self.fullW = 1536
+    #         self.fullH = 793
+    #         # if self.isMaximized() is True:
+    #         self.fullW = self.width()
+    #         self.fullH = self.height()
+    #
+    #         previous_width = 1536
+    #         previous_height = 793
+    #         # current_size = self.size()
+    #         if self.previous_size.isValid():
+    #             previous_width = self.previous_size.width()
+    #             previous_height = self.previous_size.height()
+    #
+    #         # self.score_label.setGeometry(ceil(self.width() * 0.85), ceil(self.height() * 0.81),
+    #         #                              ceil(self.width() * 0.14), 50)
+    #         # self.font.setPointSize(ceil(self.width() * 0.02))
+    #         # self.score_label.setFont(self.font)
+    #
+    #         # self.Player1_HP.setGeometry(ceil(self.width() * 0.01), ceil(self.height() * 0.81),
+    #         #                             ceil(self.width() * 0.04),
+    #         #                             100)
+    #         # self.Player1_HP.setFont(self.font)
+    #
+    #         pro_x_player_size = self.player1.max_x_size / self.fullW
+    #         pro_y_player_size = self.player1.max_y_size / self.fullH
+    #         self.player1.x_size = int(self.width() * pro_x_player_size)
+    #         self.player1.y_size = int(self.height() * pro_y_player_size)
+    #         self.player1.window_x = (self.width())
+    #         self.player1.window_y = (self.height() * 0.8)
+    #         pro_x_player_position = self.player1.x() / previous_width
+    #         pro_y_player_position = self.player1.y() / previous_height
+    #         pro_x_player_speed = self.player1.max_step_x / self.fullW
+    #         pro_y_player_speed = self.player1.max_step_y / self.fullH
+    #         self.player1.setX(round(self.width() * pro_x_player_position, 1))
+    #         self.player1.setY(round(self.height() * pro_y_player_position, 1))
+    #         self.player1.step_x = round(self.width() * pro_x_player_speed, 1)
+    #         self.player1.step_y = round(self.height() * pro_y_player_speed, 1)
+    #         # сохранение позиции player1 при изменении экрана
+    #         # (в процентном соотношении с округлением до 1 десятой)
+    #
+    #         pro_x_enemy_size = self.enemy.max_x_size / self.fullW
+    #         pro_y_enemy_size = self.enemy.max_y_size / self.fullH
+    #         self.enemy.x_size = int(self.width() * pro_x_enemy_size)
+    #         self.enemy.y_size = int(self.height() * pro_y_enemy_size)
+    #         pro_x_enemy_speed = self.enemy.max_step_x / self.fullW
+    #         self.enemy.step_x = round(self.width() * pro_x_enemy_speed, 1)
+    #         pro_y_enemy_speed = self.enemy.max_step_y / self.fullH
+    #         self.enemy.step_y = round(self.width() * pro_x_enemy_speed, 1)
+    #         self.enemy.window_x = self.width()
+    #         self.enemy.window_y = self.height()
+    #         for enemy in self.array_enemies:
+    #             enemy.x_size = int(self.width() * pro_x_enemy_size)
+    #             enemy.y_size = int(self.height() * pro_y_enemy_size)
+    #             pro_x_bullet_position = enemy.x() / previous_width
+    #             pro_y_bullet_position = enemy.y() / previous_height
+    #             enemy.setX(round(self.width() * pro_x_bullet_position, 1))
+    #             enemy.setY(round(self.height() * pro_y_bullet_position, 1))
+    #             enemy.step_x = round(self.width() * pro_x_enemy_speed, 1)
+    #             enemy.step_y = round(self.width() * pro_y_enemy_speed, 1)
+    #
+    #         pro_x_bullet_size = self.bullet.max_x_size / self.fullW
+    #         pro_y_bullet_size = self.bullet.max_y_size / self.fullH
+    #         self.bullet.x_size = int(self.width() * pro_x_bullet_size)
+    #         self.bullet.y_size = int(self.height() * pro_y_bullet_size)
+    #         # self.bullet.width_window = self.fullW
+    #         # self.bullet.height_window = self.fullH
+    #         pro_x_bullet_speed = self.bullet.max_step_x / self.fullW
+    #         pro_y_bullet_speed = self.bullet.max_step_y / self.fullW
+    #         self.bullet.step_x = round(self.width() * pro_x_bullet_speed, 1)
+    #         self.bullet.step_y = round(self.width() * pro_y_bullet_speed, 1)
+    #         for bullet in self.array_bullets:
+    #             bullet.x_size = int(self.width() * pro_x_bullet_size)
+    #             bullet.y_size = int(self.height() * pro_y_bullet_size)
+    #             pro_x_bullet_position = bullet.x() / previous_width
+    #             pro_y_bullet_position = bullet.y() / previous_height
+    #             bullet.setX(round(self.width() * pro_x_bullet_position, 1))
+    #             bullet.setY(round(self.height() * pro_y_bullet_position, 1))
+    #             bullet.step_x = round(self.width() * pro_x_bullet_speed, 1)
+    #             bullet.step_y = round(self.width() * pro_y_bullet_speed, 1)
+    #         # self.previous_size = current_size
+    #
+    #         # self.restart_timer_txt.setGeometry(0, ceil(self.height() * 0.1), self.width(), 150)
+    #         # self.restart_timer_txt.setStyleSheet("font-family: Courier, monospace; color: rgb(200,200,200)")
+    #         # self.font.setPointSize(ceil(self.width() * 0.1))
+    #         # self.restart_timer_txt.setFont(self.font)
 
     def update_score(self):
-        if self.menu.stackWidget.currentWidget() == self and self.count_restart_sec >= 1 and self.restart_timer.isActive() is False:
+        # if self.menu.stackWidget.currentWidget() == self and self.count_restart_sec >= 1 and self.restart_timer.isActive() is False:
             self.sec += 1
             if self.sec > 59:
                 self.min += 1
                 self.sec = 0
-            if self.sec < 10 and self.min < 10:
-                self.score_label.setText(f"0{self.min}:0{self.sec}")
-            elif self.min < 10:
-                self.score_label.setText(f"0{self.min}:{self.sec}")
-            elif self.sec < 10:
-                self.score_label.setText(f"{self.min}:0{self.sec}")
-            else:
-                self.score_label.setText(f"{self.min}:{self.sec}")
+            # if self.sec < 10 and self.min < 10:
+            #     self.score_label.setText(f"0{self.min}:0{self.sec}")
+            # elif self.min < 10:
+            #     self.score_label.setText(f"0{self.min}:{self.sec}")
+            # elif self.sec < 10:
+            #     self.score_label.setText(f"{self.min}:0{self.sec}")
+            # else:
+            #     self.score_label.setText(f"{self.min}:{self.sec}")
 
     def create_obj(self,cd,timer,array_objs,pos,hp,damage,step,speed_shoot,x_size,y_size,color):
         if timer.isActive() is False:
@@ -820,14 +847,15 @@ class StartGame(QWidget):
                                         x_size, y_size, self.width(), self.height())
             obj.set_default()
             obj.draw_color = color
+            obj.setBrush(QColor(color))
             array_objs.append(obj)
             timer.start(cd)
             timer.timeout.connect(timer.stop)
             return obj
 
     def check_collision(self):
-        if self.player1.HP_O <= 0:
-            self.menu.stackWidget.setCurrentWidget(self.menu.game_over_page)
+        # if self.player1.HP_O <= 0:
+            # self.menu.stackWidget.setCurrentWidget(self.menu.game_over_page)
         # Проверяем столкновение пуль с врагами
         for enemy in self.array_enemies:
             if self.player1.boundingRect().intersects(enemy.boundingRect()):
@@ -847,44 +875,50 @@ class StartGame(QWidget):
             if enemy.x() <= -enemy.x_size:
                 self.player1.HP_O -= enemy.damage  # Уменьшение здоровья игрока
                 self.array_enemies.remove(enemy)
+                self.removeItem(enemy)
                 continue
             if self.boundingRect().contains(enemy.boundingRect()) is False:
                 self.array_enemies.remove(enemy)
+                self.removeItem(enemy)
             for bullet in self.array_bullets:
                 if self.boundingRect().contains(bullet.boundingRect()) is False:
                     self.array_bullets.remove(bullet)
+                    self.removeItem(bullet)
                     continue
                 if enemy.x() <= self.width() - (enemy.x_size // 2):
                     if enemy.boundingRect().intersects(bullet.boundingRect()):
                         self.array_bullets.remove(bullet)
+                        self.removeItem(bullet)
                         enemy.HP_O -= (self.bullet.damage * self.player1.damage)
                         if enemy.HP_O <= 0:
                             self.array_enemies.remove(enemy)
+                            self.removeItem(enemy)
 
     def updateScene(self):
-        self.restart_timer_txt.setText(f'{self.count_restart_sec}')
+        # self.restart_timer_txt.setText(f'{self.count_restart_sec}')
         if self.restart_timer.isActive() is False:
             if self.count_restart_sec > 1:
                 self.restart_timer.start(1000)
                 self.count_restart_sec -= 1
 
-        if self.menu.stackWidget.currentWidget() == self and self.count_restart_sec <= 1 and self.restart_timer.isActive() is False:
+        # if self.menu.stackWidget.currentWidget() == self and self.count_restart_sec <= 1 and self.restart_timer.isActive() is False:
             # if self.sec == 3 or self.sec % 10 == 0 and self.sec > 0:
             #     self.menu.stackWidget.setCurrentWidget(self.menu.choose_card_page)  # Костыль, переделай
             #     self.menu.choose_card_page.randomize_cards(self)
             #
             #     self.sec += 1
-            if len(self.menu.stars) < 100:
-                randomint = random.randint(0, 101)
-                if randomint <= 4:
-                    self.menu.create_star(1)
-            for star in self.menu.stars:
-                star.move_direction_L = 1
-                # if star.max_step_x < star.primary_step*1.5:
-                #     star.step_x += 1
-                star.new_move(1, 0, 0)
-                if star.x() <= -star.x_size:
-                    self.menu.reborn_star(star)
+
+            # if len(self.menu.stars) < 100:
+            #     randomint = random.randint(0, 101)
+            #     if randomint <= 4:
+            #         self.menu.create_star(1)
+            # for star in self.menu.stars:
+            #     star.move_direction_L = 1
+            #     # if star.max_step_x < star.primary_step*1.5:
+            #     #     star.step_x += 1
+            #     star.new_move(1, 0, 0)
+            #     if star.x() <= -star.x_size:
+            #         self.menu.reborn_star(star)
 
             if self.player1.shoot == 1:
                 x_size = 20
@@ -901,46 +935,81 @@ class StartGame(QWidget):
                     else:
                         bullet.move_direction_L = 1
                         bullet.move_direction_R = 0
+                    self.addItem(bullet)
 
-            self.create_obj(2000, self.enemy_timer, self.array_enemies,
+            enemy = self.create_obj(2000, self.enemy_timer, self.array_enemies,
                             (self.width(), random.randint(0, int(self.height()*0.8)-self.enemies[0][7])),
                             self.enemies[0][1], self.enemies[0][2], self.enemies[0][3], self.enemies[0][5],
                             self.enemies[0][6], self.enemies[0][7], self.enemies[0][8])
-            self.player1.new_move()
+            self.addItem(enemy)
+            # self.player1.new_move(1,1,1)
+            self.player_move()
             for bullet in self.array_bullets:
                 bullet.new_move(1, 0, 0)
             for enemy in self.array_enemies:
                 enemy.move_direction_L = 1
                 enemy.new_move(1, 0, 0)
             self.check_collision()
-        else:
-            self.player1.new_move(0)
-        if self.isActiveWindow() is False and self.menu.stackWidget.currentWidget() == self:
-            self.menu.stackWidget.setCurrentWidget(self.menu.pause_page)
+        # else:
+            # self.player1.new_move(0)
+        # if self.isActiveWindow() is False and self.menu.stackWidget.currentWidget() == self:
+        #     self.menu.stackWidget.setCurrentWidget(self.menu.pause_page)
         self.update()
 
+    def player_move(self):
+        if self.player1.move_direction_L == 1 and self.player1.x() >0:
+            self.player1.moveBy(-self.player1.step_x,0)
+            # self.player1.setPos(self.view.mapToScene(QPoint(int(self.player1.x()) - 1,int(self.player1.y()))))
+            # self.player1.setPos(0,0)
+        if self.player1.move_direction_R == 1 and self.player1.x()+self.player1.x_size < self.width():
+            self.player1.moveBy(self.player1.step_x,0)
+        if self.player1.move_direction_U == 1 and self.player1.y() > 0:
+            self.player1.moveBy(0,-self.player1.step_y)
+        if self.player1.move_direction_D == 1 and self.player1.y()+self.player1.y_size < self.height():
+            self.player1.moveBy(0, self.player1.step_y)
 
     def keyPressEvent(self, event):
-        if self.count_restart_sec <= 1 and self.restart_timer.isActive() is False:
+        # if self.count_restart_sec <= 1 and self.restart_timer.isActive() is False:
             if event.text() in ['Ц', 'ц', 'W', 'w']:
                 self.player1.move_direction_U = 1
+                if self.player2.y() > 0:
+                    self.player2.moveBy(0,-5)
 
-            elif event.text() in ['Ф', 'ф', 'A', 'a']:
-                self.player1.move_direction_L = 1
-                self.player1.direction = 0
+            if event.text() in ['Ф', 'ф', 'A', 'a']:
+                    self.player1.move_direction_L = 1
+                    self.player1.direction = 0
+                    if self.player2.x() > 0:
+                        self.player2.moveBy(-5, 0)
 
-            elif event.text() in ['Ы', 'ы', 'S', 's']:
+
+            if event.text() in ['Ы', 'ы', 'S', 's']:
                 self.player1.move_direction_D = 1
+                if self.player2.y() + 45 < self.height():
+                    self.player2.moveBy(0,5)
 
             elif event.text() in ['В', 'в', 'D', 'd']:
-                self.player1.move_direction_R = 1
-                self.player1.direction = 1
+                    self.player1.move_direction_R = 1
+                    self.player1.direction = 1
+                    if self.player2.x() + 45 < self.width():
+                        self.player2.moveBy(5, 0)
 
             if event.text() in ['C', 'c', 'С', 'с']:
                 self.player1.shoot = 1
+            print(self.boundingRect().x(),'x ',self.boundingRect().y(),'y ',self.boundingRect().width(),'w ',self.boundingRect().height(),'h')
 
-            if event.key() == Qt.Key.Key_Escape:  # кнопку надо ограничить в свое нажатии, можно прям в меню ее нажать
-                self.menu.stackWidget.setCurrentWidget(self.menu.pause_page)
+            print('Scene ',self.width(), 'w ',self.height(), 'h')
+            print(self.player1.x(),'x ',self.player1.y(),'y ',self.player1.x_size,'w ',self.player1.y_size,'h')
+            scene_coords = QPoint(int(self.player1.x()),int(self.player1.y()))
+            view_coords = self.view.mapFromScene(self.player1.x(),self.player1.y())
+            global_coords = self.view.mapToGlobal(QPoint(0,0))
+            parent_coords = self.view.mapToParent(QPoint(0,0))
+            # view_coords = self.view.mapToScene(scene_coords)
+            print('scene p ->',scene_coords)
+            print('view p ->',view_coords)
+            print('global p ->',global_coords)
+            print('parent p ->',parent_coords)
+            # if event.key() == Qt.Key.Key_Escape:  # кнопку надо ограничить в свое нажатии, можно прям в меню ее нажать
+            #     self.menu.stackWidget.setCurrentWidget(self.menu.pause_page)
 
     def keyReleaseEvent(self, event):
         if event.text() in ['Ц', 'ц', 'W', 'w']:
@@ -964,8 +1033,8 @@ class StartGame(QWidget):
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
         painter.fillRect(0, 0, self.width(), self.height(),
                          QColor(0,0,0))  # Очищаем окно, закрашивая его зеленым
-        for star in self.menu.stars:
-            star.paint(painter)
+        # for star in self.menu.stars:
+        #     star.paint(painter)
 
         painter.fillRect(0, ceil(self.height() * 0.8), self.width(), self.height(), QColor(100, 100, 100))
 
@@ -973,29 +1042,29 @@ class StartGame(QWidget):
             painter.fillRect(ceil(self.width() * 0.05) + i * (ceil(self.width() * 0.01) + 2),
                              ceil(self.height() * 0.82),
                              ceil(self.width() * 0.01), ceil(self.width() * 0.03), QColor(200, 100, 100))
-        self.player1.paint(painter)
-        for bullet in self.array_bullets:
-            bullet.paint(painter)
+        # self.player1.paint(painter)
+        # for bullet in self.array_bullets:
+        #     bullet.paint(painter)
         for enemy in self.array_enemies:
             enemy.paint(painter)
 
-        if self.count_restart_sec <= 1 and self.restart_timer.isActive() is False:
-            self.restart_timer_txt.hide()
-        else:
-            self.restart_timer_txt.show()
-            painter.fillRect(0, 0, self.width(), self.height(), QColor(0, 0, 0, 200))
+        # if self.count_restart_sec <= 1 and self.restart_timer.isActive() is False:
+        #     self.restart_timer_txt.hide()
+        # else:
+        #     self.restart_timer_txt.show()
+        #     painter.fillRect(0, 0, self.width(), self.height(), QColor(0, 0, 0, 200))
 
-
-    def paintEvent(self, event):
-        painter = QPainter(self)
-        self.paint(painter)
-
+    def paint_static(self):
+        info_bar = QGraphicsRectItem(0,ceil(self.height() * 0.8),self.width(),self.height())
+        info_bar.setBrush(QColor(100, 100, 100))
+        self.addItem(info_bar)
 
 # с помощью лебел можно сделать переход по словам, также модификации у обьектов должен быть как у карточек
 
 
+
 if __name__ == '__main__':
     app = QApplication(sys.argv)
-    game_window = Menu()
-    game_window.show()
+    game_window = StartGame(None,True)
+    # game_window.show()
     sys.exit(app.exec())
