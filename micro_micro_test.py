@@ -3,8 +3,8 @@ from math import ceil, sqrt
 import random
 
 from PyQt6.QtCore import QPoint, QSize, QRectF, Qt, QTimer
-from PyQt6.QtGui import QColor, QPainter, QBrush
-from PyQt6.QtWidgets import QApplication, QGraphicsRectItem, QGraphicsView, QGraphicsScene
+from PyQt6.QtGui import QColor, QPainter, QBrush, QFont
+from PyQt6.QtWidgets import QApplication, QGraphicsRectItem, QGraphicsView, QGraphicsScene, QGraphicsTextItem
 
 
 class StartGame(QGraphicsScene):
@@ -14,8 +14,7 @@ class StartGame(QGraphicsScene):
         self.menu = menu
 
         self.setSceneRect(0,0,1120,(600*0.8))
-        self.setBackgroundBrush(QColor(100,100,100))
-        self.addRect(self.boundingRect(),QColor('black'),QBrush(QColor('black')))
+        self.setBackgroundBrush(QColor(0,0,0))
 
 
         self.previous_size = QSize()
@@ -24,7 +23,8 @@ class StartGame(QGraphicsScene):
 
         self.mode = 0
 
-        self.sec = -1
+        self.msec = 0
+        self.sec = 0
         self.min = 0
 
         # players = [ (name, hp, damage, step, soap_koef, speed_shoot, size_x, size_y, color) ]
@@ -33,16 +33,18 @@ class StartGame(QGraphicsScene):
             ('IFeelPain',    1,  0.5,    16,   40,        290,         35,     35,     QColor(200, 150, 0)),
             ('UPower',       5,  2,      7,    15,        420,         65,     65,     QColor(100, 255, 255))
         ]
-        # players = [ (name, hp, damage, step, soap_koef, speed_shoot, size_x, size_y, color) ]
+        # enemies = [ (name, hp, damage, step, soap_koef, speed_shoot, size_x, size_y, color) ]
         self.enemies = [
-            ('Default',      3,  1,      0.4,    0,         0,           45,     45,     QColor(255, 0, 0)),
+            ('Default',      3,  1,      0.2,    0,         0,           45,     45,     QColor(150, 0, 0)),
             ('Tiny',         1,  1,      3,    0,         0,           35,     35,     QColor(255, 111, 0)),
             ('Fat',          5,  1,      0.5,  0,         0,           85,     85,     QColor(255, 111, 111)),
         ]
 
+
         self.player2_timer = QTimer()
         self.player2_chtimer = QTimer()
         self.player2 = self.create_rectobj(self.player2_timer,1, self.players[0][1], self.players[0][2], self.players[0][3],self.players[0][4],self.players[0][5],self.players[0][6],self.players[0][7],self.players[0][8],self.width(),self.height())
+        self.player2.setZValue(1)
         self.player2.setPos(200,300)
         self.player2.direction = 1
         self.player2.speed_l_ch = 0
@@ -52,18 +54,23 @@ class StartGame(QGraphicsScene):
         self.array_bullets = []
         self.bullet_timer = QTimer()
 
+        self.array_arrays = [self.array_enemies,self.array_bullets]
+
         self.timer = QTimer()
         self.timer.timeout.connect(self.updateScene)
         self.timer.start(10)
         self.enemy_timer = QTimer(self)
         self.bullet_timer1 = QTimer(self)
+        self.interface()
+
 
     def boundingRect(self):
-        # return QRectF(-100, -100, (self.scene.width() + 200), (self.scene.height() + 200))
         return QRectF(0,0,self.width(),self.height())
 
     def boundingField(self):
-        return QRectF(-1000, 0, (self.width() + 2000), (self.height()))
+        return QRectF(-2000, 0, (self.width() + 4000), (self.height()))
+        # return QRectF(0,0,self.width(),self.height())
+
 
     def create_rectobj(self,timer,cd,hp,damage,step,soap_koef,speed_shoot,size_x,size_y,color,window_x,wimdow_y):
         if timer.isActive() is False:
@@ -196,68 +203,52 @@ class StartGame(QGraphicsScene):
             obj.moveBy(0, obj.speed_d)
 
 
-    def player_move2(self,obj,timer,arrays:list):
-        if timer.isActive() is False:
-           if obj.move_direction_L == 1:
-              # 1 - скорость всех обьектов больше, чем ожидалось
-              # 2 - нужно как то сделать передвижение по логарифму для игрока
-
-            timer.timeout.connect(timer.stop)
-            timer.start(int(obj.soap_koef))
-
-    def player_chdirection(self,obj,chdirection_timer,msec,direction,future_x):
+    def player_chdirection(self,obj,chdirection_timer,msec,direction,future_x,arrays:list):
         if chdirection_timer.isActive() is False:
             ch_speed = round(sqrt(int(abs(future_x-obj.x()))),2)
-            # ch_speed = round(0.05*(abs(int(future_x-obj.x()))),2)
             if ch_speed < 0.3:
                 ch_speed = 0.3
             if direction == 0:
                 obj.moveBy(ch_speed,0)
-                obj.speed_l_ch = ch_speed
                 obj.speed_r_ch = 0
+                for array in arrays:
+                    for arr_obj in array:
+                        arr_obj.moveBy(ch_speed,0)
             else:
                 obj.moveBy(-ch_speed, 0)
-                obj.speed_r_ch = ch_speed
                 obj.speed_l_ch = 0
+                for array in arrays:
+                    for arr_obj in array:
+                        arr_obj.moveBy(-ch_speed, 0)
 
             chdirection_timer.timeout.connect(chdirection_timer.stop)
             chdirection_timer.start(msec)
 
 
-    # def create_obj(self,cd,timer,array_objs,pos,hp,damage,step,speed_shoot,x_size,y_size,color):
-    #     if timer.isActive() is False:
-    #         obj = MovingObject(pos[0], pos[1], hp, damage, step,  speed_shoot,
-    #                                     x_size, y_size, self.width(), self.height())
-    #         obj.set_default()
-    #         obj.draw_color = color
-    #         obj.setBrush(QColor(color))
-    #         array_objs.append(obj)
-    #         timer.start(cd)
-    #         timer.timeout.connect(timer.stop)
-    #         return obj
-
     def check_collision(self):
-        # if self.player1.HP_O <= 0:
-            # self.menu.stackWidget.setCurrentWidget(self.menu.game_over_page)
         # Проверяем столкновение пуль с врагами
         for enemy in self.array_enemies:
+            damage_order = 0
             if QRectF(self.player2.x(),self.player2.y(),self.player2.size_x,self.player2.size_y).intersects(QRectF(enemy.x(),enemy.y(),enemy.size_x,enemy.size_y)):
                 if self.player2.x() + self.player2.size_x // 2 < enemy.x():
                     self.player2.speed_l = self.player2.step * 1
                     self.player2.speed_r = 0
-                    self.player2.hp -= enemy.damage
+                    damage_order = 1
                 elif self.player2.x() + self.player2.size_x // 2 > enemy.x() + enemy.size_x:
                     self.player2.speed_r = self.player2.step * 1
                     self.player2.speed_l = 0
-                    self.player2.hp -= enemy.damage
+                    damage_order = 1
                 elif self.player2.y() + self.player2.size_y // 2 < enemy.y():  # Отталкивание игрока от врага
                     self.player2.speed_u = self.player2.step * 1
                     self.player2.speed_d = 0
-                    self.player2.hp -= enemy.damage
+                    damage_order = 1
                 elif self.player2.y() + self.player2.size_y // 2 > enemy.y() + enemy.size_y:
                     self.player2.speed_d = self.player2.step * 1
                     self.player2.speed_u = 0
-                    self.player2.hp -= enemy.damage
+                    damage_order = 1
+            if damage_order == 1:
+                self.player2.hp -= enemy.damage
+                damage_order = 0
 
             if self.boundingField().contains(QRectF(enemy.x(),enemy.y(),enemy.size_x,enemy.size_y)) is False:
                 self.array_enemies.remove(enemy)
@@ -277,31 +268,8 @@ class StartGame(QGraphicsScene):
                             self.removeItem(enemy)
 
     def updateScene(self):
-        # self.restart_timer_txt.setText(f'{self.count_restart_sec}')
-        # if self.restart_timer.isActive() is False:
-        #     if self.count_restart_sec > 1:
-        #         self.restart_timer.start(1000)
-        #         self.count_restart_sec -= 1
-
-        # if self.menu.stackWidget.currentWidget() == self and self.count_restart_sec <= 1 and self.restart_timer.isActive() is False:
-            # if self.sec == 3 or self.sec % 10 == 0 and self.sec > 0:
-            #     self.menu.stackWidget.setCurrentWidget(self.menu.choose_card_page)  # Костыль, переделай
-            #     self.menu.choose_card_page.randomize_cards(self)
-            #
-            #     self.sec += 1
-
-            # if len(self.menu.stars) < 100:
-            #     randomint = random.randint(0, 101)
-            #     if randomint <= 4:
-            #         self.menu.create_star(1)
-            # for star in self.menu.stars:
-            #     star.move_direction_L = 1
-            #     # if star.max_step_x < star.primary_step*1.5:
-            #     #     star.step_x += 1
-            #     star.new_move(1, 0, 0)
-            #     if star.x() <= -star.x_size:
-            #         self.menu.reborn_star(star)
-
+        self.msec += 1
+        self.draw_time_timer_text()
         if self.player2.shoot == 1:
                 x_size = 10
                 y_size = 4
@@ -309,93 +277,81 @@ class StartGame(QGraphicsScene):
                     bullet = self.create_rectobj(self.bullet_timer,int(self.player2.speed_shoot),1,1,8,0,0,x_size,y_size,QColor(0,255,0),self.width(),self.height())
                     bullet.setPos(self.player2.x() + (self.player2.size_x*self.player2.direction) +
                                           (x_size*(self.player2.direction-1)),(self.player2.y() + self.player2.size_y // 2) - y_size // 2)
+                    bullet.setZValue(2)
                     if self.player2.direction == 1:
                         bullet.move_direction_R = 1
-                        bullet.move_direction_L = 0  # Почему то не изчезают пули --> они не пропадают тк врагов нет
+                        bullet.move_direction_L = 0
                     else:
                         bullet.move_direction_L = 1
                         bullet.move_direction_R = 0
                     self.array_bullets.append(bullet)
 
-        # enemy = self.create_obj(2000, self.enemy_timer, self.array_enemies,
-        #                     (self.width(), random.randint(0, int(self.height()*0.8)-self.enemies[0][7])),
-        #                     self.enemies[0][1], self.enemies[0][2], self.enemies[0][3], self.enemies[0][5],
-        #                     self.enemies[0][6], self.enemies[0][7], self.enemies[0][8])
         if self.enemy_timer.isActive() is False:
-            enemy = self.create_rectobj(self.enemy_timer,500,self.enemies[0][1],self.enemies[0][2],self.enemies[0][3],self.enemies[0][4],self.enemies[0][5],self.enemies[0][6],self.enemies[0][7],self.enemies[0][8],self.width(),self.height())
+            enemy = self.create_rectobj(self.enemy_timer,1000,self.enemies[0][1],self.enemies[0][2],self.enemies[0][3],self.enemies[0][4],self.enemies[0][5],self.enemies[0][6],self.enemies[0][7],self.enemies[0][8],self.width(),self.height())
+            enemy.setZValue(2)
             randint_y = random.randint(0,int(self.height()-enemy.size_y))
-            randint_x1 = random.randint(int(self.boundingField().x()),0)
-            randint_x2 = random.randint(int(self.width()),int(self.boundingField().width()))
-            randint_x_choice = random.randint(0,2)
+            randint_x1 = random.randint(int(self.boundingField().x()),int(self.boundingField().x()*0.2))
+            randint_x2 = random.randint(int(self.width()*0.6),int(self.boundingField().width())) # появление врагов дожно быть не ближе чем 2 экрана (direction)
+            randint_x_choice = random.randint(0,2) # не позволять экрану засорятся слишком многим количеством противников
             if randint_x_choice == 0:
                 enemy.setPos(randint_x1,randint_y)
             else: enemy.setPos(randint_x2,randint_y)
             enemy.move_direction_L = 1
             self.array_enemies.append(enemy)
-            # self.player1.new_move(1,1,1)
-        # self.new_move(self.player2,self.player2_timer,1,1,1)
         self.player_move(self.player2,self.player2_timer,[self.array_bullets,self.array_enemies])
         left_x,right_x = 200,920
         if int(self.player2.x()) != right_x and self.player2.direction == 0:
-            self.player_chdirection(self.player2,self.player2_chtimer,10,self.player2.direction,right_x)
+            self.player_chdirection(self.player2,self.player2_chtimer,10,self.player2.direction,right_x,self.array_arrays)
         elif int(self.player2.x()) != left_x and self.player2.direction == 1:
-            self.player_chdirection(self.player2,self.player2_chtimer,10,self.player2.direction,left_x)
+            self.player_chdirection(self.player2,self.player2_chtimer,10,self.player2.direction,left_x,self.array_arrays)
         else:
             self.player2.speed_l_ch = 0
             self.player2.speed_r_ch = 0
-        for bullet in self.array_bullets:
-                # bullet.new_move(1, 0, 0)
-            self.new_move(bullet)
+        if len(self.hps) != self.player2.hp and len(self.hps) > 0:
+            hp = self.hps[-1]
+            self.removeItem(hp)
+            self.hps.remove(hp)
 
+        for bullet in self.array_bullets:
+            self.new_move(bullet)
         for enemy in self.array_enemies:
             self.new_move(enemy)
         self.check_collision()
-        # else:
-            # self.player1.new_move(0)
-        # if self.isActiveWindow() is False and self.menu.stackWidget.currentWidget() == self:
-        #     self.menu.stackWidget.setCurrentWidget(self.menu.pause_page)
         self.update()
 
 
 
     def keyPressEvent(self, event):
-        # if self.count_restart_sec <= 1 and self.restart_timer.isActive() is False:
-            if event.text() in ['Ц', 'ц', 'W', 'w']:
-                self.player2.move_direction_U = 1
 
-            if event.text() in ['Ф', 'ф', 'A', 'a']:
-                self.player2.move_direction_L = 1
-                self.player2.direction = 0
+        if event.text() in ['Ц', 'ц', 'W', 'w']:
+            self.player2.move_direction_U = 1
 
-            if event.text() in ['Ы', 'ы', 'S', 's']:
-                self.player2.move_direction_D = 1
+        if event.text() in ['Ф', 'ф', 'A', 'a']:
+            self.player2.move_direction_L = 1
+            self.player2.direction = 0
+
+        if event.text() in ['Ы', 'ы', 'S', 's']:
+            self.player2.move_direction_D = 1
 
 
-            elif event.text() in ['В', 'в', 'D', 'd']:
-                self.player2.move_direction_R = 1
-                self.player2.direction = 1
+        elif event.text() in ['В', 'в', 'D', 'd']:
+            self.player2.move_direction_R = 1
+            self.player2.direction = 1
 
-            if event.text() in ['C', 'c', 'С', 'с']:
-                self.player2.shoot = 1
+        if event.text() in ['C', 'c', 'С', 'с']:
+            self.player2.shoot = 1
 
-            # print(self.player2.boundingRect())
-            # print(self.boundingRect().x(),'x ',self.boundingRect().y(),'y ',self.boundingRect().width(),'w ',self.boundingRect().height(),'h')
-
-            # print('Scene ',self.width(), 'w ',self.height(), 'h')
-            # print(self.player1.x(),'x ',self.player1.y(),'y ',self.player1.x_size,'w ',self.player1.y_size,'h')
-            # scene_coords = QPoint(int(self.player1.x()),int(self.player1.y()))
-            # view_coords = self.view.mapFromScene(self.player1.x(),self.player1.y())
-            # global_coords = self.view.mapToGlobal(QPoint(0,0))
-            # parent_coords = self.view.mapToParent(QPoint(0,0))
-            # view_coords = self.view.mapToScene(scene_coords)
-            # print('scene p ->',scene_coords)
-            # print('view p ->',view_coords)
-            # print('global p ->',global_coords)
-            # print('parent p ->',parent_coords)
-            # if event.key() == Qt.Key.Key_Escape:  # кнопку надо ограничить в свое нажатии, можно прям в меню ее нажать
-            #     self.menu.stackWidget.setCurrentWidget(self.menu.pause_page)
 
     def keyReleaseEvent(self, event):
+        if event.key() == Qt.Key.Key_F11:
+            global fullscreen
+            if fullscreen == 1:
+                fullscreen = 0
+            else:
+                fullscreen = 1
+        if event.key() == Qt.Key.Key_Escape:
+            fullscreen = 0
+
         if event.text() in ['Ц', 'ц', 'W', 'w']:
             self.player2.move_direction_U = 0
 
@@ -412,38 +368,53 @@ class StartGame(QGraphicsScene):
             self.player2.shoot = 0
 
 
+    def draw_player_hp(self,obj,x,between,y,w,h,color):
+        for i in range(obj.hp):
+            hp = self.addRect(x+(i*(w+between)),y,w,h,color,QBrush(color))
+            self.hps.append(hp)
 
-    # def paint(self, painter):
-    #     painter.setRenderHint(QPainter.RenderHint.Antialiasing)
-    #     painter.fillRect(0, 0, self.width(), self.height(),
-    #                      QColor(0,0,0))  # Очищаем окно, закрашивая его зеленым
-    #     # for star in self.menu.stars:
-    #     #     star.paint(painter)
-    #
-    #     painter.fillRect(0, ceil(self.height() * 0.8), self.width(), self.height(), QColor(100, 100, 100))
-    #
-    #     for i in range(int(self.player1.HP_O)):
-    #         painter.fillRect(ceil(self.width() * 0.05) + i * (ceil(self.width() * 0.01) + 2),
-    #                          ceil(self.height() * 0.82),
-    #                          ceil(self.width() * 0.01), ceil(self.width() * 0.03), QColor(200, 100, 100))
-    #     # self.player1.paint(painter)
-    #     # for bullet in self.array_bullets:
-    #     #     bullet.paint(painter)
-    #     for enemy in self.array_enemies:
-    #         enemy.paint(painter)
-    #
-    #     # if self.count_restart_sec <= 1 and self.restart_timer.isActive() is False:
-    #     #     self.restart_timer_txt.hide()
-    #     # else:
-    #     #     self.restart_timer_txt.show()
-    #     #     painter.fillRect(0, 0, self.width(), self.height(), QColor(0, 0, 0, 200))
-    #
-    # def paint_static(self):
-    #     info_bar = QGraphicsRectItem(0,ceil(self.height() * 0.8),self.width(),self.height())
-    #     info_bar.setBrush(QColor(100, 100, 100))
-    #     self.addItem(info_bar)
+    def draw_time_timer_text(self):
+        text = ''
+        if self.min < 10:
+            text += f'0{self.min}:'
+        else:
+            text += f'{self.min}:'
+        if self.sec < 10:
+            text += f'0{self.sec}:'
+        elif self.sec > 59:
+            self.min +=1
+            self.sec = 0
+        else:
+            text += f'{self.sec}:'
+        if self.msec < 10:
+            text += f'0{self.msec}'
+        elif self.msec > 99:
+            self.sec += 1
+            self.msec = 0
+        else:
+            text += f'{self.msec}'
+        self.timer_text.setPlainText(text)
 
-# с помощью лебел можно сделать переход по словам, также модификации у обьектов должен быть как у карточек
+    def interface(self):
+        background = self.addRect(self.boundingRect(), QColor(100,100,100), QBrush(QColor(100,100,100)))
+        info_bar = self.addRect(QRectF(0, self.height(), self.width(), ((self.height() * (10 / 8)) - self.height())),
+                     QColor(50, 50, 50), QBrush(QColor(50, 50, 50)))
+        left_cover = self.addRect(self.boundingField().x(),0,abs(self.boundingField().x()-self.boundingRect().x())-1,self.height() * (10 / 8),QColor('black'),QBrush(QColor('black')))
+        left_cover.setZValue(3)
+        right_cover = self.addRect(self.width(),0,self.boundingField().width(),self.height() * (10 / 8),QColor('black'),QBrush(QColor('black')))
+        right_cover.setZValue(3)
+        # HP_text = self.addText('HP',QFont('Arial',25))
+        # HP_text.setDefaultTextColor(QColor('red'))
+        # HP_text.setPos(20,self.height()+10)
+        self.hps = []
+        pl_level_hp = self.draw_player_hp(self.player2,50,8,self.height()+15,10,50,QColor(255,100,100))
+        self.timer_text = self.addText('00:00:00')
+        self.timer_text.setDefaultTextColor(QColor('white'))
+        self.timer_text.setFont(QFont('Courier New, monospace',25))
+        self.timer_text.setPos(self.width()-200,500)
+
+
+
 
 class Game(QGraphicsView):
     def __init__(self, scene):
@@ -455,19 +426,29 @@ class Game(QGraphicsView):
         self.setSceneRect(0,0,1120,600)
         self.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         self.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-        # self.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignTop)
-
-
+        self.setAlignment(Qt.AlignmentFlag.AlignTop)
+        # self.scale(0.6,0.6)
+        self.setStyleSheet('border:none')
 
     def resizeEvent(self, event):
-        self.fitInView(QRectF(0,0,1120,600), Qt.AspectRatioMode.KeepAspectRatio)
-        # super().resizeEvent(event)
-        # self.fitInView(self.sceneRect(), aspectRatioMode=Qt.AspectRatioMode.KeepAspectRatio) # из-за него все вылетает
-        # self.fitInView(self.setSceneRect(0,0,self.width(),self.height()),Qt.AspectRatioMode.IgnoreAspectRatio)
+        self.fitInView(QRectF(0,0,1115,595), Qt.AspectRatioMode.KeepAspectRatio)
+
+def toggle_fullscreen(obj):
+    if obj.isFullScreen() is False and fullscreen == 1:
+        obj.showFullScreen()
+    elif obj.isFullScreen() is True and fullscreen == 0:
+        obj.showMaximized()
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
     game = StartGame(None,True)
     game_window = Game(game)
     game_window.show()
+    fullscreen = 0
+    timer = QTimer()
+    timer.timeout.connect(lambda: toggle_fullscreen(game_window))
+    timer.start(10)
     sys.exit(app.exec())
+
+
+    # для сцены можно поставить разрешение меньше, тк там говорилось про размера окна а не игры
