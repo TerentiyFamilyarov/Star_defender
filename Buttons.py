@@ -1,41 +1,28 @@
 import sys
-from PyQt6.QtWidgets import QApplication, QGraphicsView, QGraphicsScene, QGraphicsItem, QGraphicsRectItem
-from PyQt6.QtCore import Qt, QRectF, QTimer, QObject
-from PyQt6.QtCore import QPropertyAnimation, QPoint
 
+from PyQt6.QtWidgets import QApplication, QGraphicsView, QGraphicsScene, QGraphicsEffect, QLabel, QGraphicsItem
+from PyQt6.QtGui import QPixmap
 
-class CustomItem(QGraphicsItem):
-    def __init__(self):
-        super().__init__()
-        self.rect = QRectF(-20, -20, 40, 40)
-
-    def boundingRect(self):
-        return self.rect
-
-    def paint(self, painter, option, widget):
-        painter.drawRect(self.rect)
-
-class AnimationExample(QGraphicsView):
-    def __init__(self):
-        super().__init__()
-        self.scene = QGraphicsScene()
-        self.setScene(self.scene)
-        self.item = QGraphicsRectItem(0,0,100,100)
-        self.scene.addItem(self.item)
-
-        self.animation = QPropertyAnimation(QObject(), b"pos")
-        self.animation.setDuration(1000)  # 1 секунда
-        self.animation.setStartValue(self.item.pos())
-        self.animation.setEndValue(self.item.pos() + QPoint(100, 0))  # Сдвиг по оси X на 100 пикселей
-        self.animation.setLoopCount(-1)  # бесконечное повторение
-        self.animation.start()
-
-if __name__ == '__main__':
+if __name__ == "__main__":
     app = QApplication(sys.argv)
-    view = AnimationExample()
+
+    # Создать сцену
+    scene = QGraphicsScene()
+
+    # Создать объект с изображением
+    # pixmap_item = scene.addPixmap(QPixmap('Nik Saltykov.jpg'))
+    # pixmap_item.setPixmap(QPixmap("image.png"))
+    # pixmap_item.setTiled(True)
+    # Добавить объект в сцену
+    # scene.addItem(pixmap_item)
+
+    # Создать виджет просмотра и установить сцену
+    view = QGraphicsView()
+    view.setScene(scene)
+    # view.rotate(45)
+    # view.setStyleSheet("background-image: url('Nik Saltykov.jpg');")
+
+    # Отобразить виджет просмотра
     view.show()
+
     sys.exit(app.exec())
-
-
-
-
