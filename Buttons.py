@@ -1,3 +1,9 @@
 import random
-x = 1
-print(eval('x=1'))
+def summ(x,y):
+        return x+y
+z = 'summ(1,2)'
+def answer():
+    print(eval(z))
+
+
+answer()

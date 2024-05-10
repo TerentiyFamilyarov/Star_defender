@@ -9,7 +9,10 @@ from PyQt6.QtWidgets import QApplication, QGraphicsRectItem, QGraphicsView, QGra
     QLabel, QPushButton, QStackedWidget, QVBoxLayout, QStyle, QMainWindow, QGraphicsEffect, QGraphicsProxyWidget
 
 import Bullets
+import Cards
 import Enemies
+
+chosen_player = 0
 
 def create_txt_widget(scene,name: str, fontstyle: str,textcolor:QColor,fontsize:int, pos:QPointF):
     txt = QGraphicsTextItem()
@@ -99,18 +102,17 @@ class choose_player_page(QGraphicsScene):
         self.view.setScene(self.game)
 
     def draw_actual_info(self):
+        global chosen_player
+        chosen_player = self.chosen_player
         players = self.game.players
-        self.game.set_default_rectobj(self.game.player2,players[self.chosen_player][1], players[self.chosen_player][2],
-                                   players[self.chosen_player][3], players[self.chosen_player][4],
-                                   players[self.chosen_player][5], players[self.chosen_player][6],
-                                   players[self.chosen_player][7], players[self.chosen_player][8])
+        self.game.set_player(self.game,self.game.player,players,self.chosen_player)
         self.about_player_txt.setPlainText(f"Name: {self.game.players[self.chosen_player][0]} \n"
-                                      f"Health: {self.game.player2.hp} \n"
-                                      f"Speed: {self.game.player2.step} \n"
-                                      f"Soap move: {self.game.player2.soap_koef} \n"
-                                      f"Damage: {self.game.player2.damage} \n"
-                                      f"Speed shoot: {self.game.player2.speed_shoot} \n"
-                                      f"Size: {self.game.player2.size_x}")
+                                      f"Health: {self.game.player.hp} \n"
+                                      f"Speed: {self.game.player.step} \n"
+                                      f"Soap move: {self.game.player.soap_koef} \n"
+                                      f"Damage: {self.game.player.damage} \n"
+                                      f"Speed shoot: {self.game.player.speed_shoot} \n"
+                                      f"Size: {self.game.player.size_x}")
     def onemode(self):
         self.chosen_player -= 1
         maxx = len(self.game.players)-1
@@ -175,36 +177,36 @@ class Scene_game(QGraphicsScene):
         self.view = view
         self.scene = self
 
+        self.cards = []
         self.array_enemies = Enemies.array_enemies
         self.array_bullets = Bullets.array_bullets
         self.array_arrays = [self.array_enemies, self.array_bullets]
 
         # players = [ (name, hp, damage, step, soap_koef, speed_shoot, size_x, size_y, color) ]
         self.players = [
-            ('Default',      3,  1,      8,    10,        370,         25,     25,     QColor(0, 0, 255)),
-            ('IFeelPain',    1,  0.5,    16,   40,        290,         20,     20,     QColor(200, 150, 0)),
-            ('UPower',       5,  2,      7,    15,        420,         30,     30,     QColor(100, 255, 255))
+            ('Default',      3,  1,      4,    1,        370,         25,     25,     QColor(0, 0, 255)),
+            ('IFeelPain',    1,  0.5,    7,    2,        290,         20,     20,     QColor(200, 150, 0)),
+            ('UPower',       5,  2,      4,    3,        420,         30,     30,     QColor(100, 255, 255))
         ]
         # enemies = [ (name, hp, damage, step, soap_koef, speed_shoot, size_x, size_y, color) ]
         self.enemies = Enemies.enemies
         # bullets = [ (name, hp, damage, step, soap_koef, speed_shoot, size_x, size_y, color) ]
         self.bullets = Bullets.bullets
 
-        self.player2_timer = QTimer()
-        self.player2_chtimer = QTimer()
-        self.player2 = self.create_rectobj_podclass_from_class(self,self.player2_timer,1,self.players[0][1], self.players[0][2], self.players[0][3],self.players[0][4],self.players[0][5],self.players[0][6],self.players[0][7],self.players[0][8],self.width(),self.height(),self.player_move,[self.player2_timer,self.array_arrays])
-        self.player2.creation_pattern = lambda obj:obj.setPos(150,300)
-        self.player2.setZValue(1)
-
-
+        self.player_timer = QTimer()
+        self.player_chtimer = QTimer()
+        self.player = self.fabrick_rectobj(self)
+        self.set_player(self,self.player,self.players,0)
+        self.player.setZValue(1)
 
         self.events_timer = QTimer()
         self.events_timer.timeout.connect(self.game_events)
         self.events_timer.start(150)
 
         self.game_timer = QTimer()
-        self.game_timer.timeout.connect(lambda :self.updateScene(self.player2,self.array_enemies,self.array_bullets))
+        self.game_timer.timeout.connect(lambda :self.updateScene(self.player,self.array_enemies,self.array_bullets))
         self.set_game_default()
+        self.stop_game(True)
 
         self.interface()
 
@@ -215,29 +217,26 @@ class Scene_game(QGraphicsScene):
         # else:self.stop_game(False)
         pass
 
-
-    def create_rectobj_podclass_from_class(self,scene:QGraphicsScene,timer:QTimer,cd:int,hp:int,damage:float,step:float,soap_koef:int,speed_shoot:int,size_x:int,size_y:int,color:QColor,window_x:float,window_y:float,move_pattern,parameters):
-        return self.create_rect_obj_class(scene,timer,cd,hp,damage,step,soap_koef,speed_shoot,size_x,size_y,color,window_x,window_y,move_pattern,parameters)
-
     def set_game_default(self):
+        global chosen_player
         self.cur_worked = 0
         self.msec = 0
         self.sec = 0
         self.min = 0
         self.bullet_type = 0
-        self.enemy_types = 0
-        # self.set_default_rectobj(self.player2,self.players[0][1], self.players[0][2], self.players[0][3],self.players[0][4],self.players[0][5],self.players[0][6],self.players[0][7],self.players[0][8])
-        self.player2.setPos(150,300)
-        self.player2.move_direction_L = 0
-        self.player2.move_direction_R = 0
-        self.player2.move_direction_U = 0
-        self.player2.move_direction_D = 0
-        self.player2.shoot = 0
-        self.player2.speed_l = 0
-        self.player2.speed_r = 0
-        self.player2.speed_u = 0
-        self.player2.speed_d = 0
-        self.player2.direction = 1
+        self.enemy_types = [Enemies.default_enemy]
+        self.set_player(self, self.player, self.players,chosen_player)
+        self.player.setPos(200,300)
+        self.player.move_direction_L = 0
+        self.player.move_direction_R = 0
+        self.player.move_direction_U = 0
+        self.player.move_direction_D = 0
+        self.player.shoot = 0
+        self.player.speed_l = 0
+        self.player.speed_r = 0
+        self.player.speed_u = 0
+        self.player.speed_d = 0
+        self.player.direction = 1
         for array in self.array_arrays:
             for arr_obj in array:
                 self.removeItem(arr_obj)
@@ -257,147 +256,94 @@ class Scene_game(QGraphicsScene):
     def boundingField(self):
         return QRectF(-2000, -100, (self.width() + 4000), (self.height())+200)
 
-
-    class create_rect_obj_class(QGraphicsRectItem):
-        def __init__(obj,scene:QGraphicsScene,timer:QTimer,cd:int,hp:int,damage:float,step:float,soap_koef:int,speed_shoot:int,size_x:int,size_y:int,color:QColor,window_x:float,window_y:float,move_pattern,parameters):
+    class fabrick_rectobj(QGraphicsRectItem):
+        def __init__(self,scene):
             super().__init__()
-            if timer.isActive() is False:
-                obj.setRect(QRectF(0, 0, size_x, size_y))
-                obj.setPen(QPen(Qt.PenStyle.NoPen))
-                obj.setBrush(QBrush(color))
-                scene.addItem(obj)
-                obj.move_direction_L = 0
-                obj.move_direction_R = 0
-                obj.move_direction_U = 0
-                obj.move_direction_D = 0
-                obj.shoot = 0
-                obj.speed_l = 0
-                obj.speed_r = 0
-                obj.speed_u = 0
-                obj.speed_d = 0
-                obj.step = step
-                obj.soap_koef = soap_koef
-                obj.size_x = size_x
-                obj.size_y = size_y
-                obj.window_x = window_x
-                obj.window_y = window_y
-                obj.parameters = parameters
-                obj.creation_pattern = None
-                obj.move_pattern = move_pattern
-                obj.hp = hp
-                obj.hit_delay = 0
-                obj.damage = damage
-                obj.speed_shoot = speed_shoot
-                timer.start(cd)
-                timer.timeout.connect(timer.stop)
+            self.setRect(0,0,10,10)
+            self.setPen(QPen(Qt.PenStyle.NoPen))
+            self.setBrush(QBrush(QColor('white')))
+            scene.addItem(self)
+            self.timer = QTimer()
+            self.shoot = 0
+            self.speed_l = 0
+            self.speed_r = 0
+            self.speed_u = 0
+            self.speed_d = 0
+            self.step = 0
+            self.size_x = 0
+            self.size_y = 0
+            self.hp = 0
+            self.hit_delay = 0
+            self.damage = 0
+            self.speed_shoot = 0
+            self.move = None
 
 
-        def pos_create(obj):
-            obj.creation_pattern(obj)
+    def set_player(self,scene,obj,players:list,player_type:int):
+        obj.move_direction_L = 0
+        obj.move_direction_R = 0
+        obj.move_direction_U = 0
+        obj.move_direction_D = 0
+        obj.future_x = obj.x()
+        obj.future_y = obj.y()
+        obj.hp = players[player_type][1]
+        obj.damage = players[player_type][2]
+        obj.step = players[player_type][3]
+        obj.soap_koef = players[player_type][4]
+        obj.speed_shoot = players[player_type][5]
+        obj.size_x = players[player_type][6]
+        obj.size_y = players[player_type][7]
 
-        def move(obj):
-            if obj.parameters != None:
-                obj.move_pattern(obj,obj.parameters)
-            else: obj.move_pattern(obj)
+        obj.setBrush(players[player_type][8])
+        obj.setRect(0,0,obj.size_x,obj.size_y)
+        obj.direction_timer = QTimer()
 
-    def set_default_rectobj(self,rectobj,hp,damage,step,soap_koef,speed_shoot,size_x,size_y,color):
-        rectobj.move_direction_L = 0
-        rectobj.move_direction_R = 0
-        rectobj.move_direction_U = 0
-        rectobj.move_direction_D = 0
-        rectobj.shoot = 0
-        rectobj.speed_l = 0
-        rectobj.speed_r = 0
-        rectobj.speed_u = 0
-        rectobj.speed_d = 0
-        rectobj.hp = hp
-        rectobj.damage = damage
-        rectobj.step = step
-        rectobj.soap_koef = soap_koef
-        rectobj.speed_shoot = speed_shoot
-        rectobj.size_x = size_x
-        rectobj.size_y = size_y
-        rectobj.setRect(0,0,rectobj.size_x,rectobj.size_y)
-        rectobj.setBrush(color)
-
-
-    def new_move(self,obj):
-            if obj.move_direction_L == 1:
-                obj.speed_l = obj.step
-            elif obj.move_direction_L == 0:
+        def move():
+            if obj.timer.isActive() is False:
+                if obj.speed_l < obj.step and obj.move_direction_L == 1:
+                    obj.speed_l += 0.1
+                elif obj.move_direction_L == 0 and obj.speed_l > 0:
+                    obj.speed_l -= 0.1
+                elif obj.speed_l < 0:
                     obj.speed_l = 0
 
-            if obj.move_direction_R == 1:
-                obj.speed_r = obj.step
-            elif obj.move_direction_R == 0:
+                if obj.speed_r < obj.step and obj.move_direction_R == 1:
+                    obj.speed_r += 0.1
+                elif obj.move_direction_R == 0 and obj.speed_r > 0:
+                    obj.speed_r -= 0.1
+                elif obj.speed_r < 0:
                     obj.speed_r = 0
 
-            if obj.move_direction_U == 1:
-                obj.speed_u = obj.step
-            elif obj.move_direction_U == 0:
-                obj.speed_u = 0
+                if obj.speed_u < obj.step and obj.move_direction_U == 1:
+                    obj.speed_u += 0.1
+                elif obj.move_direction_U == 0 and obj.speed_u > 0:
+                    obj.speed_u -= 0.1
+                elif obj.speed_u < 0:
+                    obj.speed_u = 0
 
-            if obj.move_direction_D == 1:
-                obj.speed_d = obj.step
-            elif obj.move_direction_D == 0:
+                if obj.speed_d < obj.step and obj.move_direction_D == 1:
+                    obj.speed_d += 0.1
+                elif obj.move_direction_D == 0 and obj.speed_d > 0:
+                    obj.speed_d -= 0.1
+                elif obj.speed_d < 0:
                     obj.speed_d = 0
 
-            obj.moveBy(-obj.speed_l + obj.speed_r,-obj.speed_u + obj.speed_d)
+                obj.timer.timeout.connect(obj.timer.stop)
+                obj.timer.start(int(obj.soap_koef*10))
 
-
-    def player_move(self,obj,parameters:list):
-        timer = parameters[0]
-        arrays = parameters[1]
-        if timer.isActive() is False:
-            if obj.speed_l < obj.step and obj.move_direction_L == 1:
-                obj.speed_l += 0.1
-            elif obj.move_direction_L == 0 and obj.speed_l > 0:
-                obj.speed_l -= 0.1
-            elif obj.speed_l < 0:
-                obj.speed_l = 0
-
-            if obj.speed_r < obj.step and obj.move_direction_R == 1:
-                obj.speed_r += 0.1
-            elif obj.move_direction_R == 0 and obj.speed_r > 0:
-                obj.speed_r -= 0.1
-            elif obj.speed_r < 0:
-                obj.speed_r = 0
-
-            if obj.speed_u < obj.step and obj.move_direction_U == 1:
-                obj.speed_u += 0.1
-            elif obj.move_direction_U == 0 and obj.speed_u > 0:
-                obj.speed_u -= 0.1
-            elif obj.speed_u < 0:
+            if obj.y() - obj.speed_u < 0:
+                obj.setY(0)
                 obj.speed_u = 0
+            else:
+                obj.moveBy(0, -obj.speed_u)
 
-            if obj.speed_d < obj.step and obj.move_direction_D == 1:
-                obj.speed_d += 0.1
-            elif obj.move_direction_D == 0 and obj.speed_d > 0:
-                obj.speed_d -= 0.1
-            elif obj.speed_d < 0:
+            if obj.y() + obj.speed_d + obj.size_y > scene.height():
+                obj.setY(scene.height() - obj.size_y)
                 obj.speed_d = 0
+            else:
+                obj.moveBy(0, obj.speed_d)
 
-            timer.timeout.connect(timer.stop)
-            timer.start(int(obj.soap_koef))
-
-        for array in arrays:
-            for arr_obj in array:
-                arr_obj.moveBy(obj.speed_l-obj.speed_r, 0)
-                # self.new_move(arr_obj)
-                arr_obj.move()
-
-        if obj.y() - obj.speed_u < 0:
-            obj.setY(0)
-            obj.speed_u = 0
-        else:
-            obj.moveBy(0, -obj.speed_u)
-
-        if obj.y() + obj.speed_d + obj.size_y > obj.window_y:
-            obj.setY(obj.window_y - obj.size_y)
-            obj.speed_d = 0
-        else:
-            obj.moveBy(0, obj.speed_d)
-
+        obj.move = move
 
     def player_chdirection(self,obj,chdirection_timer,msec,direction,future_x,arrays:list):
         if chdirection_timer.isActive() is False:
@@ -421,25 +367,9 @@ class Scene_game(QGraphicsScene):
 
     def check_collision(self,player,array_enemies,array_bullets):
         # Проверяем столкновение пуль с врагами
-        if self.player2.hp <= 0:
+        if self.player.hp <= 0:
             self.show_game_over_page(True)
         for enemy in array_enemies:
-            for enemy2 in array_enemies:
-                if enemy != enemy2:
-                    if QRectF(enemy2.x(), enemy2.y(), enemy2.size_x, enemy2.size_y).intersects(
-                            QRectF(enemy.x(), enemy.y(), enemy.size_x, enemy.size_y)):
-                        if enemy2.x() + enemy2.size_x // 2 < enemy.x():
-                            enemy2.move_direction_R = 0
-                            enemy2.move_direction_L = 1
-                        elif enemy2.x() + enemy2.size_x // 2 > enemy.x() + enemy.size_x:
-                            enemy2.move_direction_R = 1
-                            enemy2.move_direction_L = 0
-                        elif enemy2.y() + enemy2.size_y // 2 < enemy.y():  # Отталкивание игрока от врага
-                            enemy2.move_direction_D = 0
-                            enemy2.move_direction_U = 1
-                        elif enemy2.y() + enemy2.size_y // 2 > enemy.y() + enemy.size_y:
-                            enemy2.move_direction_U = 0
-                            enemy2.move_direction_D = 1
             if QRectF(player.x(),player.y(),player.size_x,player.size_y).intersects(QRectF(enemy.x(),enemy.y(),enemy.size_x,enemy.size_y)):
                 if player.hit_delay == 0:
                     player.hp -= enemy.damage
@@ -483,18 +413,29 @@ class Scene_game(QGraphicsScene):
         if player.hit_delay > 0:
             player.hit_delay -= 10
         if self.sec % 10 == 0 and self.cur_worked != self.sec:
-            self.show_card_page(True)
+            self.show_card_page_new(True)
             self.cur_worked = self.sec
         self.draw_time_timer_text()
-        bullet = Bullets.create_bullet(self,player,array_bullets,self.bullets,self.bullet_type)
-        enemy = Enemies.create_enemy(self,1000,50,array_enemies,
-                                     self.enemies,random.randint(0,self.enemy_types))
+        if player.shoot == 1:
+            if Bullets.timer.isActive() is False:
+                bullet = Bullets.default_bullet(self)
+                Bullets.array_bullets.append(bullet)
+                Bullets.timer.start(player.speed_shoot)
+        for array in [array_enemies,array_bullets]:
+            for arr_obj in array:
+                arr_obj.moveBy(player.speed_l - player.speed_r, 0)
+                arr_obj.move()
+        if Enemies.timer.isActive() is False:
+            enemy_function = random.choice(self.enemy_types)
+            enemy = enemy_function(self)
+            Enemies.array_enemies.append(enemy)
+            Enemies.timer.start(1000)
         player.move()
-        left_x,right_x = 150,self.width()-150
+        left_x,right_x = 200,self.width()-player.size_x-200
         if int(player.x()) != right_x and player.direction == 0:
-            self.player_chdirection(player,self.player2_chtimer,10,player.direction,right_x,[array_enemies,array_bullets])
+            self.player_chdirection(player,self.player_chtimer,10,player.direction,right_x,[array_enemies,array_bullets])
         elif int(player.x()) != left_x and player.direction == 1:
-            self.player_chdirection(player,self.player2_chtimer,10,player.direction,left_x,[array_enemies,array_bullets])
+            self.player_chdirection(player,self.player_chtimer,10,player.direction,left_x,[array_enemies,array_bullets])
         self.draw_player_hp(player.hp,50,8,self.height()+15,10,50,QColor(255,100,100))
         self.check_collision(player,array_enemies,array_bullets)
         self.update()
@@ -504,29 +445,29 @@ class Scene_game(QGraphicsScene):
     def keyPressEvent(self, event):
 
         if event.text() in ['Ц', 'ц', 'W', 'w']:
-            self.player2.move_direction_U = 1
+            self.player.move_direction_U = 1
 
         if event.text() in ['Ф', 'ф', 'A', 'a']:
-            self.player2.move_direction_L = 1
-            self.player2.direction = 0
+            self.player.move_direction_L = 1
+            self.player.direction = 0
 
         if event.text() in ['Ы', 'ы', 'S', 's']:
-            self.player2.move_direction_D = 1
+            self.player.move_direction_D = 1
 
-
-        elif event.text() in ['В', 'в', 'D', 'd']:
-            self.player2.move_direction_R = 1
-            self.player2.direction = 1
+        if event.text() in ['В', 'в', 'D', 'd']:
+            self.player.move_direction_R = 1
+            self.player.direction = 1
 
         if event.text() in ['C', 'c', 'С', 'с']:
-            self.player2.shoot = 1
+            self.player.shoot = 1
 
         if event.key() == Qt.Key.Key_Escape:
             if self.game_timer.isActive() is True:
                 self.show_pause_page(True)
 
         # if event.key() == Qt.Key.Key_K:
-        #     self.show_card_page(True)
+        #     # self.show_card_page(True)
+        #     self.show_card_page_new(True)
 
 
     def keyReleaseEvent(self, event):
@@ -536,23 +477,23 @@ class Scene_game(QGraphicsScene):
                 fullscreen = 0
             else:
                 fullscreen = 1
-        if event.key() == Qt.Key.Key_Escape:
-            fullscreen = 0
+        # if event.key() == Qt.Key.Key_Escape:
+        #     fullscreen = 0
 
         if event.text() in ['Ц', 'ц', 'W', 'w']:
-            self.player2.move_direction_U = 0
+            self.player.move_direction_U = 0
 
         elif event.text() in ['Ф', 'ф', 'A', 'a']:
-            self.player2.move_direction_L = 0
+            self.player.move_direction_L = 0
 
         elif event.text() in ['Ы', 'ы', 'S', 's']:
-            self.player2.move_direction_D = 0
+            self.player.move_direction_D = 0
 
         elif event.text() in ['В', 'в', 'D', 'd']:
-            self.player2.move_direction_R = 0
+            self.player.move_direction_R = 0
 
         if event.text() in ['C', 'c', 'С', 'с']:
-            self.player2.shoot = 0
+            self.player.shoot = 0
 
         # if event.text() == 'p':
         #     self.stop_game(True)
@@ -687,91 +628,49 @@ class Scene_game(QGraphicsScene):
             self.game_over_page.setVisible(False)
 
     def create_card_page(self):
-        self.types_cards = [
-            ['Blessing', 'you lucky, you are blessed from the Universe. Gain you 1 HP', [('player2', 'hp', '+1')], -1],
-            ['OnePanchMan', '100 pull-ups, 100 push-ups, 100 crunches, 10km run. your damage + 10', [('player2', 'damage',
-             '+10')], -1],
-            ['Snake shoot','your shoot is very s-s-snake, but enemies will be more various',[('scene','bullet_type','+1'),('scene','enemy_types','+1')],1]
-            # хуйня, переделывай тк нельзя нормально что либо сделать
-        ]
-        self.card_objs = []
-        backgr = self.addRect(QRectF(0,0,self.width(),self.height()*(10/8)),QPen(Qt.PenStyle.NoPen),QBrush(QColor(20,20,20,200)))
-        backgr.setZValue(3)
-        self.card_objs.append(backgr)
-        count = 3
         self.cards = []
-        for i in range(count):
-            card_width = int((self.width() / count) * 0.85)
-            card_height = int(self.height() * 0.8)
-            card_position_x = (i*(int(self.width()) - card_width - 50) // 2) + 25
-            card_position_y = (int(self.height()*(10/8)) - card_height) // 2
+        for i in range(3):
+            wid = 150
+            hei = 200
+            card = Cards.Card(QRect(i * wid + 10, 100, wid, hei), QFont('Courier New, monospace;', 25),
+                              QFont('Courier New, monospace;', 14))
+            # Cards.card_blessing(card,self.player2)
+            Cards.card_snake_shoot(card, self)
+            card_obj = self.addWidget(card)
+            self.cards.append(card_obj)
 
-            card_rect = self.addRect(QRectF(card_position_x, card_position_y, card_width, card_height),QPen(Qt.PenStyle.NoPen),QBrush(QColor('black')))
-            card_rect.setZValue(3)
-            self.card_objs.append(card_rect)
-
-            card_text = self.addText('nothing')
-            card_text.setZValue(3)
-            self.card_objs.append(card_text)
-            card_text.setTextInteractionFlags(Qt.TextInteractionFlag.TextEditorInteraction)
-            card_text.setDefaultTextColor(QColor(200,200,200))
-            card_text.setFont(QFont('Courier New, monospace;',14))
-            card_text.setTextWidth(card_width-10)
-            card_text.setPos(card_position_x + 5, card_position_y + 5)
-
-            card = QPushButton()
-            card.setGeometry(card_position_x,card_position_y,card_width,card_height)
-            card.setStyleSheet('QPushButton:hover{background-color:rgba(100,50,50,100)}'
-                               'QPushButton{background-color:rgba(0,0,0,0);border:none;}'
-                               'QPushButton:pressed{background-color:rgba(50,50,150,100)}')
-            card.setCursor(Qt.CursorShape.PointingHandCursor)
-            card_widget = self.addWidget(card)
-            card_widget.setZValue(3) # пересоздавать виджет и еще с массивами нужно поработать
-            self.card_objs.append(card_widget)
-            self.cards.append((card_text, card))# <- вот его и еще там есть другой в них нужно будет обновить информацию
-
-    def Set_Content(self,way_for_eff,card:any,Name:str,description:str,effects:list,sign):
-        card[0].setPlainText(f'{Name}\n\n\n\n{description}')
-        # for i in range(len(effects)): # effects = [( object(player), effect(HP_O), value(+10) )]
-        for i in range(len(effects)):
-            obj = getattr(way_for_eff, effects[i][0])
-            card[1].clicked.connect(lambda :print('e e cha-cha cha-cha'))
-            card[1].clicked.disconnect()
-            card[1].clicked.connect(lambda: setattr(obj, effects[i][1], eval(f'{getattr(obj,effects[i][1])}{effects[i][2]}')))
-            card[1].clicked.connect(lambda: self.show_card_page(False))
-        if sign > 0:
-            card[1].clicked.connect(lambda:self.abobe(Name))
-
-
-    def abobe(self, name):
-        for j in range(len(self.types_cards)):
-            if self.types_cards[j][0] == name:
-                self.types_cards[j][3] -= 1
-                print(self.types_cards[j])
-    def randomize_cards(self, way_to_attr):
-        for card in self.cards:
-            name, description, effects, sign = random.choice(list(self.types_cards))
-            while sign == 0:
-                name, description, effects, sign = random.choice(list(self.types_cards))
-            self.Set_Content(way_to_attr, card, name, description, effects, sign)
-
+    def create_card_page_new(self):
+        for i in range(3):
+            wid = 200
+            hei = 250
+            card = random.choice(Cards.array_cards)
+            card_widget = card(self,QRect(i*(wid+100),100,wid,hei),QFont('Courier New, monospace;', 25),
+                              QFont('Courier New, monospace;', 14))
+            card_item = self.addWidget(card_widget)
+            card_item.setZValue(3)
+            self.cards.append(card_item)
 
     def show_card_page(self,bol):
-        if bol == '?':
-            if self.card_objs[0].isVisible() is False:
-                return False
-            else: return True
-        elif bol is True and self.card_objs[0].isVisible() is False:
-            self.randomize_cards(self)
+        if bol is True and self.cards[0].isVisible() is False:
+            # Cards.randomize_cards(self,self.types_cards,self.cards)
             self.stop_game(True)
-            for obj in self.card_objs:
+            for obj in self.cards:
                 obj.setVisible(True)
-        elif bol is False and self.card_objs[0].isVisible() is True:
+        elif bol is False and self.cards[0].isVisible() is True:
             self.stop_game(False)
-            for obj in self.card_objs:
+            for obj in self.cards:
                 obj.setVisible(False)
 
-
+    def show_card_page_new(self,bol):
+        if bol is True and len(self.cards) == 0:
+            self.create_card_page_new()
+            self.stop_game(True)
+        elif bol is False and len(self.cards) > 0:
+            self.stop_game(False)
+            for card in self.cards:
+                card.hide()
+                card.deleteLater()
+            self.cards.clear()
 
     def interface(self):
         background = self.addRect(self.boundingRect(), QPen(Qt.PenStyle.NoPen), QBrush(QColor(100,100,100)))
@@ -786,14 +685,12 @@ class Scene_game(QGraphicsScene):
         self.timer_text.setDefaultTextColor(QColor('white'))
         self.timer_text.setFont(QFont('Courier New, monospace;',25))
         self.timer_text.setPos(self.width()-200,self.height())
-        # self.create_card_page()
-        self.create_card_page()
-        self.show_card_page(False)
+        # self.create_card_page_new()
+        # self.show_card_page(False)
         self.pause_page = self.create_pause_game()
         self.show_pause_page(False)
         self.game_over_page = self.create_game_over_page()
         self.show_game_over_page(False)
-        self.randomize_cards(self)
 
 
 class View_game(QGraphicsView):
@@ -843,7 +740,7 @@ class View_Menu(QGraphicsView):
         self.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         self.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         self.setAlignment(Qt.AlignmentFlag.AlignTop)
-        # self.scale(0.6,0.6)
+        # self.scale(0.7,0.7)
         self.setStyleSheet('border:none')
 
     def resizeEvent(self, event):
