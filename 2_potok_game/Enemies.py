@@ -3,16 +3,16 @@ import random
 from math import sin, pi, cos
 
 from PyQt6.QtCore import QTimer, QRectF, Qt
-from PyQt6.QtGui import QColor, QPen, QBrush, QImage, QPixmap
+from PyQt6.QtGui import QColor, QPen, QBrush, QImage, QPixmap, QPainterPath, QPainter
 from PyQt6.QtWidgets import QGraphicsRectItem
 
-        # enemies = [ (name, hp, damage, step, speed_shoot, size_x, size_y, color, type, max_count) ]
+        # enemies = [ (name, hp, damage, step, speed_shoot, size_x, size_y, picture_name, type, max_count) ]
 enemies = [
-            ('Default',      3,  2,      1,          0,       25,     25,      'arrow_right.png',0,15),#45x45
-            ('Ping_pong',    1,  1,      3,          0,       10,     10,      'arrow_right.png',1,10),
-            ('Mother',       5,  0,      0.5,        500,    35,     35,      'arrow_right.png',2,3),
-            ('Child',        1,  1,      2,          0,        8,      8,      'arrow_right.png',3,30),
-            ('Static, so-so',10, 1,      0.1,        0,       10,     50,      'arrow_right.png',4,10),
+            ('Default',      3,  2,      1,          0,       30,     30,      'arrow_right.png',0,15),#45x45
+            ('Ping_pong',    1,  1,      3,          0,       20,     20,      'arrow_right.png',1,10),
+            ('Mother',       5,  0,      0.5,        500,     35,     35,      'arrow_right.png',2,3),
+            ('Child',        1,  1,      2,          0,       20,     20,      'arrow_right.png',3,30),
+            ('Static, so-so',10, 1,      0.5,        0,       20,     60,      'arrow_right.png',4,10),
             ('Boss',         100,3,      1,          2000,    200,    200,    'arrow_right.png',5,1)
         ]
 
@@ -43,9 +43,10 @@ class Enemy(QGraphicsRectItem):
     def __init__(self):
         super().__init__()
         # self.setRect()
-        self.setPen(QPen(Qt.PenStyle.NoPen))
+        # self.setPen(QPen(Qt.PenStyle.NoPen))
         self.type = -1
         # self.setBrush(brush)
+        self.brush = QBrush(QColor(0,0,0))
         self.timer = QTimer()
         self.move_direction_L = 0
         self.move_direction_R = 0
@@ -68,6 +69,22 @@ class Enemy(QGraphicsRectItem):
         self.speed_shoot = 0
         self.move = None
 
+    def boundingRect(self):
+        return self.rect()
+        # return QRectF(self.x(),self.y(),self.size_x,self.size_y)
+
+    def shape(self):
+        path = QPainterPath()
+        path.addRect(self.boundingRect())
+        return path
+
+    def paint(self, painter: QPainter, option, widget=None):
+        painter.setPen(QPen(Qt.PenStyle.NoPen))
+        painter.setBrush(self.brush)
+        painter.drawRect(self.rect())
+        # painter.setBrush(QBrush(Qt.GlobalColor.red))
+        # painter.drawPath(self.shape())
+
 
 def delete_enemy(scene,enemy):
     array_enemies.remove(enemy)
@@ -85,17 +102,33 @@ def default_enemy(scene):
     enemy.step = step[type]
     enemy.damage = damage[type]
     enemy.hp = hp[type]
+
     pm = QPixmap(picture[type])
     scled_pm = pm.scaled(enemy.size_x, enemy.size_y)
-    enemy.setBrush(QBrush(scled_pm))
+    # enemy.setBrush(QBrush(scled_pm))
+    enemy.brush = QBrush(scled_pm)
     enemy.setRect(0,0,enemy.size_x,enemy.size_y)
     x1 = random.randint(int(scene.width() * 1.2), int(scene.boundingField().width() - enemy.size_x - 1))
     x2 = random.randint(-int(scene.boundingField().width()+1),int(scene.width())-int(scene.width()*1.2))
     y = random.randint(0,int(scene.height()-enemy.size_y))
     enemy.setPos(random.choice((x1,x2)),y)
     enemy.direction = random.choice((-1,1))
+    enemy.angle = random.randint(-15,15)
+    enemy.setTransformOriginPoint(enemy.rect().center())
     def move():
-        enemy.moveBy(enemy.step*enemy.direction,0)
+        if enemy.direction == -1:
+            enemy.direction = 1
+            enemy.angle += 180
+        if enemy.angle >= 360:
+            enemy.angle -= 360
+        elif enemy.angle <= -360:
+            enemy.angle += 360
+        move_scale_x = cos(enemy.angle * (pi / 180)) * enemy.step
+        move_scale_y = sin(enemy.angle * (pi / 180)) * enemy.step
+
+        if enemy.rotation() != enemy.angle:
+            enemy.setRotation(enemy.angle)
+        enemy.moveBy(move_scale_x, move_scale_y)
     enemy.move = move
     scene.addItem(enemy)
     array_enemies.append(enemy)
@@ -114,25 +147,33 @@ def ping_pong_enemy(scene):
     enemy.hp = hp[type]
     pm = QPixmap(picture[type])
     scled_pm = pm.scaled(enemy.size_x, enemy.size_y)
-    enemy.setBrush(QBrush(scled_pm))
+    # enemy.setBrush(QBrush(scled_pm))
+    enemy.brush = QBrush(scled_pm)
     enemy.setRect(0,0,enemy.size_x,enemy.size_y)
     x1 = random.randint(int(scene.width() * 1.2), int(scene.boundingField().width() - enemy.size_x - 1))
     x2 = random.randint(-int(scene.boundingField().width()+1),int(scene.width())-int(scene.width()*1.2))
     y = random.randint(0,int(scene.height()-enemy.size_y))
     enemy.setPos(random.choice((x1,x2)),y)
     enemy.direction = random.choice((-1,1))
+    enemy.angle = random.randint(5,355)
+    enemy.setTransformOriginPoint(enemy.rect().center())
 
-    move_proportion_x = random.uniform(0.3,0.9)
-    move_proportion_y = 1 - move_proportion_x
-    enemy.speed_d = random.choice((-enemy.step,enemy.step))
     def move():
-        if enemy.y() - enemy.step < 0:
-            enemy.speed_d = enemy.step
-            enemy.speed_u = 0
-        elif enemy.y() + enemy.size_y + enemy.step > scene.height():
-            enemy.speed_u = enemy.step
-            enemy.speed_d = 0
-        enemy.moveBy((enemy.step*enemy.direction)*move_proportion_x,(enemy.speed_d-enemy.speed_u)*move_proportion_y)
+        if int(enemy.y() - enemy.step) < 0 or int(enemy.y() + enemy.rect().height() + enemy.step) > scene.height():
+            enemy.angle *= -1
+        if enemy.direction == -1:
+            enemy.direction = 1
+            enemy.angle += 180
+        if enemy.angle >= 360:
+            enemy.angle -= 360
+        elif enemy.angle <= -360:
+            enemy.angle += 360
+        move_scale_x = cos(enemy.angle * (pi / 180)) * enemy.step
+        move_scale_y = sin(enemy.angle * (pi / 180)) * enemy.step
+
+        if enemy.rotation() != enemy.angle:
+            enemy.setRotation(enemy.angle)
+        enemy.moveBy(move_scale_x,move_scale_y)
     enemy.move = move
     scene.addItem(enemy)
     array_enemies.append(enemy)
@@ -152,7 +193,8 @@ def child_enemy(scene):
     enemy.hp = hp[type]
     pm = QPixmap(picture[type])
     scled_pm = pm.scaled(enemy.size_x, enemy.size_y)
-    enemy.setBrush(QBrush(scled_pm))
+    # enemy.setBrush(QBrush(scled_pm))
+    enemy.brush = QBrush(scled_pm)
     enemy.setRect(0, 0, enemy.size_x, enemy.size_y)
     # x = 400
     # y = 150
@@ -163,26 +205,27 @@ def child_enemy(scene):
     y = random.randint(0, int(scene.height() - enemy.size_y))
     enemy.setPos(random.choice((x1, x2)), y)
     enemy.direction = random.choice((-1, 1))
+    enemy.setTransformOriginPoint(enemy.rect().center())
 
     move_proportion_x = 1
     move_proportion_y = 1
     enemy.future_x = enemy.x() - enemy.step
     def move():
-        # enemy.speed_d = random.uniform(-2,2)
-        # enemy.moveBy((enemy.step*enemy.direction)*move_proportion_x,(enemy.speed_d)*move_proportion_y)
 
         enemy.angle += random.randint(-1, 1)
-        # bullet.timer.start(25)
+        if enemy.direction == -1:
+            enemy.direction = 1
+            enemy.angle += 180
+        if enemy.angle >= 360:
+            enemy.angle -= 360
+        elif enemy.angle <= -360:
+            enemy.angle += 360
         move_scale_x = cos(enemy.angle * (pi / 180)) * enemy.step
-        move_scale_y = -sin(enemy.angle * (pi / 180)) * enemy.step
-        if enemy.direction == 1:
-            if enemy.rotation() != -enemy.angle:
-                enemy.setRotation(-enemy.angle)
-            enemy.moveBy(move_scale_x, move_scale_y)
-        else:
-            if enemy.rotation() != enemy.angle:
-                enemy.setRotation(enemy.angle)
-            enemy.moveBy(-move_scale_x, move_scale_y)
+        move_scale_y = sin(enemy.angle * (pi / 180)) * enemy.step
+
+        if enemy.rotation() != enemy.angle:
+            enemy.setRotation(enemy.angle)
+        enemy.moveBy(move_scale_x,move_scale_y)
     enemy.move = move
     scene.addItem(enemy)
     array_enemies.append(enemy)
@@ -200,17 +243,19 @@ def mother_enemy(scene):
     enemy.damage = damage[type]
     enemy.hp = hp[type]
     pm = QPixmap(picture[type])
-    scled_pm = pm.scaled(enemy.size_x,enemy.size_y)
-    enemy.setBrush(QBrush(scled_pm))
+    scled_pm = pm.scaled(enemy.size_x, enemy.size_y)
+    # enemy.setBrush(QBrush(scled_pm))
+    enemy.brush = QBrush(scled_pm)
     enemy.setRect(0, 0, enemy.size_x, enemy.size_y)
     x1 = random.randint(int(scene.width() * 1.2), int(scene.boundingField().width() - enemy.size_x - 1))
     x2 = random.randint(-int(scene.boundingField().width() + 1), int(scene.width()) - int(scene.width() * 1.2))
     y = random.randint(0, int(scene.height() - enemy.size_y))
     enemy.setPos(random.choice((x1, x2)), y)
-    distance = random.randint(250,500)
+    distance = random.randint(150,500)
     spread = 30
     distance_size = distance + spread + enemy.step
     center_distance = distance + ((spread+enemy.step)/2)
+    enemy.angle_for_move = random.randint(-5,5)
     main_y_pos = enemy.y()
     def move():
         enemy_x_center = enemy.x()+(enemy.size_x/2)
@@ -227,8 +272,21 @@ def mother_enemy(scene):
                 enemy.direction = 1
             else: enemy.direction = -1
         if not (distance < enemy_distance_from_player < distance_size):
-            enemy.moveBy(enemy.step*enemy.direction,0)
+            if enemy.direction == -1:
+                enemy.direction = 1
+                enemy.angle_for_move += 180
+            if enemy.angle_for_move >= 360:
+                enemy.angle_for_move -= 360
+            elif enemy.angle_for_move <= -360:
+                enemy.angle_for_move += 360
+            move_scale_x = cos(enemy.angle_for_move * (pi / 180)) * enemy.step
+            move_scale_y = sin(enemy.angle_for_move * (pi / 180)) * enemy.step
+
+            if enemy.rotation() != enemy.angle:
+                enemy.setRotation(enemy.angle)
+            enemy.moveBy(move_scale_x, move_scale_y)
         else:
+            enemy.angle_for_move = 0
             if abs(enemy_distance_from_player-center_distance) < spread/2 and abs(main_y_pos-enemy.y()) < spread/2:
                 enemy.moveBy(cos(enemy.angle*(pi/180))*enemy.step*0.2,sin(enemy.angle*(pi/180))*enemy.step*0.2)
             else:
@@ -269,7 +327,8 @@ def static_ss_enemy(scene):
     enemy.hp = hp[type]
     pm = QPixmap(picture[type])
     scled_pm = pm.scaled(enemy.size_x, enemy.size_y)
-    enemy.setBrush(QBrush(scled_pm))
+    # enemy.setBrush(QBrush(scled_pm))
+    enemy.brush = QBrush(scled_pm)
     enemy.setRect(0,0,enemy.size_x,enemy.size_y)
     x1 = random.randint(int(scene.width() * 1.2), int(scene.boundingField().width() - enemy.size_x - 1))
     x2 = random.randint(-int(scene.boundingField().width()+1),int(scene.width())-int(scene.width()*1.2))
@@ -297,7 +356,8 @@ def boss_enemy(scene):
     # enemy.setBrush(QBrush(color[type]))
     pm = QPixmap(picture[type])
     scled_pm = pm.scaled(enemy.size_x, enemy.size_y)
-    enemy.setBrush(QBrush(scled_pm))
+    # enemy.setBrush(QBrush(scled_pm))
+    enemy.brush = QBrush(scled_pm)
     enemy.setRect(0, 0, enemy.size_x, enemy.size_y)
     x = scene.width() + 10
     y = abs(enemy.size_y-scene.height())/2

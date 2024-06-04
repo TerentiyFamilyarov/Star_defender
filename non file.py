@@ -101,113 +101,164 @@
 #     mainWindow = MainWindow()
 #     mainWindow.show()
 #     sys.exit(app.exec())
+from time import sleep
 
+#
+#
+# import sys
+# from PyQt6.QtCore import QThread, pyqtSignal, pyqtSlot, QObject, QRectF, QTimer
+# from PyQt6.QtWidgets import QApplication, QWidget, QVBoxLayout, QPushButton, QLabel
+#
+# class CollisionWorker(QThread):
+#     collisions_calculated = pyqtSignal(list)  # Сигнал для передачи результатов коллизий в основной поток
+#     request_data = pyqtSignal()  # Сигнал для запроса данных из основного потока
+#     receive_data = pyqtSlot(object)  # Слот для получения данных из основного потока
+#
+#     def __init__(self):
+#         super().__init__()
+#         self._is_running = False
+#         self.data = None
+#
+#     def run(self):
+#         self._is_running = True
+#         while self._is_running:
+#             self.request_data.emit()  # Запрашиваем данные из основного потока
+#             if self.data is not None:
+#                 collisions = self.calculate_collisions(self.data)
+#                 self.collisions_calculated.emit(collisions)
+#             self.msleep(1600)  # 60 FPS
+#
+#     def stop(self):
+#         self._is_running = False
+#
+#     @pyqtSlot(object)
+#     def receive_data(self, data):
+#         self.data = data
+#
+#     def calculate_collisions(self, data):
+#         enemies, bullets, scene_rect = data
+#         collisions = []
+#         for enemy in enemies:
+#             enemy_rect = QRectF(enemy['x'], enemy['y'], enemy['size_x'], enemy['size_y'])
+#             if not scene_rect.intersects(enemy_rect):
+#                 collisions.append(('enemy_out_of_bounds', enemy))
+#             for bullet in bullets:
+#                 bullet_rect = QRectF(bullet['x'], bullet['y'], bullet['size_x'], bullet['size_y'])
+#                 if enemy_rect.intersects(bullet_rect):
+#                     collisions.append(('bullet_hit_enemy', bullet, enemy))
+#         return collisions
+#
+# class MainWindow(QWidget):
+#     def __init__(self):
+#         super().__init__()
+#         self.initUI()
+#         self.enemies = [{'x': 10, 'y': 10, 'size_x': 30, 'size_y': 30}]
+#         self.bullets = [{'x': 15, 'y': 15, 'size_x': 5, 'size_y': 5}]
+#         self.scene_rect = QRectF(0, 0, 400, 300)
+#         self.update_timer = QTimer()
+#         self.update_timer.timeout.connect(self.update_game)
+#         self.update_timer.start(16)  # 60 FPS
+#
+#     def initUI(self):
+#         self.layout = QVBoxLayout(self)
+#
+#         self.label = QLabel("Press 'Start' to run the collision worker", self)
+#         self.layout.addWidget(self.label)
+#
+#         self.start_button = QPushButton("Start", self)
+#         self.start_button.clicked.connect(self.start_worker)
+#         self.layout.addWidget(self.start_button)
+#
+#         self.stop_button = QPushButton("Stop", self)
+#         self.stop_button.clicked.connect(self.stop_worker)
+#         self.layout.addWidget(self.stop_button)
+#
+#         self.worker = CollisionWorker()
+#         self.worker.collisions_calculated.connect(self.handle_collisions)
+#         self.worker.request_data.connect(self.send_data_to_worker)
+#
+#     @pyqtSlot()
+#     def start_worker(self):
+#         if not self.worker.isRunning():
+#             self.worker.start()
+#
+#     @pyqtSlot()
+#     def stop_worker(self):
+#         self.worker.stop()
+#
+#     @pyqtSlot(list)
+#     def handle_collisions(self, collisions):
+#         for collision in collisions:
+#             if collision[0] == 'enemy_out_of_bounds':
+#                 enemy = collision[1]
+#                 self.label.setText(f"Enemy out of bounds at ({enemy['x']}, {enemy['y']})")
+#             elif collision[0] == 'bullet_hit_enemy':
+#                 bullet, enemy = collision[1], collision[2]
+#                 self.label.setText(f"Bullet hit enemy at ({bullet['x']}, {bullet['y']})")
+#
+#     @pyqtSlot()
+#     def send_data_to_worker(self):
+#         data = (self.enemies, self.bullets, self.scene_rect)
+#         self.worker.receive_data(data)
+#
+#     def update_game(self):
+#         print('main work')
+#         # Обновление положения врагов и пуль, вызов других игровых логик и отрисовка
+#         pass
+#
+# if __name__ == '__main__':
+#     app = QApplication(sys.argv)
+#     mainWindow = MainWindow()
+#     mainWindow.show()
+#     sys.exit(app.exec())
 
-
+from PyQt6.QtWidgets import QGraphicsItem, QGraphicsScene, QGraphicsView, QApplication
+from PyQt6.QtGui import QPainter, QPainterPath, QBrush, QTransform
+from PyQt6.QtCore import QRectF, Qt
 import sys
-from PyQt6.QtCore import QThread, pyqtSignal, pyqtSlot, QObject, QRectF, QTimer
-from PyQt6.QtWidgets import QApplication, QWidget, QVBoxLayout, QPushButton, QLabel
 
-class CollisionWorker(QThread):
-    collisions_calculated = pyqtSignal(list)  # Сигнал для передачи результатов коллизий в основной поток
-    request_data = pyqtSignal()  # Сигнал для запроса данных из основного потока
-    receive_data = pyqtSlot(object)  # Слот для получения данных из основного потока
 
+class MyItem(QGraphicsItem):
     def __init__(self):
         super().__init__()
-        self._is_running = False
-        self.data = None
+        self.setRotation(45)
 
-    def run(self):
-        self._is_running = True
-        while self._is_running:
-            self.request_data.emit()  # Запрашиваем данные из основного потока
-            if self.data is not None:
-                collisions = self.calculate_collisions(self.data)
-                self.collisions_calculated.emit(collisions)
-            self.msleep(1600)  # 60 FPS
+    def boundingRect(self):
+        # Определяем прямоугольник, который ограничивает элемент
+        return QRectF(self.x(), self.y(), 100, 100)
 
-    def stop(self):
-        self._is_running = False
+    def shape(self):
+        # Создаем путь и добавляем прямоугольник
+        path = QPainterPath()
+        path.addRect(self.boundingRect())
 
-    @pyqtSlot(object)
-    def receive_data(self, data):
-        self.data = data
+        # Поворачиваем путь на 45 градусов
+        # transform = QTransform()
+        # transform.rotate(45)
+        # path = transform.map(path)
 
-    def calculate_collisions(self, data):
-        enemies, bullets, scene_rect = data
-        collisions = []
-        for enemy in enemies:
-            enemy_rect = QRectF(enemy['x'], enemy['y'], enemy['size_x'], enemy['size_y'])
-            if not scene_rect.intersects(enemy_rect):
-                collisions.append(('enemy_out_of_bounds', enemy))
-            for bullet in bullets:
-                bullet_rect = QRectF(bullet['x'], bullet['y'], bullet['size_x'], bullet['size_y'])
-                if enemy_rect.intersects(bullet_rect):
-                    collisions.append(('bullet_hit_enemy', bullet, enemy))
-        return collisions
+        return path
 
-class MainWindow(QWidget):
-    def __init__(self):
-        super().__init__()
-        self.initUI()
-        self.enemies = [{'x': 10, 'y': 10, 'size_x': 30, 'size_y': 30}]
-        self.bullets = [{'x': 15, 'y': 15, 'size_x': 5, 'size_y': 5}]
-        self.scene_rect = QRectF(0, 0, 400, 300)
-        self.update_timer = QTimer()
-        self.update_timer.timeout.connect(self.update_game)
-        self.update_timer.start(16)  # 60 FPS
+    def paint(self, painter: QPainter, option, widget=None):
+        # Рисуем элемент в виде синего прямоугольника, повернутого на 45 градусов
+        painter.setBrush(QBrush(Qt.GlobalColor.green))
+        painter.setBrush(QBrush(Qt.GlobalColor.darkRed))
+        # painter.drawRect(self.boundingRect())
+        painter.setBrush(QBrush(Qt.GlobalColor.blue))
+        painter.drawPath(self.shape())
 
-    def initUI(self):
-        self.layout = QVBoxLayout(self)
 
-        self.label = QLabel("Press 'Start' to run the collision worker", self)
-        self.layout.addWidget(self.label)
+app = QApplication(sys.argv)
 
-        self.start_button = QPushButton("Start", self)
-        self.start_button.clicked.connect(self.start_worker)
-        self.layout.addWidget(self.start_button)
+scene = QGraphicsScene()
+item = MyItem()
+scene.addItem(item)
 
-        self.stop_button = QPushButton("Stop", self)
-        self.stop_button.clicked.connect(self.stop_worker)
-        self.layout.addWidget(self.stop_button)
 
-        self.worker = CollisionWorker()
-        self.worker.collisions_calculated.connect(self.handle_collisions)
-        self.worker.request_data.connect(self.send_data_to_worker)
-
-    @pyqtSlot()
-    def start_worker(self):
-        if not self.worker.isRunning():
-            self.worker.start()
-
-    @pyqtSlot()
-    def stop_worker(self):
-        self.worker.stop()
-
-    @pyqtSlot(list)
-    def handle_collisions(self, collisions):
-        for collision in collisions:
-            if collision[0] == 'enemy_out_of_bounds':
-                enemy = collision[1]
-                self.label.setText(f"Enemy out of bounds at ({enemy['x']}, {enemy['y']})")
-            elif collision[0] == 'bullet_hit_enemy':
-                bullet, enemy = collision[1], collision[2]
-                self.label.setText(f"Bullet hit enemy at ({bullet['x']}, {bullet['y']})")
-
-    @pyqtSlot()
-    def send_data_to_worker(self):
-        data = (self.enemies, self.bullets, self.scene_rect)
-        self.worker.receive_data(data)
-
-    def update_game(self):
-        print('main work')
-        # Обновление положения врагов и пуль, вызов других игровых логик и отрисовка
-        pass
-
-if __name__ == '__main__':
-    app = QApplication(sys.argv)
-    mainWindow = MainWindow()
-    mainWindow.show()
-    sys.exit(app.exec())
+view = QGraphicsView(scene)
+view.show()
+for i in range(3):
+    item.setRotation(90)
+    item.setX(20*i)
+sys.exit(app.exec())
 

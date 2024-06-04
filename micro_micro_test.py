@@ -7,7 +7,7 @@ import random
 from PyQt6 import QtCore
 from PyQt6.QtCore import QPoint, QSize, QRectF, Qt, QTimer, QPointF, QRect, QThreadPool, pyqtSignal, QThread, QObject, \
     QMutex, QRunnable, QWaitCondition, pyqtSlot
-from PyQt6.QtGui import QColor, QPainter, QBrush, QFont, QPixmap, QPen, QTextOption, QPalette
+from PyQt6.QtGui import QColor, QPainter, QBrush, QFont, QPixmap, QPen, QTextOption, QPalette, QPainterPath, QTransform
 from PyQt6.QtWidgets import QApplication, QGraphicsRectItem, QGraphicsView, QGraphicsScene, QGraphicsTextItem, QWidget, \
     QLabel, QPushButton, QStackedWidget, QVBoxLayout, QStyle, QMainWindow, QGraphicsEffect, QGraphicsProxyWidget
 
@@ -164,9 +164,9 @@ class Scene_game(QGraphicsScene):
 
         # players = [ (name, hp, damage, step, soap_koef, speed_shoot, size_x, size_y, color) ]
         self.players = [
-            ('Default',      5,  1,      4,    1,        370,         20,     20,     QColor(0, 0, 255)),
+            ('Default',      5,  1,      4,    1,        370,         20,     20,     QBrush(QColor(0, 0, 255))),
             ('IFeelPain',    3,  0.5,    7,    2,        290,         15,     15,     QBrush(QPixmap('arrow_right.png'))),
-            ('UPower',       6,  2,      4,    3,        420,         25,     25,     QColor(100, 255, 255))
+            ('UPower',       6,  2,      4,    2,        420,         30,     30,     QBrush(QColor(100, 255, 255)))
         ]
         # enemies = [ (name, hp, damage, step, soap_koef, speed_shoot, size_x, size_y, color) ]
         self.enemies = Enemies.enemies
@@ -179,6 +179,7 @@ class Scene_game(QGraphicsScene):
         self.player_chtimer = QTimer()
         self.player = self.fabrick_rectobj(self)
         self.player.current_bullet_method = Bullets.triple_like_method
+        self.player.current_bullet_type = Bullets.default_bullet
         self.set_player(self,self.player,self.players,0)
         self.player.setZValue(1)
 
@@ -212,7 +213,8 @@ class Scene_game(QGraphicsScene):
         self.check_collision_thread.stop()
     @pyqtSlot()
     def update_check_data(self):
-        self.check_collision_thread.receive_data(16,self.boundingRect(),self.boundingField(),self.player,self.array_enemies,self.array_bullets)
+        # self.check_collision_thread.receive_data(16,self.boundingRect(),self.boundingField(),self.player,self.array_enemies,self.array_bullets)
+        self.check_collision_thread.receive_data(16,self.itemsBoundingRect(),self.boundingField(),self.player,self.array_enemies,self.array_bullets)
     @pyqtSlot(object,float)
     def deal_damage_enemy(self,enemy,damage):
         if enemy in self.array_enemies:
@@ -241,6 +243,7 @@ class Scene_game(QGraphicsScene):
 
     @pyqtSlot(float,float,float,float,int)
     def change_player_speed_and_hp(self,speed_l,speed_r,speed_u,speed_d,damage):
+        print('player_damaged')
         self.player.hit_delay.start(500)
         self.player.hp -= damage
         self.player.speed_l = speed_l
@@ -276,9 +279,18 @@ class Scene_game(QGraphicsScene):
                     if (self.scene_boundingRect is not None and self.scene_boundingField is not None and
                             self.player is not None and self.array_enemies is not None and
                             self.array_bullets is not None and self.speed_update is not None):
+                        player_rect = QRectF(self.player.x(), self.player.y(), self.player.size_x, self.player.size_y)
                         for enemy in self.array_enemies:
-                            if QRectF(self.player.x(), self.player.y(), self.player.size_x, self.player.size_y).intersects(
-                                    QRectF(enemy.x(), enemy.y(), enemy.size_x, enemy.size_y)):
+                            enemy_rect = QRectF(enemy.x(), enemy.y(), enemy.size_x, enemy.size_y)
+                            if enemy_rect.intersects(
+                                    self.scene_boundingRect) is False and enemy.isVisible() is True:
+                                self.enemy_visible_false.emit(enemy)
+                            elif enemy_rect.intersects(
+                                    self.scene_boundingRect) is True and enemy.isVisible() is False:
+                                self.enemy_visible_true.emit(enemy)
+                            # if player_rect.intersects(enemy_rect):
+                            # if self.player.shape().intersects(enemy.shape()):
+                            if self.player.collidesWithItem(enemy):
                                 self.player_damaged = 0
                                 if self.player.hit_delay.isActive() is False:
                                     self.player_damaged = 0
@@ -287,41 +299,38 @@ class Scene_game(QGraphicsScene):
                                 self.player_speed_u = 0
                                 self.player_speed_d = 0
 
-                                if self.player.x() + self.player.size_x // 2 < enemy.x():
+                                if player_rect.center().x() < enemy_rect.center().x():
                                     self.player_speed_r = 0
                                     self.player_speed_l = (self.player.step + enemy.step) * 0.5
 
-                                elif self.player.x() + self.player.size_x // 2 > enemy.x() + enemy.size_x:
+                                elif player_rect.center().x() > enemy_rect.center().x():
                                     self.player_speed_l = 0
                                     self.player_speed_r = (self.player.step + enemy.step) * 0.5
 
-                                elif self.player.y() + self.player.size_y // 2 < enemy.y():
+                                elif player_rect.center().y() < enemy_rect.center().y():
                                     self.player_speed_d = 0
                                     self.player_speed_u = (self.player.step + enemy.step) * 0.5
 
-                                elif self.player.y() + self.player.size_y // 2 > enemy.y() + enemy.size_y:
+                                elif player_rect.center().y() > enemy_rect.center().y():
                                     self.player_speed_u = 0
                                     self.player_speed_d = (self.player.step + enemy.step) * 0.5
 
                                 self.change_player_speed_and_hp.emit(self.player_speed_l,self.player_speed_r,
                                                                          self.player_speed_u,self.player_speed_d,self.player_damaged)
 
-                            if QRectF(enemy.x(), enemy.y(), enemy.size_x, enemy.size_y).intersects(
-                                    self.scene_boundingRect) is False and enemy.isVisible() is True:
-                                self.enemy_visible_false.emit(enemy)
-                            elif QRectF(enemy.x(), enemy.y(), enemy.size_x, enemy.size_y).intersects(
-                                    self.scene_boundingRect) is True and enemy.isVisible() is False:
-                                self.enemy_visible_true.emit(enemy)
-                            if self.scene_boundingField.contains(QRectF(enemy.x(), enemy.y(), enemy.size_x, enemy.size_y)) is False:
+
+                            if self.scene_boundingField.contains(enemy_rect) is False:
                                 self.enemy_delete.emit(enemy)
                                 continue
-                            for bullet in self.array_bullets:
-                                if self.scene_boundingRect.intersects(
-                                        QRectF(bullet.x(), bullet.y(), bullet.size_x, bullet.size_y)) is False:
-                                    self.bullet_delete.emit(bullet)
-                                    continue
-                                if QRectF(enemy.x(), enemy.y(), enemy.size_x, enemy.size_y).intersects(
-                                            QRectF(bullet.x(), bullet.y(), bullet.size_x, bullet.size_y)):
+                            if enemy.isVisible() is False:
+                                continue
+                            else:
+                                for bullet in self.array_bullets:
+                                    bullet_rect = QRectF(bullet.x(), bullet.y(), bullet.size_x, bullet.size_y)
+                                    if self.scene_boundingRect.intersects(bullet_rect) is False:
+                                        self.bullet_delete.emit(bullet)
+                                        continue
+                                    if enemy_rect.intersects(bullet_rect):
                                         self.bullet_delete.emit(bullet)
                                         damage = (bullet.damage * self.player.damage)
                                         self.deal_damage_enemy.emit(enemy,damage)
@@ -376,9 +385,10 @@ class Scene_game(QGraphicsScene):
             self.game_timer.start(16)
             self.start_check()
 
-    def boundingRect(self):
-        return QRectF(0,0,self.width(),self.height()*(10/8))
-
+    # def boundingRect(self):
+    #     return QRectF(0,0,self.width(),self.height()*(10/8))
+    def itemsBoundingRect(self):
+        return QRectF(0, 0, self.width(), self.height() * (10 / 8))
     def boundingField(self):
         return QRectF(-1000, -100, (self.width() + 2000), (self.height())+200)
 
@@ -386,10 +396,11 @@ class Scene_game(QGraphicsScene):
         def __init__(self,scene):
             super().__init__()
             self.setRect(0,0,10,10)
-            self.setPen(QPen(Qt.PenStyle.NoPen))
-            self.setBrush(QBrush(QColor('white')))
+            # self.setPen(QPen(Qt.PenStyle.NoPen))
+            self.brush = QBrush(QColor('gray'))
             scene.addItem(self)
             self.timer = QTimer()
+
             self.direction_timer = QTimer()
             self.shoot = 0
             self.direction = 1
@@ -412,11 +423,23 @@ class Scene_game(QGraphicsScene):
             self.hit_delay.timeout.connect(self.hit_delay.stop)
             self.damage = 0
             self.speed_shoot = 0
-            self.triples_count = 1
-            self.triples_degree = 15
             self.current_bullet_method = None
-            self.bullet_args = None
+            self.current_bullet_type = None
             self.move = None
+
+        def boundingRect(self):
+            return self.rect()
+
+        def shape(self):
+            path = QPainterPath()
+            path.addRect(self.boundingRect())
+            return path
+        def paint(self, painter: QPainter, option, widget=None):
+            painter.setPen(QPen(Qt.PenStyle.NoPen))
+            painter.setBrush(self.brush)
+            painter.drawRect(self.rect())
+            # painter.setBrush(QBrush(QColor(0,0,255)))
+            # painter.drawPath(self.shape())
 
 
     def set_player(self,scene,obj,players:list,player_type:int):
@@ -434,7 +457,8 @@ class Scene_game(QGraphicsScene):
         obj.size_x = players[player_type][6]
         obj.size_y = players[player_type][7]
 
-        obj.setBrush(players[player_type][8])
+        # obj.setBrush(players[player_type][8])
+        obj.brush = players[player_type][8]
         obj.setRect(0,0,obj.size_x,obj.size_y)
 
         def move():
@@ -469,6 +493,7 @@ class Scene_game(QGraphicsScene):
 
                 obj.timer.timeout.connect(obj.timer.stop)
                 obj.timer.start(int(obj.soap_koef*10))
+
 
             if obj.y() - obj.speed_u < 0:
                 obj.setY(0)
@@ -513,13 +538,13 @@ class Scene_game(QGraphicsScene):
             if Bullets.timer.isActive() is False:
                 bullet_type = Bullets.chaos_bullet
                 # bullet = Bullets.triple_method(self,bullet_type)
-                bullet = player.current_bullet_method(self,Bullets.default_bullet,player.triples_count,player.triples_degree)
+                bullet = player.current_bullet_method(self,player.current_bullet_type,Bullets.first_arg_method,Bullets.second_arg_mothod)
                 Bullets.timer.start(player.speed_shoot+bullet.speed_shoot)
         for array in [array_enemies,array_bullets]:
             for arr_obj in array:
                 arr_obj.moveBy(player.speed_l - player.speed_r, 0)
                 arr_obj.move()
-        if Enemies.timer.isActive() is False and len(Enemies.array_enemies) < 35:
+        if Enemies.timer.isActive() is False and len(Enemies.array_enemies) < 20:
 
             type_enemy = random.choice([Enemies.default_enemy,Enemies.ping_pong_enemy,Enemies.mother_enemy,Enemies.static_ss_enemy,Enemies.boss_enemy])
             enemy = type_enemy(self)
@@ -785,7 +810,8 @@ class Scene_game(QGraphicsScene):
             self.cards.clear()
 
     def interface(self):
-        background = self.addRect(self.boundingRect(), QPen(Qt.PenStyle.NoPen), QBrush(QColor(100,100,100)))
+        # background = self.addRect(self.boundingRect(), QPen(Qt.PenStyle.NoPen), QBrush(QColor(100,100,100)))
+        background = self.addRect(self.itemsBoundingRect(), QPen(Qt.PenStyle.NoPen), QBrush(QColor(100,100,100)))
         info_bar = self.addRect(QRectF(0, self.height(), self.width(), ((self.height() * (10 / 8)) - self.height())),
                      QPen(Qt.PenStyle.NoPen), QBrush(QColor(50, 50, 50)))
         info_bar.setZValue(3)
@@ -832,6 +858,8 @@ class View_Menu(QGraphicsView):
         self.setGeometry(0,0,1120,600)
         self.setMinimumSize(1120,600)
         self.setBackgroundBrush(QColor(0, 0, 0))
+        # self.setViewportUpdateMode(QGraphicsView.FullViewportUpdate)
+        # self.setViewportUpdateMode(QGraphicsView.ViewportUpdateMode.FullViewportUpdate)
         self.showMaximized()
         stack_widget = QStackedWidget()
         stack_widget.setStyleSheet('background-color: rgba(0,0,0,150)')

@@ -5,6 +5,7 @@ from PyQt6.QtCore import QRect, Qt
 from PyQt6.QtGui import QFont, QCursor
 from PyQt6.QtWidgets import QWidget, QLabel, QPushButton, QApplication, QVBoxLayout
 
+import Bullets
 import Enemies
 
 
@@ -43,27 +44,18 @@ class Card(QWidget):
         self.button.show()
 
 
-def card_snake_shoot(scene,rect:QRect,style_name:QFont,style_desc:QFont):
-    card = Card(rect,style_name,style_desc)
-    card.name.setText('Snake shoot')
-    card.description.setText('asjhasdaskd lasdhlaksdj alsdhalskj halksdj lksda')
-    def procedure():
-        scene.bullet_type = 1
-        scene.enemy_types.append(Enemies.ping_pong_enemy)
-        array_cards.remove(card_snake_shoot)
-        card.deleteLater()
-    card.button.clicked.connect(lambda: scene.show_card_page_new(False))
-    card.button.clicked.connect(procedure)
-    card.button.show()
-    return card
 
 def card_blessing(scene,rect:QRect,style_name:QFont,style_desc:QFont):
     card = Card(rect,style_name,style_desc)
     card.name.setText('Blessing')
     card.description.setText('askdfjh akjsh wjwhpo[o ;k;d d')
     def procedure():
+        scene.player.hp += 1
+        scene.player.size_x = int(scene.player.size_x*1.1)
+        scene.player.size_y = int(scene.player.size_y*1.1)
+        scene.player.setRect(0,0,scene.player.size_x,scene.player.size_y)
+        scene.player.step *= 0.2
         card.deleteLater()
-        scene.player.hp +=1
     card.button.clicked.connect(lambda: scene.show_card_page_new(False))
     card.button.clicked.connect(procedure)
     card.button.show()
@@ -74,15 +66,160 @@ def card_power(scene,rect:QRect,style_name:QFont,style_desc:QFont):
     card.name.setText('Power up')
     card.description.setText('asd.mxcn ipwe n 1 ;ldkjf ')
     def procedure():
+        scene.player.damage *= 1.1
+        scene.player.step *= 1.2
+        scene.player.size_x = int(scene.player.size_x*0.9)
+        scene.player.size_y = int(scene.player.size_y*0.9)
         card.deleteLater()
-        scene.player.damage += 1
+        scene.player.setRect(0,0,scene.player.size_x,scene.player.size_y)
+    card.button.clicked.connect(lambda: scene.show_card_page_new(False))
+    card.button.clicked.connect(procedure)
+    card.button.show()
+    return card
+
+def card_washing(scene,rect:QRect,style_name:QFont,style_desc:QFont):
+    card = Card(rect,style_name,style_desc)
+    card.name.setText('wash machine')
+    card.description.setText('asd.mxcn ipwe n 1 ;ldkjf ')
+    def procedure():
+        scene.player.step *= 1.2
+        scene.player.soap_koef *= 0.8
+        card.deleteLater()
+        scene.player.setRect(0,0,scene.player.size_x,scene.player.size_y)
+    card.button.clicked.connect(lambda: scene.show_card_page_new(False))
+    card.button.clicked.connect(procedure)
+    card.button.show()
+    return card
+
+def card_add_bullet(scene,rect:QRect,style_name:QFont,style_desc:QFont):
+    card = Card(rect,style_name,style_desc)
+    card.name.setText('Add bullet')
+    card.description.setText('asd.mxcn ipwe c 1 ;ldkjf ')
+    def procedure():
+        # scene.player.triples_count += 1
+        Bullets.bullet_count += 1
+        scene.player.damage *= 0.9
+        card.deleteLater()
+    card.button.clicked.connect(lambda: scene.show_card_page_new(False))
+    card.button.clicked.connect(procedure)
+    card.button.show()
+    return card
+
+def card_big_bullet(scene,rect:QRect,style_name:QFont,style_desc:QFont):
+    card = Card(rect,style_name,style_desc)
+    card.name.setText('Big bullet')
+    card.description.setText('asd.mxcn ipwe bb 1 ;ldkjf ')
+    def procedure():
+        Bullets.size_koef *= 1.2
+        Bullets.damage_koef *= 1.2
+        Bullets.speed_koef *= 0.7
+        Bullets.speed_shoot_koef *= 1.3
+        Bullets.update_bullets_list()
+        card.deleteLater()
+    card.button.clicked.connect(lambda: scene.show_card_page_new(False))
+    card.button.clicked.connect(procedure)
+    card.button.show()
+    return card
+
+def card_chaos_bullet_set(scene,rect:QRect,style_name:QFont,style_desc:QFont):
+    card = Card(rect,style_name,style_desc)
+    card.name.setText('Chaos set')
+    card.description.setText('asd.mxcn ipwe bb 1 ;ldkjf ')
+    def procedure():
+        # scene.player.triples_count = 10
+        Bullets.bullet_count = 5
+        Bullets.first_arg_method = Bullets.bullet_count
+        # scene.player.triples_degree = 90
+        Bullets.bullet_degree = 60
+        Bullets.second_arg_mothod = Bullets.bullet_degree
+        Bullets.size_koef = 1
+        Bullets.speed_koef = 1
+        Bullets.damage_koef = 1
+        Bullets.speed_shoot_koef = 1
+        Bullets.update_bullets_list()
+        scene.player.hp -= 2
+        if scene.player.hp < 1:
+            scene.player.hp = 1
+        card.deleteLater()
+        scene.player.current_bullet_type = Bullets.chaos_bullet
+    card.button.clicked.connect(lambda: scene.show_card_page_new(False))
+    card.button.clicked.connect(procedure)
+    card.button.show()
+    return card
+
+def card_navigation_bullet_set(scene,rect:QRect,style_name:QFont,style_desc:QFont):
+    card = Card(rect,style_name,style_desc)
+    card.name.setText('Navi set')
+    card.description.setText('asd.mxcn ipwe bb 1 ;ldkjf ')
+    def procedure():
+        # scene.player.triples_count = 10
+        Bullets.bullet_count = 1
+        # Bullets.first_arg_method = Bullets.bullet_count
+        # scene.player.triples_degree = 90
+        Bullets.bullet_degree = 45
+        # Bullets.second_arg_mothod = Bullets.bullet_degree
+        Bullets.size_koef = 1
+        Bullets.speed_koef = 1
+        Bullets.damage_koef = 1
+        Bullets.speed_shoot_koef = 1
+        Bullets.update_bullets_list()
+        scene.player.step *= 0.8
+        card.deleteLater()
+        scene.player.current_bullet_type = Bullets.navigation_bullet
+    card.button.clicked.connect(lambda: scene.show_card_page_new(False))
+    card.button.clicked.connect(procedure)
+    card.button.show()
+    return card
+
+def card_ultimate_bullet(scene, rect:QRect, style_name:QFont, style_desc:QFont):
+    card = Card(rect, style_name, style_desc)
+    card.name.setText('Ultimate set')
+    card.description.setText('asd.mxcn ipwe bb 1 ;ldkjf ')
+
+    def procedure():
+        Bullets.bullet_count -= 100
+        # Bullets.first_arg_method = Bullets.bullet_count
+        Bullets.size_koef *= 2
+        Bullets.speed_koef *= 0.8
+        Bullets.damage_koef *= 2
+        Bullets.speed_shoot_koef *= 1000
+        Bullets.update_bullets_list()
+        scene.player.step *= 0.7
+        card.deleteLater()
+    card.button.clicked.connect(lambda: scene.show_card_page_new(False))
+    card.button.clicked.connect(procedure)
+    card.button.show()
+    return card
+
+def card_army_bullet(scene, rect:QRect, style_name:QFont, style_desc:QFont):
+    card = Card(rect, style_name, style_desc)
+    card.name.setText('army bullets')
+    card.description.setText('asd.mxcn ipwe bb 1 ;ldkjf ')
+
+    def procedure():
+        Bullets.bullet_count += 5
+        Bullets.bullet_degree += 5
+        # Bullets.first_arg_method = Bullets.bullet_count
+        Bullets.size_koef *= 0.9
+        Bullets.speed_koef *= 1.2
+        Bullets.damage_koef *= 0.9
+        Bullets.speed_shoot_koef *= 0.9
+        Bullets.update_bullets_list()
+        scene.player.step *= 1.1
+        card.deleteLater()
     card.button.clicked.connect(lambda: scene.show_card_page_new(False))
     card.button.clicked.connect(procedure)
     card.button.show()
     return card
 
 array_cards = [
-    card_snake_shoot,
     card_blessing,
-    card_power
+    card_power,
+    card_washing,
+    card_add_bullet,
+    card_big_bullet,
+    card_chaos_bullet_set,
+    card_navigation_bullet_set,
+    card_ultimate_bullet,
+    card_army_bullet
 ]

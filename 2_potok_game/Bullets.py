@@ -7,11 +7,48 @@ from PyQt6.QtGui import QColor, QBrush, QPen, QKeyEvent, QInputEvent
 from PyQt6.QtWidgets import QGraphicsRectItem
 
 # bullets = [ (name,         damage, step, speed_shoot, size_x, size_y, color) ]
+bullet_count = 1
+bullet_degree = 45
+first_arg_method = bullet_count
+second_arg_mothod = bullet_degree
+size_koef = 1
+damage_koef = 1
+speed_koef = 1
+speed_shoot_koef = 1
 bullets = [
-            ('Default',      1,      13,        0,           10,      3,     QColor(0, 255, 0)),
-            ('Chaos',        0.5,    5,         -100,        4,      4,     QColor(255, 111, 0)),
-            ('Navigation',   5,      2,          400,        5,      6,     QColor(255, 111, 111)),
+            ('Default',      1,      13,  1,   10,  3,     QColor(0, 255, 0)),
+            ('Chaos',        0.5,    5,   1,4,   4,     QColor(255, 111, 0)),
+            ('Navigation',   5,      2,   400, 5,   6,     QColor(255, 111, 111)),
         ]
+
+def update_bullets_list():
+    global bullets, bullet_count, bullet_degree, first_arg_method, second_arg_mothod
+    bullets = [
+        ('Default',   (1*damage_koef),  (13 * speed_koef),int(1*speed_shoot_koef),   int(10 * size_koef),int(3 * size_koef), QColor(0, 255, 0)),
+        ('Chaos',     (0.5*damage_koef),(5 * speed_koef), int(1*speed_shoot_koef),int(4 * size_koef), int(4 * size_koef), QColor(255, 111, 0)),
+        ('Navigation',(5*damage_koef),  (2 * speed_koef), int(4*speed_shoot_koef), int(5 * size_koef), int(6 * size_koef), QColor(255, 111, 111)),
+    ]
+    damage.clear()
+    step.clear()
+    speed_shoot.clear()
+    size_x.clear()
+    size_y.clear()
+    color.clear()
+    for i in range(len(bullets)):
+        damage.append(bullets[i][1])
+        step.append(bullets[i][2])
+        speed_shoot.append(bullets[i][3])
+        size_x.append(bullets[i][4])
+        size_y.append(bullets[i][5])
+        color.append(bullets[i][6])
+    if bullet_count < 1:
+        bullet_count = 1
+    if bullet_degree >= 360:
+        bullet_degree -= 360
+    elif bullet_degree <= -360:
+        bullet_degree +=360
+    first_arg_method = bullet_count
+    second_arg_mothod = bullet_degree
 damage = []
 step = []
 speed_shoot = []
@@ -63,6 +100,7 @@ def default_bullet(scene):
     type = 0
     bullet = Bullet()
     bullet.size_x, bullet.size_y = size_x[type], size_y[type]
+    # bullet.size_x, bullet.size_y = bullets[type][4], bullets[type][5]
     bullet.step = step[type]
     bullet.damage = damage[type]
     bullet.speed_shoot = speed_shoot[type]
@@ -167,9 +205,9 @@ def navigation_bullet(scene):
                 bullet.setRotation(bullet.angle)
             bullet.moveBy(-move_scale_x, move_scale_y)
         if scene.key_up_pressed == 1:
-            array_bullets[-1].angle += 1
+            bullet.angle += 1
         elif scene.key_down_pressed == 1:
-            array_bullets[-1].angle -= 1
+            bullet.angle -= 1
 
     bullet.move = move
     scene.addItem(bullet)
@@ -178,8 +216,16 @@ def navigation_bullet(scene):
 
 
 def triple_like_method(scene,*args):
+    # global bullet_count
     # count = 3
     ch_bullet, count, degree = args
+    # if count < 1:
+    #     bullet_count = 1
+    #     count = 1
+    # if degree >= 360:
+    #     degree -= 360
+    # elif degree <= -360:
+    #     degree += 360
     if count == 1:
         bullet = ch_bullet(scene)
         bullet.angle = 0
