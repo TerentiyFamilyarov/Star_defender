@@ -29,9 +29,9 @@ picture = []
 def update_bullets_list():
     global bullets, bullet_count, bullet_degree, first_arg_method, second_arg_mothod
     bullets = [
-        ('Default',   (1*damage_koef),  (13 * speed_koef),int(1*speed_shoot_koef),   int(15 * scale_x_koef),int(8 * scale_y_koef), '../Bullets/images/default_bullet.png'),
-        ('Chaos',     (0.5*damage_koef),(5 * speed_koef), int(1*speed_shoot_koef),int(9 * scale_x_koef), int(9 * scale_y_koef), '../Bullets/images/chaos_bullet.png'),
-        ('Navigation',(5*damage_koef),  (2 * speed_koef), int(4*speed_shoot_koef), int(10 * scale_x_koef), int(11 * scale_y_koef), '../Bullets/images/navigate_bullet.png'),
+        ('Default',   (1*damage_koef),  (13 * speed_koef),int(1*speed_shoot_koef),   int(15 * scale_x_koef),int(8 * scale_y_koef), 'Bullets/images/default_bullet.png'),
+        ('Chaos',     (0.5*damage_koef),(5 * speed_koef), int(1*speed_shoot_koef),int(9 * scale_x_koef), int(9 * scale_y_koef), 'Bullets/images/chaos_bullet.png'),
+        ('Navigation',(5*damage_koef),  (2 * speed_koef), int(4*speed_shoot_koef), int(10 * scale_x_koef), int(11 * scale_y_koef), 'Bullets/images/navigate_bullet.png'),
     ]
     damage.clear()
     step.clear()
@@ -57,13 +57,6 @@ def update_bullets_list():
 
 
 update_bullets_list()
-# for i in range(len(bullets)):
-#     damage.append(bullets[i][1])
-#     step.append(bullets[i][2])
-#     speed_shoot.append(bullets[i][3])
-#     size_x.append(bullets[i][4])
-#     size_y.append(bullets[i][5])
-#     picture.append(bullets[i][6])
 array_bullets = []
 timer = QTimer()
 timer.timeout.connect(timer.stop)
@@ -237,7 +230,6 @@ def triple_like_method(scene,*args):
         bullet.angle = 0
     else:
         for i in range(1,count+1):
-            # a1 = 15
             a1 = degree
             max_a = -a1
             d = (max_a-a1)/(count-1)

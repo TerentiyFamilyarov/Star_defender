@@ -1,13 +1,11 @@
 import random
-import sys
 
-from PyQt6.QtCore import QRect, Qt, QTimer, pyqtSlot
-from PyQt6.QtGui import QFont, QCursor, QPalette, QColor, QPainter, QPixmap, QBrush
-from PyQt6.QtWidgets import QWidget, QLabel, QPushButton, QApplication, QVBoxLayout
+from PyQt6.QtCore import QRect, Qt, QTimer
+from PyQt6.QtGui import QFont, QPainter, QPixmap
+from PyQt6.QtWidgets import QWidget, QLabel, QPushButton
 
 from Bullets import bullets_file
 from Enemies import enemies_file
-
 
 timer = QTimer()
 timer.timeout.connect(timer.stop)
@@ -18,12 +16,10 @@ class HoverButton(QPushButton):
         self.parent = parent
 
     def enterEvent(self, event):
-        # Изменяем цвет фона родительского виджета при наведении мыши на кнопку
         self.parent.enter_background()
         super().enterEvent(event)
 
     def leaveEvent(self, event):
-        # Восстанавливаем исходный цвет фона родительского виджета при уходе мыши с кнопки
         self.parent.leave_background()
         super().leaveEvent(event)
 
@@ -54,7 +50,6 @@ class Card(QWidget):
         self.description.setFont(style_desc)
         self.description.show()
 
-        # self.button = QPushButton(self)
         self.button = HoverButton('',self)
         self.button.setGeometry(0,0,self.width(),self.height())
         self.button.setStyleSheet('''
@@ -319,10 +314,10 @@ def card_army_bullet(scene, rect:QRect, style_name:QFont, style_desc:QFont):
     def on_click():
         bullets_file.bullet_count += 2
         bullets_file.scale_x_koef *= 0.9
-        if round(bullets_file.scale_x_koef,1) < 0.5:
+        if round(bullets_file.scale_x_koef, 1) < 0.5:
             bullets_file.scale_x_koef = 0.5
         bullets_file.scale_y_koef *= 0.9
-        if round(bullets_file.scale_y_koef,1) < 0.5:
+        if round(bullets_file.scale_y_koef, 1) < 0.5:
             bullets_file.scale_y_koef = 0.5
         bullets_file.damage_koef *= 0.9
         bullets_file.update_bullets_list()
@@ -349,14 +344,13 @@ def card_concentrate_bullet(scene, rect:QRect, style_name:QFont, style_desc:QFon
     def on_click():
         bullets_file.bullet_degree -= 10
         bullets_file.scale_x_koef *= 0.9
-        if round(bullets_file.scale_x_koef,1) < 0.5:
+        if round(bullets_file.scale_x_koef, 1) < 0.5:
             bullets_file.scale_x_koef = 0.5
         bullets_file.scale_y_koef *= 0.9
-        if round(bullets_file.scale_y_koef,1) < 0.5:
+        if round(bullets_file.scale_y_koef, 1) < 0.5:
             bullets_file.scale_y_koef = 0.5
         bullets_file.speed_koef *= 1.2
         bullets_file.damage_koef *= 0.8
-        # bullets_file.speed_shoot_koef *= 0.8
         bullets_file.update_bullets_list()
         enemies_file.difficult_koef *= 1.1
         enemies_file.update_enemies_list()
@@ -410,11 +404,11 @@ def card_random_effect(scene, rect:QRect, style_name:QFont, style_desc:QFont):
     card.description.move(0, int((card.height() // 2) - (card.description.height() // 2)))
     def on_click():
         positive_effect1 = random.choice(
-            (bullets_file.scale_x_koef,scene.player.soap_koef,
-             bullets_file.scale_y_koef,bullets_file.speed_koef,bullets_file.speed_shoot_koef))
+            (bullets_file.scale_x_koef, scene.player.soap_koef,
+             bullets_file.scale_y_koef, bullets_file.speed_koef, bullets_file.speed_shoot_koef))
         positive_effect1 *= random.uniform(0.5,2)
         positive_effect2 = random.choice(
-            (bullets_file.bullet_count,bullets_file.bullet_degree,scene.player.hp,scene.player.size_x,
+            (bullets_file.bullet_count, bullets_file.bullet_degree, scene.player.hp, scene.player.size_x,
              scene.player.step))
         positive_effect2 += random.randint(-5,5)
         scene.player.hp -= 1
@@ -424,9 +418,9 @@ def card_random_effect(scene, rect:QRect, style_name:QFont, style_desc:QFont):
             scene.player.size_x = 15
         scene.player.size_y = scene.player.size_x
         scene.player.update_size(scene.player.size_x,scene.player.size_y)
-        if round(bullets_file.scale_x_koef,1) < 0.5:
+        if round(bullets_file.scale_x_koef, 1) < 0.5:
             bullets_file.scale_x_koef = 0.5
-        if round(bullets_file.scale_y_koef,1) < 0.5:
+        if round(bullets_file.scale_y_koef, 1) < 0.5:
             bullets_file.scale_y_koef = 0.5
         if int(bullets_file.scale_x_koef) > 50:
             bullets_file.scale_x_koef = 50

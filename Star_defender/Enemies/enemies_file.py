@@ -22,12 +22,12 @@ picture = []
 def update_enemies_list():
     global enemies
     enemies = [
-        ('Default',      int(3*difficult_koef),  (2*difficult_koef), (1*difficult_koef), 0, 40, 40, '../Enemies/images/default_enemy.png', 0),  # 45x45
-        ('Ping_pong',    int(1*difficult_koef),  (1*difficult_koef), (3*difficult_koef), 0, 25, 25, '../Enemies/images/ping_pong_enemy.png', 1),
-        ('Mother',       int(5*difficult_koef),  (0*difficult_koef), (0.5*difficult_koef), 2500, 50, 50, '../Enemies/images/mother_enemy.png', 2),
-        ('Child',        int(1*difficult_koef),  (1*difficult_koef), (2*difficult_koef), 0, 25, 25, '../Enemies/images/child_enemy.png', 3),
-        ('Static, so-so',int(10*difficult_koef), (1*difficult_koef), (0.5*difficult_koef), 0, 30, 70,'../Enemies/images/static_enemy.png', 4),
-        ('Boss',         int(100*difficult_koef),(3*difficult_koef), (1*difficult_koef), 3000, 210, 210,'../Enemies/images/boss_enemy.png', 5)
+        ('Default',      int(3*difficult_koef),  (2*difficult_koef), (1*difficult_koef), 0, 40, 40, 'Enemies/images/default_enemy.png', 0),  # 45x45
+        ('Ping_pong',    int(1*difficult_koef),  (1*difficult_koef), (3*difficult_koef), 0, 25, 25, 'Enemies/images/ping_pong_enemy.png', 1),
+        ('Mother',       int(5*difficult_koef),  (0*difficult_koef), (0.5*difficult_koef), 2500, 50, 50, 'Enemies/images/mother_enemy.png', 2),
+        ('Child',        int(1*difficult_koef),  (1*difficult_koef), (2*difficult_koef), 0, 25, 25, 'Enemies/images/child_enemy.png', 3),
+        ('Static, so-so',int(10*difficult_koef), (1*difficult_koef), (0.5*difficult_koef), 0, 30, 70,'Enemies/images/static_enemy.png', 4),
+        ('Boss',         int(100*difficult_koef),(3*difficult_koef), (1*difficult_koef), 3000, 210, 210,'Enemies/images/boss_enemy.png', 5)
     ]
     hp.clear()
     damage.clear()
@@ -112,7 +112,6 @@ def default_enemy(scene):
     enemy.damage = damage[type]
     enemy.hp = hp[type]
 
-    # enemy.pixmap = QPixmap(picture[type])
     enemy.pixmap.load(picture[type])
     enemy.update_size(enemy.size_x,enemy.size_y)
     x1 = random.randint(int(scene.width() * 1.2), int(scene.boundingField().width() - enemy.size_x - 1))
@@ -199,8 +198,6 @@ def child_enemy(scene):
     enemy.setPos(random.choice((x1, x2)), y)
     enemy.direction = random.choice((-1, 1))
 
-    move_proportion_x = 1
-    move_proportion_y = 1
     enemy.future_x = enemy.x() - enemy.step
     def move():
 
@@ -248,9 +245,7 @@ def mother_enemy(scene):
     main_y_pos = enemy.y()
     def move():
         enemy_x_center = enemy.x()+(enemy.size_x/2)
-        enemy_y_center = enemy.y()+(enemy.size_y/2)
         player_x_center = scene.player.x()+(scene.player.size_x/2)
-        player_y_center = scene.player.y()+(scene.player.size_y/2)
         enemy_distance_from_player = abs(abs(enemy_x_center)-player_x_center)
 
         if enemy_distance_from_player > distance_size:
@@ -370,9 +365,7 @@ def boss_enemy(scene):
         else:
             enemy.step = step[type]
         enemy_x_center = enemy.x() + (enemy.size_x / 2)
-        enemy_y_center = enemy.y() + (enemy.size_y / 2)
         player_x_center = scene.player.x() + (scene.player.size_x / 2)
-        player_y_center = scene.player.y() + (scene.player.size_y / 2)
         enemy_distance_from_player = abs(abs(enemy_x_center) - player_x_center)
         if enemy_distance_from_player > distance_size:
             if enemy_x_center > player_x_center:
